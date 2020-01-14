@@ -42,23 +42,19 @@ class CurationTemplate():
         c_PMID = pinfo[0]
 
         # Check if this is already in the DB
-        db_check = Publication.objects.filter(doi=c_doi)
+        db_check = Publication.objects.filter(doi=c_doi) | Publication.objects.filter(PMID=c_PMID)
         if len(db_check) == 1:
             parsed_publication = db_check[0]
         else:
             # Get data from europepmc
-            try:
-                payload = {'format' : 'json'}
+            payload = {'format' : 'json'}
+            if pd.isnull(pinfo[0]):
                 payload['query'] = 'doi:' + c_doi
-                r = requests.get('https://www.ebi.ac.uk/europepmc/webservices/rest/search', params=payload)
-                r = r.json()
-                r = r['resultList']['result'][0]
-            except:
-                payload = {'format': 'json'}
+            else:
                 payload['query'] = ['ext_id:' + str(c_PMID)]
-                r = requests.get('https://www.ebi.ac.uk/europepmc/webservices/rest/search', params=payload)
-                r = r.json()
-                r = r['resultList']['result'][0]
+            r = requests.get('https://www.ebi.ac.uk/europepmc/webservices/rest/search', params=payload)
+            r = r.json()
+            r = r['resultList']['result'][0]
 
             if r['pubType'] == 'preprint':
                 parsed_publication = Publication(doi = r['doi'],
@@ -159,7 +155,7 @@ class CurationTemplate():
         current_schema = self.table_mapschema.loc['Performance Metrics'].set_index('Column')
         for p_key, performance_info in self.table_performances.iterrows():
             parsed_performance = {'publication': self.parsed_publication.id,
-                                  'metrics': []
+                                  'metrics' : []
             }
             for col, val in performance_info.iteritems():
                 if pd.isnull(val) == False:
@@ -168,14 +164,7 @@ class CurationTemplate():
                         l = col[1]
                     m, f, _ = current_schema.loc[l]
                     if f.startswith('metric'):
-                        try:
-                            parsed_performance['metrics'].append(str2metric(f, val))
-                        except:
-                            if ';' in val:
-                                for x in val.split(';'):
-                                    parsed_performance['metrics'].append(str2metric(f, x))
-                            else:
-                                print('Error parsing:', f, val)
+                        parsed_performance['metrics'].append( str2metric(f, val) )
                     else:
                         parsed_performance[f] = val
             self.parsed_performances.append((p_key,parsed_performance))
@@ -221,8 +210,6 @@ remap_gwas_model = { 'PUBMEDID' : 'source_PMID',
 
 # Needed for parsing confidence intervals
 insquarebrackets = re.compile('\\[([^)]+)\\]')
-inparentheses = re.compile('\((.*)\)')
-
 
 def str2metric(field, val):
     _, ftype, fname = field.split('_')
@@ -257,31 +244,11 @@ def str2metric(field, val):
     if type(val) == float:
         current_metric['estimate'] = val
     else:
-        matches_square = insquarebrackets.findall(val)
-        #Check if an alternative metric has been declared
-        if '=' in val:
-            mname, val = [x.strip() for x in val.split('=')]
-            # Check if it has short + long name
-            matches_parentheses = inparentheses.findall(mname)
-            if len(matches_parentheses) == 1:
-                current_metric['name'] = mname.split('(')[0]
-                current_metric['name_short'] = matches_parentheses[0]
-
-        #Check if SE is reported
-        matches_parentheses = inparentheses.findall(val)
-        if len(matches_parentheses) == 1:
-            val = val.split('(')[0].strip()
-            try:
-                current_metric['estimate'] = float(val)
-            except:
-                val, unit = val.split(" ", 1)
-                current_metric['estimate'] = float(val)
-                current_metric['unit'] = unit
-            current_metric['se'] = matches_parentheses[0]
-
-        elif len(matches_square) == 1:
+        matches = insquarebrackets.findall(val)
+        if len(matches) == 1:
             current_metric['estimate'] = float(val.split('[')[0])
-            ci_match = tuple(map(float, matches_square[0].split(' - ')))
+
+            ci_match = tuple(map(float, matches[0].split(' - ')))
             current_metric['ci'] = NumericRange(lower=ci_match[0], upper=ci_match[1], bounds='[]')
         else:
             current_metric['estimate'] = float(val.split('[')[0])

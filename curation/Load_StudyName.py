@@ -3,16 +3,7 @@ from catalog.models import *
 import os, gzip
 import numpy as np
 
-# Code to clear the DB if you want to start from scratch
-# Metric.objects.all().delete()
-# Performance.objects.all().delete()
-# Sample.objects.all().delete()
-# Score.objects.all().delete()
-# EFOTrait.objects.all().delete()
-# Publication.objects.all().delete()
-# Cohort.objects.all().delete()
-skip_scorefiles = False
-
+skip_scorefiles = True
 
 loc_curation2schema = './DB_SourceFiles/Templates/TemplateColumns2Models_v4.xlsx'
 curation2schema = pd.read_excel(loc_curation2schema, index_col = 0)
@@ -31,13 +22,7 @@ StudyNames = ['Mavaddat2015','Mavaddat2019',
               'Khera2018', 'Inouye2018', 'Wunnemann2019', 'Paquette2017', 'Lall2017',
               'Oram2016', 'Perry2018', 'Onengut-Gumuscu2019', 'Sharp2019', 'Chouraki2016',
               'Desikan2017', 'Khera2019', 'Shieh2016', 'Schumacher2018', 'Vassy2014', 'Song2018',
-              'Weng2018', 'Mahajan2018', 'Udler2019', 'Belsky2013', 'RuttenJacobs2019', 'Abraham2019',
-              'Abraham2014', 'Abraham2015',
-              'Klarin2019',
-              'Pashayan2015a_GIM', 'Pashayan2015b_BRJ',
-              'Kuchenbaecker2017', 'Lecarpentier2018',
-              'Wen2016', 'Zhang2018', 'Lakeman2019', 'Patel2016', 'Tosto2017', 'Schmit2018','Paul2018',
-              'Natarajan2017', 'Morieri2018', 'Hajek2018']
+              'Weng2018', 'Mahajan2018']
 
 for StudyName in StudyNames:
     print(StudyName)
