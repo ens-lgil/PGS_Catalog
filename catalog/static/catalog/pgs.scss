@@ -115,7 +115,7 @@ u {
 .navbar {
   background-color: $pgs_dark3;
   padding: 0.5rem 3rem;
-  background-image: url("../imgs/pgs_header_background.png");
+  background-image: url("/static/imgs/pgs_header_background.png");
   background-repeat: no-repeat;
   background-position: top right;
 }
@@ -719,9 +719,15 @@ a {
   }
 }
 
+#dc_LoadTime:hover {
+  cursor: pointer;
+}
 #trait_cat {
   float:left;
   padding:5px;
+  &:hover {
+    cursor: pointer;
+  }
 }
 #trait_subcat {
   float:left;
@@ -778,53 +784,6 @@ footer {
     &:not(:last-child) {
       margin-right:8px;
     }
-  }
-}
-
-/* D3 charts */
-
-#mychart {                                                             /* NEW */
-  //position: relative;
-  .slice {
-    cursor: pointer;
-  }
-
-  .slice .main-arc {
-    stroke: #fff;
-    stroke-width: 1px;
-  }
-
-  .slice .hidden-arc {
-    fill: none;
-  }
-
-  .slice text {
-    pointer-events: none;
-    dominant-baseline: middle;
-    text-anchor: middle;
-    font-size: 14px;
-  }
-                                                       /* NEW */
-  .tooltip_d3 {                                                        /* NEW */
-    background: #eee;                                               /* NEW */
-    box-shadow: 1px 0 5px #999999;                                    /* NEW */
-    color: #333;                                                    /* NEW */
-    display: none;                                                  /* NEW */
-    font-size: 12px;                                                /* NEW */
-    //left: 0px;//130px;                                                    /* NEW */
-    padding: 10px;                                                  /* NEW */
-    position: absolute;                                             /* NEW */
-    text-align: center;                                             /* NEW */
-    //top: 0px;//95px;                                                      /* NEW */
-    min-width: 100px;                                                    /* NEW */
-    z-index: 10;                                                    /* NEW */
-  }                                                                 /* NEW */
-  .tootlip_legend {
-    font-weight: bold;
-  }
-  .tooltip_count {
-    margin-top:2px;
-    white-space: nowrap;
   }
 }
 

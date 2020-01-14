@@ -145,7 +145,7 @@ class EFOTrait(models.Model):
 
 
 class Demographic(models.Model):
-    estimate = models.FloatField(verbose_name='Estimate (value)', null=False)
+    estimate = models.FloatField(verbose_name='Estimate (value)', null=False, default=0)
     estimate_type = models.CharField(verbose_name='Estimate (type)', max_length=100, null=False, default='mean') #e.g. mean, median, mode
     unit = models.TextField(verbose_name='Unit', max_length=100, null=True)
     ci = DecimalRangeField(verbose_name='95% Confidence Interval', null=True)

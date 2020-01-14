@@ -97,7 +97,7 @@
           <div class="clearfix" style="display: flex;margin-bottom:2rem">
             <div class="clearfix" style="float:left;padding:5px;margin-right:1rem">
               <div style="width:300px;height:250px;float:left;margin-right:0px">
-                <canvas id="traits_cat" width="300" height="250"></canvas>
+                <canvas id="trait_cat_piechart" width="300" height="250"></canvas>
                 <script type="text/javascript">
 
                   ready(function(){
@@ -132,7 +132,7 @@
                       {% endfor %}
                     ];
 
-                    var chart_element = document.getElementById("traits_cat");
+                    var chart_element = document.getElementById("trait_cat_piechart");
                     new Chart(chart_element, {
                       type: 'doughnut',
                       data: {
@@ -157,6 +157,11 @@
                             showhide_trait(data_list[index].id+"_list");
 
                           }
+                        },
+                        hover: {
+                          onHover: function(e, el) {
+                            $("#trait_cat_piechart").css("cursor", el[0] ? "pointer" : "default");
+                          }
                         }
                       }
                     });
@@ -177,6 +182,7 @@
             item_height = 35;
             number_of_cat = Object.keys(data_json).length;
 
+            category_tooltip = 'data-toggle="tooltip" title=""'
 
             for (cat_index in data_json) {
               cat_index = parseInt(cat_index);
@@ -191,6 +197,10 @@
                             '<span>'+name+'</span>'+
                             '<span class="badge badge-pill badge-pgs float_right">'+size_g+' <span>PGS</span></span>';
               //e.addEventListener("onclick", showhide(div_id));
+              e.setAttribute("data-toggle", "tooltip");
+              e.setAttribute("data-placement", "left");
+              e.setAttribute("data-delay", "800");
+              e.setAttribute("title", "Click to display the list of traits related to '"+name+"'");
               e.setAttribute("onclick", "showhide_trait('"+div_id+"')");
               trait_elem.appendChild(e);
 
