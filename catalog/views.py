@@ -3,8 +3,12 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 import re
 
-#from django_tables2 import RequestConfig
 from .tables import *
+
+
+####################################################
+##################### TESTS ########################
+####################################################
 
 def charts(request):
 
@@ -131,73 +135,40 @@ def get_lighter_colour(rgb_colour):
     return "rgb("+', '.join(newRGB)+")"
 
 
-def traits_chart_data():
-    data = [
-        {
-          "name": "Nervous system disease",
-          "colour" : "rgb(230, 25, 75)",
-          "id" : "nervous",
-          "size_g": 2,
-          "children": [
-            {"name": "Alzheimer's disease", "size": 2}
-          ]
-        },
-        {
-          "name": "Body weights and measures",
-          "colour" : "rgb(60, 180, 75)",
-          "id" : "body",
-          "size_g": 2,
-          "children": [
-            {"name": "body mass index", "size": 2}
-          ]
-        },
-        {
-          "name": "Cancer",
-          "colour" : "rgb(255, 225, 25)",
-          "id" : "cancer",
-          "size_g": 13,
-          "children": [
-            {"name": "breast carcinoma", "size": 6},
-            {"name": "estrogen-receptor negative breast cancer", "size": 3},
-            {"name": "estrogen-receptor positive breast cancer", "size": 3},
-            {"name": "prostate carcinoma", "size": 1}
-          ]
-        },
-        {
-          "name": "Cardiovascular disease",
-          "colour" : "rgb(245, 130, 48)",
-          "id" : "cardio",
-          "size_g": 8,
-          "children": [
-            {"name": "atrial fibrillation", "size": 2},
-            {"name": "coronary artery disease", "size": 5},
-            {"name": "coronary heart disease", "size": 1}
-          ]
-        },
-        {
-          "name": "Metabolic disease",
-          "colour" : "rgb(0, 130, 200)",
-          "id" : "metabo",
-          "size_g": 10,
-          "children": [
-            {"name": "type I diabetes mellitus", "size": 4},
-            {"name": "type II diabetes mellitus", "size": 6}
-          ]
-        },
-        {
-          "name": "Inflammatory bowel disease",
-          "colour" : "rgb(145, 30, 180)",
-          "id" : "ibd",
-          "size_g": 1,
-          "children": [
-            {"name": "inflammatory bowel disease", "size": 1}
-          ]
-        }
-      ]
 
-    return data
 
 ####################################################
+####################################################
+
+
+
+def traits_chart_data():
+    data = []
+
+    for category in TraitCategory.objects.all():
+        cat_name   = category.label
+        cat_colour = category.colour
+        cat_scores_count = category.count_scores
+        cat_id = category.parent.replace(' ', '_')
+
+        cat_traits = []
+
+        for trait in category.efotraits.all():
+            trait_name = trait.label
+            trait_scores_count = trait.scores_count
+            trait_entry = {"name": trait_name, "size": trait_scores_count}
+            cat_traits.append(trait_entry)
+
+        cat_data = {
+          "name": cat_name,
+          "colour" : cat_colour,
+          "id" : cat_id,
+          "size_g": cat_scores_count,
+          "children": cat_traits
+        }
+        data.append(cat_data)
+
+    return data
 
 def index(request):
     current_release = Release.objects.order_by('-date').first()
@@ -225,7 +196,7 @@ def browseby(request, view_selection):
         context['data_chart'] = traits_chart_data()
     elif view_selection == 'studies':
         context['view_name'] = 'Publications'
-        table = Browse_PublicationTable(Publication.objects.all())
+        table = Browse_PublicationTable(Publication.objects.all(), order_by="num")
         #RequestConfig(request, paginate={"per_page": 100}).configure(table)
         context['table'] = table
     elif view_selection == 'sample_set':
@@ -235,7 +206,7 @@ def browseby(request, view_selection):
         context['table'] = table
     else:
         context['view_name'] = 'Polygenic Scores'
-        table = Browse_ScoreTable(Score.objects.all())
+        table = Browse_ScoreTable(Score.objects.all(), order_by="num")
         #RequestConfig(request, paginate={"per_page": 100}).configure(table)
         context['table'] = table
 

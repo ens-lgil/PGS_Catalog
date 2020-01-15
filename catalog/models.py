@@ -129,6 +129,21 @@ class EFOTrait(models.Model):
             except:
                 self.description = response['description']
 
+
+    def get_category(self):
+        """ Test to fetch the GWAS trait category from an EFO ID """
+        import requests
+
+        response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/parentMapping/%s'%self.id)
+        response_json = response.json()
+        print("Response JSON:")
+        print(response_json)
+        if response_json and response_json['trait'] != 'None':
+            print(response_json['parent'])
+            print(response_json['colourLabel'])
+            print(response_json['colour'])
+
+
     def __str__(self):
         return '%s | %s '%(self.id, self.label)
 
@@ -142,6 +157,28 @@ class EFOTrait(models.Model):
     @property
     def scores_count(self):
         return Score.objects.filter(trait_efo=self).count()
+
+
+class TraitCategory(models.Model):
+    # Stable identifiers for declaring a set of traits
+    label = models.CharField('Trait category', max_length=50)
+    colour = models.CharField('Trait category colour', max_length=30)
+    parent = models.CharField('Trait category (parent term)', max_length=50)
+
+    # Link to the description of the sample(s) in the other table
+    efotraits = models.ManyToManyField(EFOTrait, verbose_name='Traits', related_name='efotrait')
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def count_scores(self):
+        scores_count = 0
+        for trait in self.efotraits.all():
+            scores_count += trait.scores_count
+
+        return scores_count
+
 
 
 class Demographic(models.Model):

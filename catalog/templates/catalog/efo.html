@@ -14,16 +14,19 @@
 
     <h2>Trait: <b>{{ trait.label }}</b></h2>
     <section>
-    <h3>Experimental Factor Ontology (EFO) Information</h3>
-
+    {% if 'EFO' in trait.id %}
+      <h3>Experimental Factor Ontology (EFO) Information</h3>
+    {% else %}
+      <h3>Trait Information</h3>
+    {% endif %}
       <table class="table table-bordered table_pgs_h">
         <tbody>
           <tr>
-            <td>EFO ID</td>
+            <td>Identifier</td>
             <td><b><a href="{{ trait.url }}">{{ trait.id }}</a></b></td>
           </tr>
           <tr>
-            <td>EFO Trait Description</td>
+            <td>Description</td>
             <td>
               {% if desc_list %}
                 <ul>

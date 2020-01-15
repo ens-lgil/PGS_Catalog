@@ -43,12 +43,6 @@ $(document).ready(function() {
         $(this).prev().toggle();
         return false;
     });
-    /*$("#myInput").on("keyup", function() {
-        var value = $(this).val().toLowerCase();
-        $("#filterableTable tr").filter(function() {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-        });
-    });*/
 
 
     // Add external link icon and taget blank for external links

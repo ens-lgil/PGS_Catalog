@@ -91,7 +91,8 @@ class Browse_PublicationTable(tables.Table):
     class Meta:
         model = Publication
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "true",
+            "data-sort-name" : "id"
         }
         fields  = [
             'id',
@@ -123,12 +124,13 @@ class Browse_PublicationTable(tables.Table):
 class Browse_TraitTable(tables.Table):
     label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term)', orderable=True)
     scores_count = tables.Column(accessor='scores_count', verbose_name='Number of PGS Developed')
-    id_url = Column_format_html(accessor='display_id_url', verbose_name='Experimental Factor Ontology ID (EFO_ID)', orderable=False)
+    id_url = Column_format_html(accessor='display_id_url', verbose_name='Experimental Factor Ontology ID (EFO_ID)')
 
     class Meta:
         model = EFOTrait
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "true",
+            "data-sort-name" : "display_label"
         }
         fields = [
             'label_link',
@@ -147,7 +149,8 @@ class Browse_ScoreTable(tables.Table):
     class Meta:
         model = Score
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "true",
+            "data-sort-name" : "id"
         }
         fields = [
             'id',

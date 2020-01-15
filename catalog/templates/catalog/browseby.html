@@ -226,9 +226,16 @@
               if (subcat_children.length == 1) {
                 subcat_div_height_right = cat_index * item_height;
               }
+              else if (cat_index == number_of_cat-1) {
+                cat_pos = cat_index * item_height;
+                subcat_div_height_right = 0;
+                if (subcat_children.length < number_of_cat) {
+                  subcat_div_height_right = (number_of_cat -subcat_children.length)*item_height;
+                }
+              }
               else if ((cat_index + (subcat_children.length/2)) < number_of_cat) {
                 cat_pos = cat_index * item_height;
-                subcat_div_height_right = cat_pos - ((subcat_children.length)*item_height)/2 + item_height/2 ;
+                subcat_div_height_right = cat_pos - ((subcat_children.length)*item_height)/2 + item_height/2;
               }
               se_right.style.marginTop = subcat_div_height_right+"px";
               //subcat_div_length = subcat_children.length * item_height;
@@ -253,8 +260,8 @@
           });
           </script>
         </div>
+        <h3>Traits</h3>
           {% endif %}
-          <h3>Traits</h3>
           {% render_table table %}
         {% else %}
             <p>Not implemented yet.</p>

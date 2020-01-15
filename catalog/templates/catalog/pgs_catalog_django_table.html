@@ -11,6 +11,7 @@
           data-toggle="table"
           data-search="true"
           data-sortable="true"
+          data-sort-order="asc"
           data-custom-sort="customSort"
           data-show-export="true"
           data-filter-control="true"
@@ -89,17 +90,25 @@
                   bb = parseInt(bb_num[1]);
                 }
               }
+              // Numeric value with strings before it (e.g. EFO_, HP_)
+              else if (aa.match(/^(EFO|HP)_\d+$/)) {
+                aa_num = aa.match(/^(EFO|HP)_(\d+)$/);
+                bb_num = bb.match(/^(EFO|HP)_(\d+)$/);
+
+                if (aa_num && aa_num.length > 1) {
+                  aa = parseFloat(aa_num[2]);
+                }
+                if (bb_num && bb_num.length > 1) {
+                  bb = parseFloat(bb_num[2]);
+                }
+              }
               // Numeric value with strings before it (e.g. OR:, HR:, ...)
               else if (aa.match(/^\w+\:\s*\d+/)) {
-                console.log("before: "+aa);
-
-                console.log("middle: "+aa);
                 aa_num = aa.match(/^\w+\:\s*(\d+\.?\d*)(\D|$)/);
                 bb_num = bb.match(/^\w+\:\s*(\d+\.?\d*)(\D|$)/);
 
                 if (aa_num && aa_num.length > 1) {
                   aa = parseFloat(aa_num[1]);
-                  console.log("end: "+aa);
                 }
                 if (bb_num && bb_num.length > 1) {
                   bb = parseFloat(bb_num[1]);
