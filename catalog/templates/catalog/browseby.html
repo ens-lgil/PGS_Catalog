@@ -48,7 +48,7 @@
               add_search_term('');
             }
 
-            function showhide_trait(id) {
+            function showhide_trait(id, term) {
               var elem = document.getElementById(id);
               if (elem.style.display == 'none') {
                 containers = document.getElementsByClassName("trait_subcat_container");
@@ -66,6 +66,8 @@
                     elem.style.filter = 'alpha(opacity=' + op * 100 + ")";
                     op += op * 0.1;
                 }, 15);
+
+                add_search_term(term);
 
                 // Reset button
                 var reset_cat = document.getElementById('reset_cat');
@@ -154,7 +156,7 @@
                         'onClick' : function (evt, item) {
                           if (item[0]) {
                             var index = item[0]['_index'];
-                            showhide_trait(data_list[index].id+"_list");
+                            showhide_trait(data_list[index].id+"_list", labels_list[index]);
 
                           }
                         },
@@ -201,7 +203,7 @@
               e.setAttribute("data-placement", "left");
               e.setAttribute("data-delay", "800");
               e.setAttribute("title", "Click to display the list of traits related to '"+name+"'");
-              e.setAttribute("onclick", "showhide_trait('"+div_id+"')");
+              e.setAttribute("onclick", "showhide_trait('"+div_id+"', '"+name+"')");
               trait_elem.appendChild(e);
 
               subcat_children = data_json[cat_index].children;
