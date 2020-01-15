@@ -158,6 +158,17 @@ class EFOTrait(models.Model):
     def scores_count(self):
         return Score.objects.filter(trait_efo=self).count()
 
+    @property
+    def categories(self):
+        categories = TraitCategory.objects.filter(efotraits__id__exact=self.id)
+
+        categories_data = ''
+        if len(categories) > 0:
+            category_labels = [x.label for x in categories]
+            categories_data = ', '.join(category_labels)
+
+        return categories_data
+
 
 class TraitCategory(models.Model):
     # Stable identifiers for declaring a set of traits
