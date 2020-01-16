@@ -22,247 +22,32 @@
             </ul>
         {% elif table %}
           {% if data_chart %}
-          <script type="text/javascript">
-            function ready(callback){
-                // in case the document is already rendered
-                if (document.readyState!='loading') callback();
-                // modern browsers
-                else if (document.addEventListener) document.addEventListener('DOMContentLoaded', callback);
-                // IE <= 8
-                else document.attachEvent('onreadystatechange', function(){
-                    if (document.readyState=='complete') callback();
-                });
-            }
+            <script type="text/javascript">
+              document.addEventListener("DOMContentLoaded", function(event) {
+                // Draw the PGS Scores per trait category piechart
+                draw_trait_category_piechart({{ data_chart|safe }});
 
-            function reset_showhide_trait() {
-              containers = document.getElementsByClassName("trait_subcat_container");
-              for (var i = 0; i < containers.length; i++) {
-                  containers[i].style.display = 'none';
-              }
-              // Reset button
-              var reset_cat = document.getElementById('reset_cat');
-              if (reset_cat && reset_cat.style.display != 'none') {
-                reset_cat.style.display = 'none';
-              }
+                // Build the categories and sub-categories
+                display_category_list({{ data_chart|safe }});
+              });
+            </script>
 
-              add_search_term('');
-            }
+            <h3>
+              <span>PGS Scores per trait category</span>
+              <span id="reset_cat" class="btn btn-pgs pgs_no_icon_link" onclick="reset_showhide_trait();">Reset view</span>
+            </h3>
 
-            function showhide_trait(id, term) {
-              var elem = document.getElementById(id);
-              if (elem.style.display == 'none') {
-                containers = document.getElementsByClassName("trait_subcat_container");
-                for (var i = 0; i < containers.length; i++) {
-                    containers[i].style.display = 'none';
-                }
-                var op = 0.1;  // initial opacity
-                elem.style.opacity = 0;
-                elem.style.display = 'block';
-                var timer = setInterval(function () {
-                    if (op >= 1){
-                        clearInterval(timer);
-                    }
-                    elem.style.opacity = op;
-                    elem.style.filter = 'alpha(opacity=' + op * 100 + ")";
-                    op += op * 0.1;
-                }, 15);
-
-                add_search_term(term);
-
-                // Reset button
-                var reset_cat = document.getElementById('reset_cat');
-                if (reset_cat) {
-                  reset_cat.style.display = 'inline';
-                }
-              }
-            }
-
-            function add_search_term(term) {
-              var elems = document.getElementsByClassName('search-input');
-              if (elems.length > 0) {
-                elem = elems[0];
-                elem.focus();
-                elem.value = term;
-                elem.blur();
-                setTimeout(function(){
-                  $('table.table[data-toggle="table"] tbody a[href^="http"]').attr('target','_blank');
-                  $('table.table[data-toggle="table"] tbody a[href^="http"]').not('[class*="pgs_no_icon_link"]').addClass("external-link");
-                }, 1000);
-              }
-            }
-          </script>
-
-            <h3><span>PGS Scores per trait category</span>
-            <span id="reset_cat" class="btn btn-pgs pgs_no_icon_link" onclick="reset_showhide_trait();">Reset view</span>
-          </h3>
-
-          <div class="clearfix" style="display: flex;margin-bottom:2rem">
-            <div class="clearfix" style="float:left;padding:5px;margin-right:1rem">
-              <div style="width:300px;height:250px;float:left;margin-right:0px">
-                <canvas id="trait_cat_piechart" width="300" height="250"></canvas>
-                <script type="text/javascript">
-
-                  ready(function(){
-
-                    var ids_list = [
-                      {% for c in data_chart %}
-                        "{{ c.id|safe }}",
-                      {% endfor %}
-                    ];
-
-                    var labels_list = [
-                      {% for c in data_chart %}
-                        "{{ c.name|safe }}",
-                      {% endfor %}
-                    ];
-
-                    var bg_list = [
-                      {% for c in data_chart %}
-                        "{{ c.colour|safe }}",
-                      {% endfor %}
-                    ];
-
-                    var count_list = [
-                      {% for c in data_chart %}
-                        "{{ c.size_g|safe }}",
-                      {% endfor %}
-                    ];
-
-                    var data_list = [
-                      {% for c in data_chart %}
-                        {{ c|safe }},
-                      {% endfor %}
-                    ];
-
-                    var chart_element = document.getElementById("trait_cat_piechart");
-                    new Chart(chart_element, {
-                      type: 'doughnut',
-                      data: {
-                        labels: labels_list,
-                        datasets: [{
-                          label: "PGS Scores per trait category",
-                          backgroundColor: bg_list,
-                          data: count_list
-                        }]
-                      },
-                      options: {
-                        title: {
-                          display: false
-                        },
-                        legend: {
-                          display: false
-                        },
-                        responsive: true,
-                        'onClick' : function (evt, item) {
-                          if (item[0]) {
-                            var index = item[0]['_index'];
-                            showhide_trait(data_list[index].id+"_list", labels_list[index]);
-
-                          }
-                        },
-                        hover: {
-                          onHover: function(e, el) {
-                            $("#trait_cat_piechart").css("cursor", el[0] ? "pointer" : "default");
-                          }
-                        }
-                      }
-                    });
-                  });
-                </script>
+            <div class="clearfix" style="display: flex;margin-bottom:2rem">
+              <div class="clearfix" style="float:left;padding:5px;margin-right:1rem">
+                <div style="width:300px;height:250px;float:left;margin-right:0px">
+                  <canvas id="trait_cat_piechart" width="300" height="250"></canvas>
+                </div>
               </div>
+              <div id="trait_cat"></div>
+              <div id="trait_subcat"></div>
             </div>
-            <div id="trait_cat"></div>
-            <div id="trait_subcat"></div>
           </div>
-          <script type="text/javascript">
-
-          ready(function(){
-            var trait_elem = document.getElementById("trait_cat");
-            var subtrait_elem = document.getElementById("trait_subcat");
-            var data_json = {{ data_chart|safe }}
-
-            item_height = 35;
-            number_of_cat = Object.keys(data_json).length;
-
-            category_tooltip = 'data-toggle="tooltip" title=""'
-
-            for (cat_index in data_json) {
-              cat_index = parseInt(cat_index);
-
-              var name     = data_json[cat_index].name;
-              var div_id   = data_json[cat_index].id+"_list";
-              var t_colour = data_json[cat_index].colour;
-              var size_g   = data_json[cat_index].size_g;
-              var e = document.createElement('div');
-              e.className = "trait_item";
-              e.innerHTML = '<span class="trait_colour" style="background-color:'+t_colour+'"></span>'+
-                            '<span>'+name+'</span>'+
-                            '<span class="badge badge-pill badge-pgs float_right">'+size_g+' <span>PGS</span></span>';
-              //e.addEventListener("onclick", showhide(div_id));
-              e.setAttribute("data-toggle", "tooltip");
-              e.setAttribute("data-placement", "left");
-              e.setAttribute("data-delay", "800");
-              e.setAttribute("title", "Click to display the list of traits related to '"+name+"'");
-              e.setAttribute("onclick", "showhide_trait('"+div_id+"', '"+name+"')");
-              trait_elem.appendChild(e);
-
-              subcat_children = data_json[cat_index].children;
-              var se = document.createElement('div');
-              se.id = div_id;
-              se.className = "trait_subcat_container clearfix";
-              se.style.display = "none";
-
-              var se_left = document.createElement('div');
-              se_left.className = "trait_subcat_left";
-              se_left.style.color = t_colour;
-              se_left.innerHTML = '<i class="icon icon-common" data-icon="&#xf061;"></i>';
-              var subcat_div_height_left = cat_index * item_height;
-              se_left.style.marginTop = subcat_div_height_left+"px";
-              se.appendChild(se_left);
-
-              var se_right = document.createElement('div');
-              se_right.className = "trait_subcat_right";
-              var subcat_div_height_right = 0;
-              var count = cat_index + (subcat_children.length/2);
-
-              if (subcat_children.length == 1) {
-                subcat_div_height_right = cat_index * item_height;
-              }
-              else if (cat_index == number_of_cat-1) {
-                cat_pos = cat_index * item_height;
-                subcat_div_height_right = 0;
-                if (subcat_children.length < number_of_cat) {
-                  subcat_div_height_right = (number_of_cat -subcat_children.length)*item_height;
-                }
-              }
-              else if ((cat_index + (subcat_children.length/2)) < number_of_cat) {
-                cat_pos = cat_index * item_height;
-                subcat_div_height_right = cat_pos - ((subcat_children.length)*item_height)/2 + item_height/2;
-              }
-              se_right.style.marginTop = subcat_div_height_right+"px";
-              //subcat_div_length = subcat_children.length * item_height;
-              //se_left.style.lineHeight = subcat_div_length+"px";
-
-              for (subcat_index in subcat_children) {
-                var sc_name   = subcat_children[subcat_index].name;
-                var sc_size = subcat_children[subcat_index].size;
-                var sc = document.createElement('div');
-                sc.className = "trait_item";
-                sc.innerHTML = '<span class="trait_colour" style="background-color:'+t_colour+'"></span>'+
-                              '<span>'+sc_name+'</span>'+
-                              '<span class="badge badge-pill badge-pgs float_right">'+sc_size+' <span>PGS</span></span>';
-                sc.setAttribute("onclick", "add_search_term('"+sc_name+"')");
-                se_right.appendChild(sc);
-              }
-              se.appendChild(se_right);
-
-
-              subtrait_elem.appendChild(se);
-            }
-          });
-          </script>
-        </div>
-        <h3>Traits</h3>
+          <h3>Traits</h3>
           {% endif %}
           {% render_table table %}
         {% else %}
