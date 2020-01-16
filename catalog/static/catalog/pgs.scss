@@ -687,6 +687,11 @@ a {
 
 .trait_colour {
   padding: 4px 5px;
+  border-radius: 8px;
+}
+.trait_colour_border {
+  border:1px solid #EEE;
+  padding: 3px 4px !important;
 }
 
 .trait_subcat_left {
@@ -697,6 +702,13 @@ a {
   line-height: 35px;
   margin-left: 20px;
   margin-right: 20px;
+}
+.trait_subcat_border {
+  i {
+    text-shadow: -1px 1px  0 #EEE,
+				          1px 1px  0 #EEE,
+				          1px -1px 0 #EEE;
+  }
 }
 
 .trait_subcat_right {

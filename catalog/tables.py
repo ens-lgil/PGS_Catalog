@@ -124,7 +124,7 @@ class Browse_PublicationTable(tables.Table):
 class Browse_TraitTable(tables.Table):
     label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term)', orderable=True)
     scores_count = tables.Column(accessor='scores_count', verbose_name='Number of PGS Developed')
-    id_url = Column_format_html(accessor='display_id_url', verbose_name='Experimental Factor Ontology ID (EFO_ID)')
+    id_url = Column_format_html(accessor='display_id_url', verbose_name='Trait identifier (ontology ID)')
     categories = tables.Column(accessor='categories', verbose_name='Trait categories')
 
     class Meta:
@@ -143,7 +143,7 @@ class Browse_TraitTable(tables.Table):
 
 
 class Browse_ScoreTable(tables.Table):
-    list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(EFO)', orderable=False)
+    list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Variants and weights data files '), orderable=False)
 
     relative_path = '../..'

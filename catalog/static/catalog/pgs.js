@@ -271,7 +271,19 @@ function display_category_list(data_json) {
     var t_colour = data_json[cat_index].colour;
     var size_g   = data_json[cat_index].size_g;
 
+    // Get an idea if the colour is quite light. If so, it will outline the arrow
+    colour_light = t_colour.match(/^#(\w)\w(\w)\w(\w)/);
+    count_nb_f = 0
+    for (var i=1;i<4;i++) {
+      if (colour_light[i] == 'F' || colour_light[i] == 'f') {
+        count_nb_f++;
+      }
+    }
+
     var colour_span = colour_box.replace(colour_to_replace,t_colour);
+    if (count_nb_f > 1) {
+      colour_span = colour_span.replace('trait_colour','trait_colour trait_colour_border');
+    }
 
     // Create category box
     var e = document.createElement('div');
@@ -294,7 +306,9 @@ function display_category_list(data_json) {
 
     // Arrow separator - vertical position
     var se_left = document.createElement('div');
-    se_left.className = "trait_subcat_left";
+    console.log("Number of F: "+count_nb_f);
+    var class_name = (count_nb_f>1) ? 'trait_subcat_left trait_subcat_border' : 'trait_subcat_left';
+    se_left.className = class_name;
     se_left.style.color = t_colour;
     se_left.innerHTML = category_arrow;
     var subcat_div_height_left = cat_index * item_height;

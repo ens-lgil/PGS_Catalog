@@ -24,11 +24,11 @@
           {% if data_chart %}
             <script type="text/javascript">
               document.addEventListener("DOMContentLoaded", function(event) {
+                var data_chart = {{ data_chart|safe }};
                 // Draw the PGS Scores per trait category piechart
-                draw_trait_category_piechart({{ data_chart|safe }});
-
+                draw_trait_category_piechart(data_chart);
                 // Build the categories and sub-categories
-                display_category_list({{ data_chart|safe }});
+                display_category_list(data_chart);
               });
             </script>
 

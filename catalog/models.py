@@ -101,10 +101,10 @@ class Cohort(models.Model):
 class EFOTrait(models.Model):
     '''Class to hold information related to controlled trait vocabulary
     (mainly to link multiple EFO to a single score)'''
-    id = models.CharField('Experimental Factor Ontology ID (EFO_ID)', max_length=30, primary_key=True)
-    label = models.CharField('EFO Label', max_length=500)
-    description = models.TextField('EFO Description')
-    url = models.CharField('EFO URL', max_length=500)
+    id = models.CharField('Ontology Trait ID', max_length=30, primary_key=True)
+    label = models.CharField('Ontology Trait Label', max_length=500)
+    description = models.TextField('Ontology Trait Description')
+    url = models.CharField('Ontology URL', max_length=500)
 
     def parse_api(self):
         import requests
