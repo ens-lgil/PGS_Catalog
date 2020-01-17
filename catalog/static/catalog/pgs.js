@@ -204,6 +204,7 @@ function add_search_term(term) {
   }
 }
 
+
 // Build and draw the Trait category piechart
 function draw_trait_category_piechart(data_chart) {
 
@@ -359,4 +360,37 @@ function display_category_list(data_json) {
 
     subtrait_elem.appendChild(se);
   }
+}
+
+
+// Build and draw sample distribution piecharts
+function draw_samples_piechart(data_chart, id, type) {
+
+  var pc_class   = (type == 'sample') ? "sample_piechart_" : "sample_piechart_gender_";
+  var pc_colours = (type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
+  var pc_title   = (type == 'sample') ? 'Sample distribution' : 'Sample gender distribution';
+
+  new Chart(document.getElementById(pc_class+id), {
+    type: 'doughnut',
+    data: {
+      labels: data_chart[0],
+      datasets: [{
+        backgroundColor: pc_colours,
+        data: data_chart[1]
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        text: pc_title
+      },
+      legend: {
+        position: 'bottom',
+        reverse: true,
+        labels: {
+          boxWidth: 20
+        }
+      }
+    }
+  });
 }
