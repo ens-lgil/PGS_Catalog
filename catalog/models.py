@@ -159,7 +159,7 @@ class EFOTrait(models.Model):
         return Score.objects.filter(trait_efo=self).count()
 
     @property
-    def categories(self):
+    def category_labels(self):
         categories = TraitCategory.objects.filter(efotraits__id__exact=self.id)
 
         categories_data = ''
@@ -168,6 +168,10 @@ class EFOTrait(models.Model):
             categories_data = ', '.join(category_labels)
 
         return categories_data
+
+    @property
+    def category_list(self):
+        return TraitCategory.objects.filter(efotraits__id__exact=self.id)
 
 
 class TraitCategory(models.Model):

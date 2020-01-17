@@ -37,14 +37,16 @@
               <span id="reset_cat" class="btn btn-pgs pgs_no_icon_link" onclick="reset_showhide_trait();">Reset view</span>
             </h3>
 
-            <div class="clearfix" style="display: flex;margin-bottom:2rem">
-              <div class="clearfix" style="float:left;padding:5px;margin-right:1rem">
-                <div style="width:300px;height:250px;float:left;margin-right:0px">
+            <div class="trait_graph_container clearfix">
+              <div class="trait_piechart_container clearfix">
+                <div class="trait_piechart">
                   <canvas id="trait_cat_piechart" width="300" height="250"></canvas>
                 </div>
               </div>
-              <div id="trait_cat"></div>
-              <div id="trait_subcat"></div>
+              <div class="trait_cat_container clearfix">
+                <div id="trait_cat"></div>
+                <div id="trait_subcat"></div>
+              </div>
             </div>
           </div>
           <h3>Traits</h3>

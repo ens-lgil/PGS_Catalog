@@ -125,7 +125,7 @@ class Browse_TraitTable(tables.Table):
     label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term)', orderable=True)
     scores_count = tables.Column(accessor='scores_count', verbose_name='Number of PGS Developed')
     id_url = Column_format_html(accessor='display_id_url', verbose_name='Trait identifier (ontology ID)')
-    categories = tables.Column(accessor='categories', verbose_name='Trait categories')
+    category_labels = tables.Column(accessor='category_labels', verbose_name='Trait categories')
 
     class Meta:
         model = EFOTrait
@@ -136,7 +136,7 @@ class Browse_TraitTable(tables.Table):
         fields = [
             'label_link',
             'id_url',
-            'categories',
+            'category_labels',
             'scores_count'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
