@@ -443,6 +443,13 @@ th .th-inner {
   }
 }
 
+.pgs_small_icons {
+  max-height:30px !important;
+}
+.pgs_big_icons {
+  max-height:70px !important;
+}
+
 
 /* Toggle button */
 .toggle_btn, .toggle_table_btn {
@@ -680,6 +687,14 @@ a {
   margin-bottom: 2rem;
   padding-top:1rem;
   border-top:4px solid $pgs_dark2;
+}
+.sample_piechart_container {
+  float:left;
+  border:1px solid #ccc;
+  > div {
+    width:200px;
+    height:150px;
+  }
 }
 .pgs_h_separator {
   height:2px;
