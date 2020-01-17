@@ -154,9 +154,10 @@ def traits_chart_data():
         cat_traits = []
 
         for trait in category.efotraits.all():
+            trait_id = trait.id
             trait_name = trait.label
             trait_scores_count = trait.scores_count
-            trait_entry = {"name": trait_name, "size": trait_scores_count}
+            trait_entry = {"name": trait_name, "size": trait_scores_count, "id": trait_id}
             cat_traits.append(trait_entry)
 
         cat_data = {

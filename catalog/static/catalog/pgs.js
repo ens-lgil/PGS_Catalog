@@ -136,7 +136,6 @@ $(document).ready(function() {
       // Update rsquare notation (r2)
       $('#pgs_params').html(pgs_param.replace("r2", "r<sup>2</sup>"));
     }
-
 });
 
 
@@ -183,6 +182,11 @@ function showhide_trait(id, term) {
     // Reset button
     $('#reset_cat').show("slow");
   }
+
+  $('a.trait_item').mouseover(function() {
+    $('a.trait_item .trait_link').remove();
+    $(this).append('<i class="icon icon-common trait_link" data-icon="&#xf0c1;"></i>');
+  });
 }
 
 
@@ -338,12 +342,17 @@ function display_category_list(data_json) {
 
     // Create the sub-categories (traits) boxes
     for (subcat_index in subcat_children) {
-      var sc_name   = subcat_children[subcat_index].name;
+      var sc_id   = subcat_children[subcat_index].id;
+      var sc_name = subcat_children[subcat_index].name;
       var sc_size = subcat_children[subcat_index].size;
-      var sc = document.createElement('div');
+      var sc = document.createElement('a');
       sc.className = "trait_item";
       sc.innerHTML = colour_span+'<span>'+sc_name+'</span>'+count_badge.replace(count_to_replace,sc_size);
-      sc.setAttribute("onclick", "add_search_term('"+sc_name+"')");
+      sc.setAttribute("href", "/trait/"+sc_id);
+      sc.setAttribute("data-toggle", "tooltip");
+      sc.setAttribute("data-placement", "left");
+      sc.setAttribute("data-delay", "800");
+      sc.setAttribute("title", "Click to go to the detailed page of the '"+sc_name+"' trait");
       se_right.appendChild(sc);
     }
     se.appendChild(se_right);

@@ -228,6 +228,9 @@ u {
   background-color: $pgs_colour_1;
   color: white;
   outline: none;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  box-shadow: 0px 0px 6px 1px rgba(0, 0, 0, 0.2);
   &:hover {
     background-color: $pgs_colour_1_lighter;
   }
@@ -526,6 +529,9 @@ a {
 .float_right {
   float:right;
 }
+.margin-right_1 {
+  margin-right: 1rem;
+}
 
 .release_label {
     position:absolute;
@@ -797,11 +803,15 @@ a {
   cursor:pointer;
   &:hover {
     color: $pgs_colour_1_lighter;
-    border-color: $pgs_colour_1_lighter;
+    border: 1px solid $pgs_colour_1_lighter;
   }
   span:nth-child(2) {
     margin-right: 8px;
   }
+}
+.trait_link {
+  padding-right: 8px;
+  color: $pgs_colour_1_lighter !important;
 }
 
 #dc_LoadTime:hover {
