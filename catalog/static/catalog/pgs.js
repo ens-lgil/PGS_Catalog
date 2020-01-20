@@ -184,8 +184,16 @@ function showhide_trait(id, term) {
   }
 
   $('a.trait_item').mouseover(function() {
-    $('a.trait_item .trait_link').remove();
-    $(this).append('<i class="icon icon-common trait_link" data-icon="&#xf0c1;"></i>');
+    trait_link = $(this).find('.trait_link');
+    if (trait_link.length == 0) {
+      $(this).append('<i class="icon icon-common trait_link" data-icon="&#xf0c1;"></i>');
+    }
+    else {
+      trait_link.show();
+    }
+  });
+  $('a.trait_item').mouseout(function() {
+    $(this).find('.trait_link').hide();
   });
 }
 
