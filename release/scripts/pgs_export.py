@@ -70,7 +70,7 @@ class PGSExport:
                 'id',
                 'score',
                 'sampleset',
-                'pheotyping_reported',
+                'phenotyping_reported',
                 'pub_pmid_label',
                 'pub_doi_label',
                 'covariates',

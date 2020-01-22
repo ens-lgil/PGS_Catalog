@@ -28,8 +28,13 @@ def create_readme_spreadsheet(excel_writer):
 # Main running method #
 #---------------------#
 
-def run():
-    dirpath = '../../../datafiles/export/'
+def run(*args):
+    if (len(args) == 0):
+        print("ERROR: missing argument providing the path to the export directory")
+        print("Please use the command line with: --script-args <path_to_the_export_directory>")
+        exit()
+
+    dirpath = args[0] # e.g. '../../../datafiles/export/'
     datadir = dirpath+"all_metadata/"
     filename = datadir+'pgs_all_metadata.xlsx'
 

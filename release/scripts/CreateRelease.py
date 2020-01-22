@@ -73,14 +73,14 @@ def run():
                 publication_count=len(publications),
                 score_count=len(new_scores.keys()),
                 notes=release_notes
-            );
+              )
 
     print("Latest release: "+str(lastest_release.date))
-    print("New release: "+str(release.date)
-    print("Number of new Scores: "+str(release.score_count)
+    print("New release: "+str(release.date))
+    print("Number of new Scores: "+str(release.score_count))
     print(', '.join(new_scores.keys()))
-    print("Number of new Publications: "+str(release.publication_count)
-    print("Number of new Performances: "+str(release.performance_count)
+    print("Number of new Publications: "+str(release.publication_count))
+    print("Number of new Performances: "+str(release.performance_count))
 
     # Scores
     scores_direct = Score.objects.filter(date_released__isnull=True)

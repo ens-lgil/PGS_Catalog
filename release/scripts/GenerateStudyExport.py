@@ -8,10 +8,13 @@ from catalog.models import *
 # Main running method #
 #---------------------#
 
-def run():
+def run(*args):
+    if (len(args) == 0):
+        print("ERROR: missing argument providing the path to the export directory")
+        print("Please use the command line with: --script-args <path_to_the_export_directory>")
+        exit()
 
-    # Example
-    dirpath = '../../../datafiles/export/'
+    dirpath = args[0] # e.g. '../../../datafiles/export/'
 
     my_list = ['PGS000001','PGS000002','PGS000018']
 
