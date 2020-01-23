@@ -45,6 +45,7 @@ $(document).ready(function() {
     });
 
 
+
     // Add external link icon and taget blank for external links
     function alter_external_links(prefix) {
       if (!prefix) {
@@ -153,6 +154,23 @@ function reset_showhide_trait() {
   add_search_term('');
 }
 
+function fadeIn(elem) {
+  elem.css('opacity', 0);
+  elem.css('display', 'block');
+
+  var op = 0.1;  // opacity step
+
+  // Fade in the elem (fadeIn() is not included in the slim version of jQuery)
+  var timer = setInterval(function () {
+    if (op >= 1){
+      clearInterval(timer);
+    }
+    elem.css('opacity', op);
+    elem.css('filter', 'alpha(opacity=' + op * 100 + ")");
+    op += op * 0.1;
+  }, 15);
+}
+
 function showhide_trait(id, term) {
   var elem = $('#'+id);
 
@@ -160,21 +178,8 @@ function showhide_trait(id, term) {
     // Hide previously selected traits
     $('.trait_subcat_container').hide();
 
-    // Initial opacity value
-    elem.css('opacity', 0);
-    elem.css('display', 'block');
-
-    var op = 0.1;  // opacity step
-
-    // Fade in the elem (fadeIn() is not included in the slim version of jQuery)
-    var timer = setInterval(function () {
-      if (op >= 1){
-        clearInterval(timer);
-      }
-      elem.css('opacity', op);
-      elem.css('filter', 'alpha(opacity=' + op * 100 + ")");
-      op += op * 0.1;
-    }, 15);
+    // Display list of traits
+    fadeIn(elem);
 
     // Add search term to filter the table
     add_search_term(term);
@@ -302,13 +307,13 @@ function display_category_list(data_json) {
     var e = document.createElement('div');
     e.className = "trait_item";
     e.innerHTML = colour_span+'<span>'+name+'</span>'+count_badge.replace(count_to_replace,size_g);
-
     e.setAttribute("data-toggle", "tooltip");
     e.setAttribute("data-placement", "left");
     e.setAttribute("data-delay", "800");
     e.setAttribute("title", "Click to display the list of traits related to '"+name+"'");
     e.setAttribute("onclick", "showhide_trait('"+div_id+"', '"+name+"')");
     trait_elem.appendChild(e);
+
 
     // Create sub-categories (traits) main container
     subcat_children = data_json[cat_index].children;
@@ -319,7 +324,6 @@ function display_category_list(data_json) {
 
     // Arrow separator - vertical position
     var se_left = document.createElement('div');
-    console.log("Number of F: "+count_nb_f);
     var class_name = (count_nb_f>1) ? 'trait_subcat_left trait_subcat_border' : 'trait_subcat_left';
     se_left.className = class_name;
     se_left.style.color = t_colour;
@@ -368,6 +372,9 @@ function display_category_list(data_json) {
 
     subtrait_elem.appendChild(se);
   }
+
+  // Display list of trait categories
+  fadeIn($("#trait_cat"));
 }
 
 
