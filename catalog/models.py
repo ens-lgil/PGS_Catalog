@@ -276,13 +276,35 @@ class Sample(models.Model):
         if self.sample_cases != None:
             sstring = '[ {:,} cases'.format(self.sample_cases)
             if self.sample_controls != None:
-                sstring += ', {:,} controls]'.format(self.sample_controls)
+                sstring += ', {:,} controls ]'.format(self.sample_controls)
             else:
-                sstring += ']'
+                sstring += ' ]'
             sinfo.append(sstring)
         if self.sample_percent_male != None:
             sinfo.append('%s %% Male samples'%str(round(self.sample_percent_male,2)))
         return sinfo
+
+    @property
+    def display_samples_for_table(self):
+        div_id = "sample_"+str(self.pk)
+        sstring = ''
+        if self.sample_cases != None:
+            sstring += '<div><a class="toggle_table_btn" id="'+div_id+'" title="Click to show/hide the details">{:,} individuals <i class="fa fa-plus-circle"></i></a></div>'.format(self.sample_number)
+            sstring += '<div class="toggle_list" id="list_'+div_id+'">'
+            sstring += '<span class="only_export">[</span>'
+            sstring += '<ul>\n<li>{:,} cases</li>\n'.format(self.sample_cases)
+            if self.sample_controls != None:
+                sstring += '<li><span class="only_export">, </span>'
+                sstring += '{:,} controls</li>'.format(self.sample_controls)
+            sstring += '</ul>'
+            sstring += '<span class="only_export">]</span>'
+            sstring += '</div>'
+        else:
+            sstring += '{:,} individuals'.format(self.sample_number)
+        if self.sample_percent_male != None:
+            sstring += '<span class="only_export">, </span>'
+            sstring += '<div class="mt-2 smaller-90">%s %% Male samples</div>'%str(round(self.sample_percent_male,2))
+        return sstring
 
     @property
     def display_sample_number_total(self):
@@ -351,6 +373,7 @@ class Sample(models.Model):
 
 class Score(models.Model):
     """Class for individual Polygenic Score (PGS)"""
+
     # Stable identifiers
     num = models.IntegerField('Polygenic Score (PGS) Number', primary_key=True)
     id = models.CharField('Polygenic Score (PGS) ID', max_length=30)
@@ -387,6 +410,7 @@ class Score(models.Model):
     def set_score_ids(self, n):
         self.num = n
         self.id = 'PGS' + str(n).zfill(6)
+
 
     class Meta:
         get_latest_by = 'num'
@@ -525,7 +549,7 @@ class Performance(models.Model):
     def publication_withexternality(self):
         '''This function checks whether the evaluation is internal or external to the score development paper'''
         p = self.publication
-        info = [' '.join([p.id, '<br/><small>', p.firstauthor, '<i>et al.</i>', '(%s)' % p.date_publication.strftime('%Y'), '</small>']), self.publication.id]
+        info = [' '.join([p.id, '<br/><small><i class="fa fa-angle-double-right"></i> ',p.firstauthor, '<i>et al.</i>', '(%s)' % p.date_publication.strftime('%Y'), '</small>']), self.publication.id]
 
         if self.publication == self.score.publication:
             info.append('D')

@@ -481,9 +481,19 @@ th .th-inner {
 .toggle_btn, .toggle_table_btn {
   cursor:pointer;
   white-space: nowrap;
+  i {
+    color: $pgs_colour_1;
+    &:hover {
+      color: $pgs_colour_1_lighter;
+    }
+  }
 }
 .toggle_list {
   display:none;
+  ul {
+    padding-inline-start: 20px;
+    margin-bottom: 0.5em;
+  }
 }
 
 
@@ -774,6 +784,9 @@ a {
   color: $pgs_colour_2 !important;
 }
 
+.smaller_90 {
+  font-size: 90%;
+}
 
 /* Trait CSS */
 .trait_graph_container {

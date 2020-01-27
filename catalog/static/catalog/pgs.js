@@ -20,15 +20,20 @@ $(document).ready(function() {
     var moretext = 'Show more';
     var lesstext = 'Show less';
 
-    $('.more').each(function() {
-        var content = $(this).html();
-        if(content.length > showChar) {
-            var c = content.substr(0, showChar);
-            var h = content.substr(showChar, content.length - showChar);
-            var html = c + '<span class="moreellipses">' + ellipsestext+ '&nbsp;</span><span class="morecontent"><span>' + h + '</span>&nbsp;&nbsp;<a href="" class="morelink link_more">' + moretext + '</a></span>';
-            $(this).html(html);
-        }
-    });
+
+    function shorten_displayed_content() {
+      $('.more').each(function() {
+          var content = $(this).html();
+          if(content.length > showChar) {
+              var c = content.substr(0, showChar);
+              var h = content.substr(showChar, content.length - showChar);
+              var html = c + '<span class="moreellipses">' + ellipsestext+ '&nbsp;</span><span class="morecontent"><span>' + h + '</span>&nbsp;&nbsp;<a href="" class="morelink link_more">' + moretext + '</a></span>';
+              $(this).html(html);
+          }
+      });
+    }
+    shorten_displayed_content();
+
 
     $(".morelink").click(function(){
         if($(this).hasClass("link_less")) {
@@ -82,7 +87,7 @@ $(document).ready(function() {
 
     // Button toggle
     $('.toggle_btn').click(function() {
-      $(this).find('i').toggleClass("icon-plus-square icon-minus-square");
+      $(this).find('i').toggleClass("fa-plus-circle fa-minus-circle");
       id = $(this).attr('id');
       $('#list_'+id).toggle();
     });
@@ -90,7 +95,7 @@ $(document).ready(function() {
     // Button toggle within an HTML table
     $('table.table[data-toggle="table"]').on("click", ".toggle_table_btn", function(){
       pgs_tooltip();
-      $(this).find('i').toggleClass("icon-plus-square icon-minus-square");
+      $(this).find('i').toggleClass("fa-plus-circle fa-minus-circle");
       id = $(this).attr('id');
       $('#list_'+id).toggle();
     });
@@ -98,6 +103,7 @@ $(document).ready(function() {
     $('table.table[data-toggle="table"]').on("click", ".sortable", function(){
       setTimeout(function(){
         alter_external_links('table.table[data-toggle="table"] tbody');
+        shorten_displayed_content();
       }, 0);
     });
     var timer;
@@ -107,6 +113,7 @@ $(document).ready(function() {
       if ($('.form-control').val) {
           timer = setTimeout(function(){
             alter_external_links('table.table[data-toggle="table"] tbody');
+            shorten_displayed_content();
           }, timeout);
       }
     });
