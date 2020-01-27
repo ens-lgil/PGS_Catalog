@@ -111,13 +111,51 @@ class PGSExport:
         other_metric_key: other_metric_label
     }
 
+
     def __init__(self,filename):
         self.filename = filename
         self.writer   = pd.ExcelWriter(filename, engine='xlsxwriter')
+        self.spreadsheets_conf = {
+            'scores'     : ('Scores', self.create_scores_spreadsheet),
+            'perf'       : ('Perfomance Metrics', self.create_performance_metrics_spreadsheet),
+            'samplesets' : ('Sample Sets', self.create_samplesets_spreadsheet),
+            'sample_training': ('Sample Training', self.create_sample_training_spreadsheet),
+            'sample_variants': ('Source of Variant Associations', self.create_sample_variants_spreadsheet),
+            'publications': ('Publications', self.create_publications_spreadsheet),
+            'efo_traits': ('EFO Traits', self.create_efo_traits_spreadsheet)
+        }
+        self.spreadsheets_list = [
+            'scores', 'perf', 'samplesets', 'sample_training',
+            'sample_variants', 'publications', 'efo_traits'
+        ]
+
 
     def save(self):
         """ Close the Pandas Excel writer and output the Excel file """
         self.writer.save()
+
+
+    def generate_sheets(self, csv_prefix):
+        """ Generate the differents sheets """
+
+        if (len(self.spreadsheets_conf.keys()) != len(self.spreadsheets_list)):
+            print("Size discrepancies between the dictionary 'spreadsheets' and the list 'spreadsheets_ordering'.")
+            exit()
+        if (csv_prefix == ''):
+            print("CSV prefix, for the individual CSV spreadsheet is empty. Please, provide a prefix!")
+            exit()
+
+        for spreadsheet_name in self.spreadsheets_list:
+            spreadsheet_label = self.spreadsheets_conf[spreadsheet_name][0]
+            try:
+                data = self.spreadsheets_conf[spreadsheet_name][1]()
+                self.generate_sheet(data, spreadsheet_label)
+                print("Spreadsheet '"+spreadsheet_label+"' done")
+                self.generate_csv(data, csv_prefix, spreadsheet_label)
+                print("CSV '"+spreadsheet_label+"' done")
+            except:
+                print("Issue to generate the spreadsheet '"+spreadsheet_label+"'")
+                exit()
 
 
     def generate_sheet(self, data, sheet_name):
