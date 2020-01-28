@@ -26,11 +26,11 @@ def get_efo_info(trait):
 
         trait_has_changed = 0
         if new_label != trait.label:
-            print("\tnew label '"+new_label+"'")
+            #print("\tnew label '"+new_label+"'")
             trait_has_changed = 1
             trait.label = new_label
         if new_desc != trait.description:
-            print("\tnew desc '"+', '.join(new_desc)+"'")
+            #print("\tnew desc '"+', '.join(new_desc)+"'")
             trait_has_changed = 1
             trait.description = new_desc
         if trait_has_changed == 1:
@@ -46,9 +46,9 @@ def get_efo_category_info(trait):
         label  = response_json['colourLabel']
         colour = response_json['colour']
         parent = response_json['parent']
-        print("\tparent: "+response_json['parent'])
-        print("\tcolourLabel: "+response_json['colourLabel'])
-        print("\tcolour: "+response_json['colour'])
+        #print("\tparent: "+response_json['parent'])
+        #print("\tcolourLabel: "+response_json['colourLabel'])
+        #print("\tcolour: "+response_json['colour'])
 
         categories = TraitCategory.objects.filter(label=label)
         # Update the trat category, if needed
@@ -77,11 +77,10 @@ def get_efo_category_info(trait):
 def run():
     """ Update the EFO entries and add/update the Trait categories (from GWAS Catalog)."""
     for trait in EFOTrait.objects.all():
-        trait_id = trait.id
-        trait_label = trait.label
-        trait_desc = trait.description
-
-        print("# "+trait_id+" | "+trait_label)
+        #trait_id = trait.id
+        #trait_label = trait.label
+        #trait_desc = trait.description
+        #print("# "+trait_id+" | "+trait_label)
 
         get_efo_info(trait)
         get_efo_category_info(trait)
