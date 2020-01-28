@@ -140,6 +140,14 @@ def get_lighter_colour(rgb_colour):
 ####################################################
 ####################################################
 
+def performance_disclaimer():
+    return """<span class="pgs_note_title">Disclaimer: </span>
+        The performance metrics are displayed as reported by the source studies.
+        It is important to note that metrics are not necessarily comparable with
+        each other.For example, metrics depend on the sample characteristics
+        (described by the PGS Catalog Sample Set [PSS] ID), phenotyping, and
+        statistical modelling. Please refer to the source publication for additional
+        guidance on performance."""
 
 
 def traits_chart_data():
@@ -226,6 +234,7 @@ def pgs(request, pgs_id):
         'pgs_id' : pgs_id,
         'score' : score,
         'citation' : citation,
+        'performance_disclaimer': performance_disclaimer(),
         'efos' : score.trait_efo.all(),
         'num_variants_pretty' : '{:,}'.format(score.variants_number)
     }
@@ -258,7 +267,8 @@ def pgp(request, pub_id):
     except Publication.DoesNotExist:
         raise Http404("Publication: \"{}\" does not exist".format(pub_id))
     context = {
-        'publication' : pub
+        'publication' : pub,
+        'performance_disclaimer': performance_disclaimer()
     }
 
     #Display scores that were developed by this publication
@@ -301,6 +311,7 @@ def efo(request, efo_id):
     related_scores = Score.objects.filter(trait_efo=efo_id)
     context = {
         'trait': trait,
+        'performance_disclaimer': performance_disclaimer(),
         'table_scores' : Browse_ScoreTable(related_scores)
     }
 
@@ -351,10 +362,86 @@ def pss(request, pss_id):
     }
     return render(request, 'catalog/pss.html', context)
 
+
+def cohort(request, cohort_short_name, cohort_id):
+    try:
+        cohort = Cohort.objects.get(id__exact=cohort_id)
+    except Cohort.DoesNotExist:
+        raise Http404("Cohort: \"{}\" does not exist".format(cohort_short_name))
+
+    context = { 'cohort': cohort }
+
+    samples = Sample.objects.filter(cohorts__in=[cohort])
+    context['table_samples'] = SampleTable_performance(samples)
+
+    # PGS sources
+    scores_eval = Score.objects.filter(samples_variants__in=samples)
+    if len(scores_eval) > 0:
+        context['table_scores_eval'] = Browse_ScoreTable(scores_eval)
+
+    # PGS training
+    scores_training = Score.objects.filter(samples_training__in=samples)
+    if len(scores_training) > 0:
+        context['table_scores_training'] = Browse_ScoreTable(scores_training)
+
+    # PGS performance
+    sample_sets = SampleSet.objects.filter(samples__in=samples)
+    perfs = Performance.objects.filter(sampleset__in=sample_sets)
+    score_perfs_dict = {}
+    for perf in perfs:
+        score_perfs_dict[perf.score] = 1
+    scores_perf = list(score_perfs_dict.keys())
+    if len(scores_perf) > 0:
+        context['table_scores_perf'] = Browse_ScoreTable(scores_perf)
+
+    return render(request, 'catalog/cohort.html', context)
+
+
 def releases(request):
     releases_list = Release.objects.order_by('-date')
+
+    import datetime
+    from random import randrange
+
+    month = 1
+    day = 5
+    year = 2019
+
+
+    release_data = []
+
+    total_score = 0
+    total_perf = 0
+    total_publi = 0
+
+    for test in range(0,20):
+        score = randrange(10)
+        perf = randrange(10)
+        publi = randrange(10)
+        date = datetime.datetime(year,month,day)
+
+        if (test%2):
+            month += 1
+        day += 1
+
+        release_item = {
+                        'date': date.strftime('%d/%m/%y'),
+                        'score_count': score,
+                        'performance_count': perf,
+                        'publication_count': publi,
+                        'total_score_count': total_score,
+                        'total_performance_count': total_perf,
+                        'total_publication_count': total_publi,
+                       }
+        total_score += score
+        total_perf += perf
+        total_publi += publi
+
+        release_data.append(release_item)
+
     context = {
-        'releases_list': releases_list
+        'releases_list': releases_list,
+        'releases_data': release_data
     }
     return render(request, 'catalog/releases.html', context)
 
