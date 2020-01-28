@@ -7,10 +7,17 @@ relative_path = '../..'
 publication_path = relative_path+'/publication'
 trait_path = relative_path+'/trait'
 
+def smaller_in_bracket(value):
+    bracket_left = '['
+    value = value.replace(' '+bracket_left, bracket_left)
+    value = value.replace(bracket_left,'<span class="smaller_90 pl-2"><span class="pgs_colour_2">[</span>')
+    value = value.replace(']','<span class="pgs_colour_2">]</span></span>')
+    return value
 
 class Column_joinlist(tables.Column):
     def render(self, value):
-        return format_html('<br/>'.join(value))
+        values = smaller_in_bracket('<br/>'.join(value))
+        return format_html(values)
 
 class Column_metriclist(tables.Column):
     def render(self, value):
@@ -22,7 +29,13 @@ class Column_metriclist(tables.Column):
             else:
                 name_html = format_html('<span title="{}" class="pgs_helptip">{}</span>', name[0], name[0])
             l.append((name_html, '<span class="pgs_nowrap">'+str(val)+'</span>'))
-        return format_html('<br>'.join([': '.join(x) for x in l]))
+
+        values = smaller_in_bracket('<br>'.join([': '.join(x) for x in l]))
+        return format_html(values)
+
+class Column_sample_merged(tables.Column):
+    def render(self, value):
+        return format_html(value)
 
 class Column_trait(tables.Column):
     def render(self, value):
@@ -72,7 +85,7 @@ class Column_cohorts(tables.Column):
             qlist.append(qdict[k])
         if len(qlist) > 5:
             div_id = get_random_string(10)
-            html_list = '<a class="toggle_table_btn" id="'+div_id+'" title="Click to expand/collapse the list">'+str(len(qlist))+' cohorts <i class="icon icon-common icon-plus-square"></i></a>'
+            html_list = '<a class="toggle_table_btn" id="'+div_id+'" title="Click to expand/collapse the list">'+str(len(qlist))+' cohorts <i class="fa fa-plus-circle"></i></a>'
             html_list = html_list+'<div class="toggle_list" id="list_'+div_id+'">'
             html_list = html_list+"<ul><li>"+'</li><li><span class="only_export">,</span>'.join(qlist)+'</li></ul></div>'
             return format_html(html_list)
@@ -170,7 +183,7 @@ class Browse_ScoreTable(tables.Table):
         return format_html('<a href='+relative_path+'/pgs/{}>{}</a>', value, value)
 
     def render_publication(self, value):
-        citation = format_html(' '.join([value.id, '<br/><small>', value.firstauthor, '<i>et al.</i>', value.journal, '(%s)'%value.date_publication.strftime('%Y'), '</small>']))
+        citation = format_html(' '.join([value.id, '<br/><small><i class="fa fa-angle-double-right"></i>', value.firstauthor, '<i>et al.</i>', value.journal, '(%s)'%value.date_publication.strftime('%Y'), '</small>']))
         return format_html('<a href="'+publication_path+'/{}">{}</a>', value.id, citation)
 
     def render_list_traits(self, value):
@@ -188,7 +201,7 @@ class Browse_ScoreTable(tables.Table):
 
 
 class Browse_SampleSetTable(tables.Table):
-    sample_merged = Column_joinlist(accessor='display_samples', verbose_name='Sample Numbers', orderable=False)
+    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
     phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Detailed Phenotype Description')
@@ -220,7 +233,7 @@ class Browse_SampleSetTable(tables.Table):
 
 
 class SampleTable_variants(tables.Table):
-    sample_merged = Column_joinlist(accessor='display_samples', verbose_name='Sample Numbers', orderable=False)
+    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sources = Column_joinlist(accessor='display_sources', verbose_name='Study Identifiers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
 
@@ -255,7 +268,7 @@ class SampleTable_variants(tables.Table):
 
 
 class SampleTable_training(tables.Table):
-    sample_merged = Column_joinlist(accessor='display_samples', verbose_name='Sample Numbers', orderable=False)
+    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
@@ -277,7 +290,7 @@ class SampleTable_training(tables.Table):
 
 
 class SampleTable_performance(tables.Table):
-    sample_merged = Column_joinlist(accessor='display_samples', verbose_name='Sample Numbers', orderable=False)
+    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
     phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name=format_html('Detailed Phenotype Description'))
