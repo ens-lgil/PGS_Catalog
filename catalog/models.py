@@ -183,6 +183,10 @@ class TraitCategory(models.Model):
     # Link to the description of the sample(s) in the other table
     efotraits = models.ManyToManyField(EFOTrait, verbose_name='Traits', related_name='efotrait')
 
+
+    class Meta:
+        verbose_name_plural = "Trait categories"
+
     def __str__(self):
         return self.label
 
