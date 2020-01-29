@@ -6,32 +6,30 @@ def get_gwas_info(gcst_id):
     response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/studies/%s'%gcst_id)
     response_json = response.json()
     if response_json:
-        sample_number = 0
-        ancestry_broad = ''
-        ancestry_country = ''
-        phenotyping_free = response_json['diseaseTrait']['trait']
+        print("# "+gcst_id+": ")
         pmid = response_json['publicationInfo']['pubmedId']
+
+        #Parse a new row of the Samples table for each model
         for ancestry in response_json['ancestries']:
             if ancestry['type'] != "initial":
                 continue
 
-            sample_number = ancestry['numberOfIndividuals']
+            #Create Sample model
+            current_sample = {'source_GWAS_catalog' : gcst_id,'source_PMID' : pmid}
+
+            current_sample['phenotyping_free'] = response_json['diseaseTrait']['trait']
+            current_sample['sample_number'] = ancestry['numberOfIndividuals']
+
             ancestry_broad_list = []
             for ancestral_group in ancestry['ancestralGroups']:
                 ancestry_broad_list.append(ancestral_group['ancestralGroup'])
-            ancestry_broad = ', '.join(ancestry_broad_list)
+            current_sample['ancestry_broad'] = ', '.join(ancestry_broad_list)
 
             ancestry_country_list = []
             for country in ancestry['countryOfRecruitment']:
                 ancestry_country_list.append(country['countryName'])
-            ancestry_country = ', '.join(ancestry_country_list)
-
-        print("# "+gcst_id+": ")
-        print("\tSamples: "+str(sample_number))
-        print("\tAncestry_broad: "+ancestry_broad)
-        print("\tAncestry_country: "+ancestry_country)
-        print("\tPhenotyping_free: "+phenotyping_free)
-        print("\tPmid: "+str(pmid))
+            current_sample['ancestry_country'] = ', '.join(ancestry_country_list)
+            print(current_sample)
 
 
 def run():
