@@ -232,6 +232,31 @@ class Browse_SampleSetTable(tables.Table):
         return format_html('<span class="more">{}</span>', value)
 
 
+class SampleTable_variants_details(tables.Table):
+    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
+    sources = Column_joinlist(accessor='display_sources', verbose_name='PubMed ID', orderable=False)
+    sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
+
+    class Meta:
+        model = Sample
+        attrs = {
+            "data-show-columns" : "true",
+            "data-sort-name" : "display_ancestry"
+        }
+        fields = [
+            'sources',
+            'sample_merged', 'sample_ancestry', 'ancestry_country'
+        ]
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+
+    def render_sources(self, value):
+        pmid = ''
+        if 'PMID' in value and value['PMID']:
+            pmid = '<a href="https://www.ncbi.nlm.nih.gov/pubmed/{}">{}</a>'.format(value['PMID'], value['PMID'])
+        return format_html(pmid)
+
+
 class SampleTable_variants(tables.Table):
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sources = Column_joinlist(accessor='display_sources', verbose_name='Study Identifiers', orderable=False)

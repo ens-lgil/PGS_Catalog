@@ -338,6 +338,23 @@ def efo(request, efo_id):
     return render(request, 'catalog/efo.html', context)
 
 
+def gwas_gcst(request, gcst_id):
+    try:
+        samples = Sample.objects.filter(source_GWAS_catalog__exact=gcst_id).distinct()
+    except Sample.DoesNotExist:
+        raise Http404("PGS Sample with the NHGRI-GWAS Catalog ID: \"{}\" does not exist".format(gcst_id))
+
+    related_scores = Score.objects.filter(samples_variants__in=samples).distinct()
+
+    context = {
+        'gwas_id': gcst_id,
+        'table_samples' : SampleTable_variants_details(samples),
+        'table_scores' : Browse_ScoreTable(related_scores)
+    }
+
+    return render(request, 'catalog/gwas_gcst.html', context)
+
+
 def pss(request, pss_id):
     try:
         sample_set = SampleSet.objects.get(id__exact=pss_id)
