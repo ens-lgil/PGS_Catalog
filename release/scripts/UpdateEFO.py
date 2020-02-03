@@ -1,7 +1,7 @@
 import requests
 from catalog.models import EFOTrait, TraitCategory
 
-def get_efo_info(trait):
+def update_efo_info(trait):
     """ Fetch EFO information from an EFO ID, using the OLS REST API """
     trait_id = trait.id
     response = requests.get('https://www.ebi.ac.uk/ols/api/ontologies/efo/terms?obo_id=%s'%trait_id.replace('_', ':'))
@@ -37,7 +37,7 @@ def get_efo_info(trait):
             trait.save()
 
 
-def get_efo_category_info(trait):
+def update_efo_category_info(trait):
     """ Fetch the trait category from an EFO ID, using the GWAS REST API """
     trait_id = trait.id
     response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/parentMapping/%s'%trait_id)
@@ -82,5 +82,5 @@ def run():
         #trait_desc = trait.description
         #print("# "+trait_id+" | "+trait_label)
 
-        get_efo_info(trait)
-        get_efo_category_info(trait)
+        update_efo_info(trait)
+        update_efo_category_info(trait)
