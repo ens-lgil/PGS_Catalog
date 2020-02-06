@@ -98,8 +98,8 @@ class Column_format_html(tables.Column):
 
 
 class Browse_PublicationTable(tables.Table):
-    scores_count = tables.Column(accessor='scores_count', verbose_name='Number of PGS Developed', orderable=False)
-    scores_evaluated = tables.Column(accessor='scores_evaluated', verbose_name='Number of PGS Evaluated', orderable=False)
+    scores_count = tables.Column(accessor='scores_count', verbose_name='PGS Developed', orderable=False)
+    scores_evaluated = tables.Column(accessor='scores_evaluated', verbose_name='PGS Evaluated', orderable=False)
 
     class Meta:
         model = Publication
@@ -138,7 +138,7 @@ class Browse_TraitTable(tables.Table):
     label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term)', orderable=True)
     scores_count = tables.Column(accessor='scores_count', verbose_name='Number of PGS Developed')
     id_url = Column_format_html(accessor='display_id_url', verbose_name='Trait identifier (ontology ID)')
-    category_labels = tables.Column(accessor='category_labels', verbose_name='Trait categories')
+    category_labels = tables.Column(accessor='category_labels', verbose_name='Trait category')
 
     class Meta:
         model = EFOTrait
@@ -157,7 +157,7 @@ class Browse_TraitTable(tables.Table):
 
 class Browse_ScoreTable(tables.Table):
     list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
-    ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Variants and weights data files '), orderable=False)
+    ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Variants data files '), orderable=False)
 
     relative_path = '../..'
 
@@ -318,7 +318,7 @@ class SampleTable_performance(tables.Table):
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
-    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name=format_html('Detailed Phenotype Description'))
+    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Detailed Phenotype Description')
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
     class Meta:
@@ -354,8 +354,6 @@ class PerformanceTable(tables.Table):
     class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='PGS Classification Metrics', orderable=False)
     othermetrics = Column_metriclist(accessor='othermetrics_list', verbose_name='Other Metrics', orderable=False)
     pub_withexternality = Column_pubexternality(accessor='publication_withexternality', verbose_name='Performance Source', orderable=False)
-    # Test
-    sample_ancestry = tables.Column(accessor='sampleset.samples_ancestry', verbose_name='Sample Ancestry')
 
     class Meta:
         model = Performance
@@ -363,7 +361,7 @@ class PerformanceTable(tables.Table):
             "data-show-columns" : "true"
         }
         fields = [
-            'id', 'sampleset', 'sample_ancestry', 'pub_withexternality',
+            'id', 'sampleset', 'pub_withexternality',
             'trait_info',
             'effect_sizes', 'class_accuracy', 'othermetrics',
             'covariates', 'performance_comments'
