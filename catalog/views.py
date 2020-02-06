@@ -218,7 +218,8 @@ def browseby(request, view_selection):
         table = Browse_ScoreTable(Score.objects.all(), order_by="num")
         context['table'] = table
 
-        context['has_table'] = 1
+    context['has_table'] = 1
+
     return render(request, 'catalog/browseby.html', context)
 
 def pgs(request, pgs_id):
