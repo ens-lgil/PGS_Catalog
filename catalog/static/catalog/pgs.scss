@@ -13,7 +13,7 @@ $pgs_dark0: #000;
 $pgs_dark2: #222; // Main font-color
 $pgs_dark3: #333; // Header & footer background-color
 $pgs_dark5: #555;
-$pgs_darkB: #BBB;
+$pgs_darkA: #AAA;
 $pgs_light_grey: #e9ecef;
 $pgs_light_grey2: #FAFAFA;
 $pgs_note_title: #F00;
@@ -758,11 +758,11 @@ a {
   display:flex;
   pre {
     padding: 0.5rem 0.75rem;
-    border:1px solid $pgs_light_grey;
+    border:1px solid $pgs_darkA;
     line-height: 20px;
     span {
       font-weight: bold;
-      color: $pgs_darkB;
+      color: $pgs_darkA;
     }
     span.scoring_col {
       padding-right:1.5rem;
