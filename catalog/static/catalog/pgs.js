@@ -3,7 +3,7 @@ $(document).ready(function() {
     // Fix issue with internal links because of the sticky header
     function offsetAnchor() {
       if(location.hash.length !== 0) {
-        window.scrollTo(window.scrollX, window.scrollY - 105);
+        window.scrollTo(window.scrollX, window.scrollY - 95);
       }
     }
     // This will capture hash changes while on the page

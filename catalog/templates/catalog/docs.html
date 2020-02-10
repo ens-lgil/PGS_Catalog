@@ -1,17 +1,18 @@
 {% extends 'catalog/base.html' %}
 {% load static %}
 
-{% block title %}Polygenic Score Documentation{% endblock %}
+{% block title %}Polygenic Score Data Description{% endblock %}
 
 {% block content %}
     <nav aria-label="You are here:">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="../../">PGS Catalog</a></li>
         <li class="breadcrumb-item">Documentation</li>
+        <li class="breadcrumb-item">Data Description</li>
       </ol>
     </nav>
 
-    <h2>PGS Catalog Documentation</h2>
+    <h2>PGS Catalog Data Description</h2>
     <p>
       This page contains information regarding the development and contents of the PGS Catalog.
     </p>
@@ -20,62 +21,21 @@
         <nav role="navigation">
           <h5>Table of Contents</h5>
           <ul>
-            <li><a href="#citation">Citation</a></li>
-            <li><a href="#eligibility">PGS Catalog Inclusion Criteria</a></li>
-            <li><a href="#desc">PGS Catalog Data Descriptions:</a>
-              <ul>
-                <li><a href="#desc_pub">Publication</a></li>
-                <li><a href="#desc_pgs">Polygenic Score (PGS)</a></li>
-                <li><a href="#desc_trait">Trait</a></li>
-                <li><a href="#desc_smpl">Sample</a></li>
-                <li><a href="#desc_perf">Performance Metrics</a></li>
-              </ul>
-            </li>
+            <li><a href="#desc_pub">Publication</a></li>
+            <li><a href="#desc_pgs">Polygenic Score (PGS)</a></li>
+            <li><a href="#desc_trait">Trait</a></li>
+            <li><a href="#desc_smpl">Sample</a></li>
+            <li><a href="#desc_perf">Performance Metrics</a></li>
           </ul>
         </nav>
       </div>
     </div>
 
-    <section>
-    <h3 id="citation">Citation</h3>
-    <p>The PGS Catalog development is led by <a href="https://www.ebi.ac.uk/about/people/samuel-lambert">Samuel Lambert</a>
-        under the supervision of <a href="http://www.inouyelab.org/home/people">Michael Inouye</a> (<a href="https://sysgenresearch.org/">University of Cambridge & Baker Institute</a>)
-        and <a href="https://www.ebi.ac.uk/about/people/jackie-macarthur">Jackie MacArthur</a> (<a href="https://www.ebi.ac.uk/gwas/">NHGRI-EBI GWAS Catalog</a>).</p>
-    <p>The Catalog is under active development, and a flagship publication is in preparation for early 2020. If you use the catalog before then we ask that you cite it as:
-    <div class="clearfix mb-3">
-      <div class="highlight_content">
-        <p>Samuel A. Lambert, Simon Jupp, Gad Abraham, Helen Parkinson, John Danesh, Jacqueline A.L. MacArthur, and Michael Inouye. (2019)</p>
-        <p><u>The Polygenic Score (PGS) Catalog: a database of published PGS to enable reproducibility and uniform evaluation.</u>
-        [<a href="http://www.pgscatalog.org">www.pgscatalog.org</a>]</p>
-      </div>
-    </div>
-    <p>Individual PGS obtained from the database should also be cited appropriately, and used in accordance with any licensing restrictions set by the authors (see <a href="https://www.ebi.ac.uk/about/terms-of-use">Terms of Use</a> for more information).</p>
-    </section>
 
     <section>
-    <h3 id="eligibility">PGS Catalog Inclusion Criteria</h3>
-    <p>For a publication's data to be included in the PGS Catalog it must contain one of the following:<ul>
-        <li><b>A newly developed PGS.</b> This includes the following information about the score and its predictive ability (<u>evaluated on samples not used in training</u>):</li>
-        <ul>
-            <li>Variant information necessary to apply the PGS to new samples (variant rsID and/or genomic position, weights/effect sizes, effect allele, genome build)</li>
-            <li>Information about how the PGS was developed (computational method, variant selection, relevant parameters)</li>
-            <li>Descriptions of the samples used for training (e.g. discovery of the variant associations (<i>these can usually be extracted directly from the GWAS Catalog using GCST IDs</i>), as well as fitting the PGS) and external evaluation</li>
-            <li>A description of PGS predictive ability (e.g. effect sizes [beta, OR, HR, etc.], classification accuracy, proportion of the variance explained (R<sup>2</sup>), and/or covariates evaluated in the PGS prediction)</li>
-        </ul>
-        <li class="mt-2"><b>An evaluation of a previously developed PGS.</b> This would include the evaluation of PGS already present in the catalog (or eligible for inclusion), on samples not used for PGS training. The requirements for description would be the same as for the evaluation of a new PGS.</li>
-    </ul></p>
-    <p>In the current pilot of the catalog we have only curated PGS developed after 2010, and focused on including well-studied scores for the following traits: coronary artery disease (CAD), diabetes (types 1 and 2), obesity / body mass index (BMI), breast cancer, prostate cancer and Alzheimer’s disease.
-    The catalog however is not limited to these traits, and in the future we plan to move to a model where researchers can submit PGS and evaluations for curation and subsequent inclusion into the catalog.</p>
-    </section>
-
-    <section>
-    <h3 id="desc">PGS Catalog Data Descriptions</h3>
-        <p>In this section we describe the curated data and tables extracted from the PGS publications and presented in the catalog.</p>
-        <span class="pgs_h_list">
-          <span>Jump to:</span><span class="pgs_h_item"><a href="#desc_pub">Publication</a></span><span class="pgs_h_item"><a href="#desc_pgs">Polygenic Score (PGS)</a></span><span class="pgs_h_item"><a href="#desc_trait">Trait</a></span><span class="pgs_h_item"><a href="#desc_smpl">Sample</a></span><span class="pgs_h_item"><a href="#desc_perf">Performance Metrics</a></span>
-        </span>
-
         <br />
+        <p>In this section we describe the curated data and tables extracted from the PGS publications and presented in the catalog.</p>
+
         <h4 id="desc_pub">Publication</h4>
         <p>Each publication in the database is given a <u><b>PGP</b> (Polygenic Publication ID)</u> so that scores and evaluations link to the same source object.
         When browsing by publications the <u>Number of PGS Developed</u> refers to the number of newly developed PGS in the paper, and the <u>Number of PGS Evaluated</u>

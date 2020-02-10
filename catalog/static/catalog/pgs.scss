@@ -24,7 +24,7 @@ $pgs_dev: #577284;
 //$pgs_color_4: #B3B2B2; /* Logo light grey color */
 //$pgs_color_5: #727070; /* Logo dark grey color */
 
-$header_height_with_margin: 110px;
+$header_height_with_margin: 97px;
 $footer_height: 97px;
 
 
@@ -115,7 +115,7 @@ u {
 /* Navbar and horizontal menu */
 .navbar {
   background-color: $pgs_dark3;
-  padding: 0.5rem 3rem;
+  padding: 0rem 3rem;
   background-image: url("/static/catalog/imgs/pgs_header_background.png");
   background-repeat: no-repeat;
   background-position: top right;
@@ -325,19 +325,24 @@ th .th-inner {
   text-align: center;
   margin-top:0rem;
   margin-bottom:5rem;
+
   a {
     display: block;
-    padding:20px 50px;
+    padding:20px 40px;
+    margin: 0px 10px;
     text-decoration: none;
     transition: background-color .1s;
+    border: 1px solid #CCC;
+    border-radius: 8px;
 
     &:hover, &:focus {
-      background-color: #F9F9FA;
+      background-color: $pgs_light_grey2;
       transition: background-color .1s;
+      border: 1px solid #CCC;
     }
 
     > div:first-child {
-        color: $pgs_dark2;
+      color: $pgs_dark2;
       font-weight: 200;
       font-size: 30px;
       text-align: center;
@@ -352,8 +357,9 @@ th .th-inner {
       justify-content:center;
       align-items:center;
 
-      i {
+      div:first-child {
         vertical-align: middle;
+        float:left;
         padding-right:0px;
         font-size:34px;
         @include transform(rotate(90deg));
@@ -362,7 +368,8 @@ th .th-inner {
           text-decoration: none;
         }
       }
-      span {
+      div:last-child {
+        float:left;
         padding-left:10px;
         padding-right:8px;
       }
@@ -398,9 +405,11 @@ th .th-inner {
 @media screen and (max-width: 765px) {
   .pgs_browse {
     > div {
-      border-right:none;
-      &:not(:last-child) {
-        border-bottom: 1px solid $pgs_colour_2; //#ecedf1;
+      margin: 10px 0px;
+      > a {
+        //height:125px;
+        padding:10px 50px;
+        margin: 0px 25px;
       }
     }
   }
@@ -412,7 +421,7 @@ th .th-inner {
         padding-top:20px;
       }
       &:not(:last-child) {
-        border-bottom: 1px solid $pgs_colour_2;//#CCC; //#ecedf1;
+        border-bottom: 1px solid $pgs_colour_2;
       }
       p {
         text-align:center;
@@ -424,9 +433,9 @@ th .th-inner {
 @media screen and (min-width: 766px) {
   .pgs_browse {
     > div {
-      border-bottom: none;
-      &:not(:last-child) {
-        border-right: 1px solid $pgs_colour_2; //#ecedf1;
+      margin: 10px 0px;
+      > a {
+        height:150px;
       }
     }
   }
