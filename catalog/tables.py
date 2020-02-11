@@ -324,7 +324,8 @@ class SampleTable_performance(tables.Table):
     class Meta:
         model = Sample
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "true",
+            "data-sort-name" : "display_sampleset"
         }
         fields = [
             'sampleset',
@@ -358,7 +359,8 @@ class PerformanceTable(tables.Table):
     class Meta:
         model = Performance
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "true",
+            "data-sort-name" : "id"
         }
         fields = [
             'id', 'sampleset', 'pub_withexternality',
@@ -384,7 +386,8 @@ class PerformanceTable_PubTrait(tables.Table):
     class Meta:
         model = Performance
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "true",
+            "data-sort-name" : "id"
         }
         fields = [
             'id','score', 'sampleset', 'pub_withexternality',

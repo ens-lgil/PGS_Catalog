@@ -14,8 +14,10 @@ $pgs_dark2: #222; // Main font-color
 $pgs_dark3: #333; // Header & footer background-color
 $pgs_dark5: #555;
 $pgs_darkA: #AAA;
+$pgs_darkC: #CCC;
 $pgs_light_grey: #e9ecef;
 $pgs_light_grey2: #FAFAFA;
+$pgs_light_grey3: #FEFEFE;
 $pgs_note_title: #F00;
 $pgs_dev: #577284;
 //$pgs_color_1: #D45390; /* Logo pink color */
@@ -328,28 +330,37 @@ th .th-inner {
 
   a {
     display: block;
-    padding:20px 40px;
-    margin: 0px 10px;
+    padding:20px 25px;
+    margin: 0px 15px;
     text-decoration: none;
     transition: background-color .1s;
-    border: 1px solid #CCC;
-    border-radius: 8px;
+    //border: 1px solid $pgs_colour_1;
+    //border-radius: 8px;
+    border-radius: 2px;
+    box-shadow: 2px 2px 8px #CCC;
+    background-color: $pgs_colour_1;//#009FA6;
+
 
     &:hover, &:focus {
-      background-color: $pgs_light_grey2;
+      background-color: $pgs_colour_1_lighter;//$pgs_light_grey3;
+      //box-shadow: 2px 2px 5px #CCC;
       transition: background-color .1s;
-      border: 1px solid #CCC;
+      //border: 2px solid $pgs_colour_2;
+
     }
 
     > div:first-child {
-      color: $pgs_dark2;
+      color: #FFF;//$pgs_dark2;
       font-weight: 200;
       font-size: 30px;
       text-align: center;
     }
     > div:nth-child(2) {
       font-size: 40px;
-      color: $pgs_colour_1;
+      color: #FFF;//$pgs_colour_1;
+      .icon-dna:hover {
+        color: #FFF !important;
+      }
     }
 
     .pgs_browse_score {
@@ -407,7 +418,6 @@ th .th-inner {
     > div {
       margin: 10px 0px;
       > a {
-        //height:125px;
         padding:10px 50px;
         margin: 0px 25px;
       }
@@ -431,6 +441,9 @@ th .th-inner {
 }
 
 @media screen and (min-width: 766px) {
+  .dropdown-menu {
+    margin-left: 0px;
+  }
   .pgs_browse {
     > div {
       margin: 10px 0px;
@@ -458,23 +471,24 @@ th .th-inner {
     }
   }
 }
-@media screen and (min-width: 766px) and (max-width: 879px) {
+@media screen and (min-width: 766px) and (max-width: 899px) {
   .pgs_browse {
     a {
+      margin: 0px 10px;
       padding: 20px !important;
     }
   }
 }
-@media screen and (min-width: 880px) {
+@media screen and (min-width: 900px) {
   .pgs_browse {
-    margin-left: 2vw;
-    margin-right: 2vw;
+    margin-left: 4vw;
+    margin-right: 4vw;
   }
 }
-@media screen and (min-width: 1000px) {
+@media screen and (min-width: 990px) {
   .pgs_browse {
-    margin-left: 5vw;
-    margin-right: 5vw;
+    margin-left: 7vw;
+    margin-right: 7vw;
   }
 }
 

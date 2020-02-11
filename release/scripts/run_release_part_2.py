@@ -15,8 +15,11 @@ def run(*args):
     # Remove non released data
     call_remove_non_released_data()
 
-    # Generate PGS metadata files
-    call_generate_metadata_exports(args)
+    # Generate all PGS metadata files
+    call_generate_all_metadata_exports(args[0])
+
+    # Generate PGS studies metadata files
+    call_generate_studies_metadata_exports(args[0])
 
 
 
@@ -46,16 +49,6 @@ def call_remove_non_released_data():
     print( ' - '+'\n - '.join(data2remove.perfs2del.keys()))
     print("Number of Sample Sets to remove: "+str(len(data2remove.pss2del.keys())))
     print( ' - '+'\n - '.join(data2remove.pss2del.keys()))
-
-
-def call_generate_metadata_exports(args):
-    """ Generate metadata export files """
-
-    dirpath = args[0] # e.g. '../../../datafiles/export/'
-    print("ARGS: "+str(args))
-    print("DIRPATH: "+str(dirpath))
-    call_generate_all_metadata_exports(dirpath)
-    call_generate_studies_metadata_exports(dirpath)
 
 
 def call_generate_all_metadata_exports(dirpath):

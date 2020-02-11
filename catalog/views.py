@@ -222,6 +222,7 @@ def browseby(request, view_selection):
 
     return render(request, 'catalog/browseby.html', context)
 
+
 def pgs(request, pgs_id):
     try:
         score = Score.objects.get(id__exact=pgs_id)
@@ -254,9 +255,10 @@ def pgs(request, pgs_id):
     table = PerformanceTable(pquery)
     context['table_performance'] = table
 
-    pquery_samples = []
+    pquery_samples = set()
     for q in pquery:
-        pquery_samples = pquery_samples + q.samples()
+        for sample in q.samples():
+            pquery_samples.add(sample)
 
     table = SampleTable_performance(pquery_samples)
     context['table_performance_samples'] = table
@@ -297,9 +299,10 @@ def pgp(request, pub_id):
     table = PerformanceTable_PubTrait(pquery)
     context['table_performance'] = table
 
-    pquery_samples = []
+    pquery_samples = set()
     for q in pquery:
-        pquery_samples = pquery_samples + q.samples()
+        for sample in q.samples():
+            pquery_samples.add(sample)
 
     table = SampleTable_performance(pquery_samples)
     context['table_performance_samples'] = table
@@ -333,11 +336,17 @@ def efo(request, efo_id):
     #Find the evaluations of these scores
     pquery = Performance.objects.filter(score__in=related_scores)
     table = PerformanceTable_PubTrait(pquery)
-    context['table_performance'] =table
+    context['table_performance'] = table
 
-    pquery_samples = []
+    pquery_samples = {}
     for q in pquery:
-        pquery_samples = pquery_samples + q.samples()
+        for sample in q.samples():
+            pquery_samples[sample.id] = sample
+
+    pquery_samples = set()
+    for q in pquery:
+        for sample in q.samples():
+            pquery_samples.add(sample)
 
     table = SampleTable_performance(pquery_samples)
     context['table_performance_samples'] = table
