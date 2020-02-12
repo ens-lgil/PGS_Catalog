@@ -126,6 +126,20 @@ $(document).ready(function() {
       }
     });
 
+    // Remove pagination text if there is no pagination links
+    $('.fixed-table-pagination').each(function(index) {
+      console.log("Class found #"+index+"!");
+      var page_list = $( this ).find('.page-list');
+      if (page_list.length == 0) {
+        $( this ).remove();
+      }
+      else {
+        if (page_list.css('display') == 'none') {
+          $( this ).remove();
+        }
+      }
+    });
+
     // Update to the scientific notation (1x10-1 and 1e-1)
     if ($('#pgs_params').length) {
       var pgs_param = $('#pgs_params').html();

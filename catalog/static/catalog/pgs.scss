@@ -289,6 +289,10 @@ u {
 
 
 /* boostrap-table overwrite */
+.bootstrap-table {
+  margin-bottom: 2rem;
+}
+
 .fixed-table-toolbar {
   background-color:$pgs_dark3;
   padding-right:8px;
@@ -334,30 +338,25 @@ th .th-inner {
     margin: 0px 15px;
     text-decoration: none;
     transition: background-color .1s;
-    //border: 1px solid $pgs_colour_1;
-    //border-radius: 8px;
     border-radius: 2px;
     box-shadow: 2px 2px 8px #CCC;
-    background-color: $pgs_colour_1;//#009FA6;
+    background-color: $pgs_colour_1;
 
 
     &:hover, &:focus {
-      background-color: $pgs_colour_1_lighter;//$pgs_light_grey3;
-      //box-shadow: 2px 2px 5px #CCC;
+      background-color: $pgs_colour_1_lighter;
       transition: background-color .1s;
-      //border: 2px solid $pgs_colour_2;
-
     }
 
     > div:first-child {
-      color: #FFF;//$pgs_dark2;
+      color: #FFF;
       font-weight: 200;
       font-size: 30px;
       text-align: center;
     }
     > div:nth-child(2) {
       font-size: 40px;
-      color: #FFF;//$pgs_colour_1;
+      color: #FFF;
       .icon-dna:hover {
         color: #FFF !important;
       }
@@ -441,9 +440,6 @@ th .th-inner {
 }
 
 @media screen and (min-width: 766px) {
-  .dropdown-menu {
-    margin-left: 0px;
-  }
   .pgs_browse {
     > div {
       margin: 10px 0px;
@@ -538,6 +534,10 @@ td > ul {
 
 .table_pgs_auto {
   width: auto;
+  tbody > tr > td:first-child {
+    font-weight:bold;
+    font-style: italic;
+  }
 }
 
 .table_pgs_h {
@@ -943,7 +943,7 @@ a {
 
 /* Footer CSS */
 footer {
-  margin-top:1rem;
+  margin-top:2rem;
   background-color: $pgs_dark3;
   color: #FFF;
   a {
