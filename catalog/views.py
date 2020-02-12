@@ -213,6 +213,10 @@ def browseby(request, view_selection):
         context['view_name'] = 'Sample Sets'
         table = Browse_SampleSetTable(Sample.objects.filter(sampleset__isnull=False))
         context['table'] = table
+    elif view_selection == 'cohorts':
+        context['view_name'] = 'Cohorts'
+        table = Browse_CohortTable(Cohort.objects.all(), order_by="name_short")
+        context['table'] = table
     else:
         context['view_name'] = 'Polygenic Scores'
         table = Browse_ScoreTable(Score.objects.all(), order_by="num")
@@ -325,7 +329,7 @@ def efo(request, efo_id):
         'has_table': 1
     }
 
-    #Check if there are multiple descriptions
+    # Check if there are multiple descriptions
     try:
         desc_list = eval(trait.description)
         if type(desc_list) == list:
@@ -337,11 +341,6 @@ def efo(request, efo_id):
     pquery = Performance.objects.filter(score__in=related_scores)
     table = PerformanceTable_PubTrait(pquery)
     context['table_performance'] = table
-
-    pquery_samples = {}
-    for q in pquery:
-        for sample in q.samples():
-            pquery_samples[sample.id] = sample
 
     pquery_samples = set()
     for q in pquery:
@@ -364,8 +363,8 @@ def gwas_gcst(request, gcst_id):
 
     context = {
         'gwas_id': gcst_id,
-        'table_samples' : SampleTable_variants_details(samples),
         'table_scores' : Browse_ScoreTable(related_scores),
+        'table_samples' : SampleTable_variants_details(samples),
         'has_table': 1
     }
 
@@ -401,9 +400,9 @@ def pss(request, pss_id):
 
 def cohort(request, cohort_short_name, cohort_id):
     try:
-        cohort = Cohort.objects.get(id__exact=cohort_id)
+        cohort = Cohort.objects.get(id=cohort_id,name_short=cohort_short_name)
     except Cohort.DoesNotExist:
-        raise Http404("Cohort: \"{}\" does not exist".format(cohort_short_name))
+        raise Http404("Cohort: \"{}\" with the id \"{}\" does not exist".format(cohort_short_name,cohort_id))
 
     context = {
         'cohort': cohort,

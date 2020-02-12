@@ -232,6 +232,21 @@ class Browse_SampleSetTable(tables.Table):
         return format_html('<span class="more">{}</span>', value)
 
 
+class Browse_CohortTable(tables.Table):
+    name_link = Column_format_html(accessor='display_cohort_name', verbose_name='Cohort Short Name', orderable=True)
+    class Meta:
+        model = Cohort
+        attrs = {
+            "data-show-columns" : "false",
+            "data-sort-name" : "display_cohort_name"
+        }
+        fields = [
+            'name_link',
+            'name_full'
+        ]
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+
 class SampleTable_variants_details(tables.Table):
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sources = Column_joinlist(accessor='display_sources', verbose_name='PubMed ID', orderable=False)
@@ -405,12 +420,11 @@ class PerformanceTable_PubTrait(tables.Table):
 
 
 class CohortTable(tables.Table):
-    name_short = tables.Column(accessor='name_short', verbose_name='Cohort short name', orderable=True)
-    name_full  = tables.Column(accessor='name_full', verbose_name='Cohort long name', orderable=False)
 
     class Meta:
         attrs = {
-            "data-show-columns" : "false"
+            "data-show-columns" : "false",
+            "data-sort-name" : "name_short"
         }
         model = Cohort
         fields = [

@@ -91,11 +91,15 @@ class Publication(models.Model):
 
 class Cohort(models.Model):
     """Class to describe cohorts used in samples"""
-    name_short = models.CharField('Cohort(Short Name)', max_length=100)
-    name_full = models.CharField('Cohort', max_length=1000)
+    name_short = models.CharField('Cohort Short Name', max_length=100)
+    name_full = models.CharField('Cohort Full Name', max_length=1000)
 
     def __str__(self):
         return self.name_short
+
+    @property
+    def display_cohort_name(self):
+        return '<a href="../../cohort/%s_%s">%s</a>'%(self.name_short, self.id, self.name_short)
 
 
 class EFOTrait(models.Model):
