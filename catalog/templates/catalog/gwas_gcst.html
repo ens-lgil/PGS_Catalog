@@ -1,0 +1,27 @@
+{% extends 'catalog/base.html' %}
+{% load render_table from django_tables2 %}
+
+{% block title %}NHGRI-GWAS Catalog{% endblock %}
+
+{% block content %}
+  <nav aria-label="You are here:">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="../../">PGS Catalog</a></li>
+      <li class="breadcrumb-item">NHGRI-EBI GWAS Catalog</li>
+      <li class="breadcrumb-item">{{ gwas_id }}</li>
+    </ol>
+  </nav>
+
+  <h2>NHGRI-GWAS Catalog ID: <b>{{ gwas_id }}</b></h2>
+
+  <section>
+    <h3>Associated Polygenic Score(s)</h3>
+    {% render_table table_scores %}
+  </section>
+
+  <section>
+    <h3>Associated Sample(s)</h3>
+    {% render_table table_samples %}
+  </section>
+
+{% endblock %}
