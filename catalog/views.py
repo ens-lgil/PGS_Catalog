@@ -438,13 +438,13 @@ def cohort(request, cohort_short_name, cohort_id):
 def releases(request):
     releases_list = Release.objects.order_by('-date')
 
+    # TEST - start #
     import datetime
     from random import randrange
 
     month = 1
     day = 5
     year = 2019
-
 
     release_data = []
 
@@ -476,6 +476,7 @@ def releases(request):
         total_publi += publi
 
         release_data.append(release_item)
+    # TEST - end #
 
     context = {
         'releases_list': releases_list,

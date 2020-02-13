@@ -624,3 +624,21 @@ class Release(models.Model):
 
     def __str__(self):
         return str(self.date)
+
+    @property
+    def released_score_ids(self):
+        scores = Score.objects.filter(date_released__exact=self.date)
+        #return [x.id for x in scores]
+        return ['PGS000001','PGS000002','PGS000018']
+
+    @property
+    def released_publication_ids(self):
+        publications = Publication.objects.filter(date_released__exact=self.date)
+        #return [x.id for x in publications]
+        return ['PGP000010','PGP000011','PGP000022']
+
+    @property
+    def released_performance_ids(self):
+        performances = Performance.objects.filter(date_released__exact=self.date)
+        #return [x.id for x in performances]
+        return ['PPM000015','PPM000021','PPM000032']

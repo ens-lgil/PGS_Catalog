@@ -375,6 +375,7 @@ function display_category_list(data_json) {
     se_right.style.marginTop = subcat_div_height_right+"px";
 
     // Create the sub-categories (traits) boxes
+    subcat_children = subcat_children.sort((a, b) => (a.name > b.name) ? 1 : -1);
     for (subcat_index in subcat_children) {
       var sc_id   = subcat_children[subcat_index].id;
       var sc_name = subcat_children[subcat_index].name;
