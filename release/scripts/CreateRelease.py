@@ -1,6 +1,6 @@
 import re
 from catalog.models import *
-from datetime import datetime
+from datetime import datetime, date
 from ftplib import FTP
 
 
@@ -11,13 +11,69 @@ class CreateRelease:
 
     new_scores = {}
     new_performances = {}
+    updated_scores = {}
+    updated_performances = {}
+    updated_publications = {}
 
-    def __init__(self):
+
+    def __init__(self, dryrun=0):
         self.new_release_date = datetime.today().strftime('%Y-%m-%d')
         self.new_publications = Publication.objects.filter(date_released__isnull=True, curation_status="C")
+        self.dryrun = dryrun
+
+    def get_updated_data(self):
+
+        lastest_release_list = str(Release.objects.latest('date').date).split('-')
+        lastest_release_list = list(map(int, lastest_release_list))
+        latest_release_date = date(lastest_release_list[0],lastest_release_list[1],lastest_release_list[2])
+
+        for publication in Publication.objects.filter(date_released__isnull=False):
+            # Get last history date
+            pub_history_date = self.fetch_and_format_history_date(publication)
+
+            # Latest release happenned before the update
+            if (latest_release_date <= pub_history_date):
+                self.updated_publications[publication.id] = 1
+                publication.date_updated = self.new_release_date
+                if not self.dryrun:
+                    publication.save()
+
+            scores_list = Score.objects.filter(date_released__isnull=False, publication=publication)
+            for score in scores_list:
+                # Get last history date
+                score_history_date = self.fetch_and_format_history_date(score)
+
+                # Latest release happenned before the update
+                print(score.id+" | Release: "+str(latest_release_date)+" | Update: "+str(score_history_date))
+                if (latest_release_date <= score_history_date):
+                    self.updated_scores[score.id] = 1
+                    score.date_updated = self.new_release_date
+                    if not self.dryrun:
+                        score.save()
+
+            performances_list = Performance.objects.filter(date_released__isnull=False, publication=publication)
+            for performance in performances_list:
+                # Get last history date
+                perf_history_date = self.fetch_and_format_history_date(performance)
+
+                # Latest release happenned before the update
+                if (latest_release_date <= perf_history_date):
+                    self.updated_performances[performance.id] = 1
+                    performance.date_updated = self.new_release_date
+                    if not self.dryrun:
+                        performance.save()
 
 
-    def update_data_to_release(self):
+    def fetch_and_format_history_date(self, instance):
+        history_date_timestamp = instance.history.first().history_date
+        history_date_truncated = str(history_date_timestamp).split(' ')[0]
+        history_date_list = history_date_truncated.split('-')
+        history_date_list = list(map(int, history_date_list))
+        history_date = date(history_date_list[0],history_date_list[1],history_date_list[2])
+        return history_date
+
+
+    def get_data_to_release(self):
         """
         Update data ready for the release (scores, performances and publications)
         by adding a date in the 'date_released' columns
@@ -25,7 +81,8 @@ class CreateRelease:
         #### Add release date for each publications and dependent models ####
         for publication in self.new_publications:
             publication.date_released = self.new_release_date
-            publication.save()
+            if not self.dryrun:
+                publication.save()
 
             # Scores
             scores_list = Score.objects.filter(date_released__isnull=True, publication=publication)
@@ -33,7 +90,8 @@ class CreateRelease:
                 self.new_scores[score.id] = 1
                 # Update date_release
                 score.date_released = self.new_release_date
-                score.save()
+                if not self.dryrun:
+                    score.save()
 
             # Performances
             performances_list = Performance.objects.filter(date_released__isnull=True, publication=publication)
@@ -41,21 +99,28 @@ class CreateRelease:
                 self.new_performances[performance.id] = 1
                 # Update date_release
                 performance.date_released = self.new_release_date
-                performance.save()
+                if not self.dryrun:
+                    performance.save()
 
 
     def create_new_release(self):
         """ Create new release instance and save it in the database """
-        #### Create new release instance ####
-        release_notes = 'This release contains {} new Score(s), {} new Publication(s) and {} Performance metric(s)'.format(len(self.new_scores.keys()), len(self.new_publications), len(self.new_performances.keys()))
-        release = Release.objects.create(
+        if not self.dryrun:
+            #### Create new release instance ####
+            release_notes = 'This release contains {} new Score(s), {} new Publication(s) and {} Performance metric(s)'.format(len(self.new_scores.keys()), len(self.new_publications), len(self.new_performances.keys()))
+            release = Release.objects.create(
                 date=self.new_release_date,
+                score_count=len(self.new_scores.keys()),
                 performance_count=len(self.new_performances.keys()),
                 publication_count=len(self.new_publications),
-                score_count=len(self.new_scores.keys()),
+                updated_score_count=len(self.updated_scores.keys()),
+                updated_performance_count=len(self.updated_performances.keys()),
+                updated_publication_count=len(self.updated_publications.keys()),
                 notes=release_notes
-              )
-        return release
+            )
+            return release
+        else:
+            return Release()
 
 
     def check_ftp(self):
@@ -76,7 +141,7 @@ class CreateRelease:
             file_match = pgs_re.match(file_name)
             if (file_match and file_match[1]):
                 pgs_ftp_list.append(file_match[1])
-                print("FTP: "+file_match[1])
+                #print("FTP: "+file_match[1])
 
         # Get the list of released PGS IDs
         for score in Score.objects.exclude(date_released__isnull=True):
@@ -87,22 +152,27 @@ class CreateRelease:
 
 ################################################################################
 
+
 def run():
 
     lastest_release = Release.objects.latest('date').date
+    print("Latest release: "+str(lastest_release))
 
-    release = CreateRelease()
-    release.update_data_to_release()
+    release = CreateRelease(dryrun=1)
+    release.get_updated_data()
+    release.get_data_to_release()
     new_release = release.create_new_release()
 
-
     # Just a bunch of prints
-    print("Latest release: "+str(lastest_release))
     print("New release: "+str(new_release.date))
     print("Number of new Scores: "+str(new_release.score_count))
     print(', '.join(release.new_scores.keys()))
-    print("Number of new Publications: "+str(new_release.publication_count))
     print("Number of new Performances: "+str(new_release.performance_count))
+    print("Number of new Publications: "+str(new_release.publication_count))
+    print("Number of updated Scores: "+str(new_release.updated_score_count))
+    print("Number of updated Performances: "+str(new_release.updated_performance_count))
+    print("Number of updated Publications: "+str(new_release.updated_publication_count))
+
 
     # Scores
     scores_direct = Score.objects.filter(date_released__isnull=True)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.postgres.fields import DecimalRangeField
+from simple_history.models import HistoricalRecords
 
 class Publication(models.Model):
     """Class for publications with PGS"""
@@ -9,6 +10,10 @@ class Publication(models.Model):
     id = models.CharField('PGS Publication/Study (PGP) ID', max_length=30)
 
     date_released = models.DateField('PGS Release Date', null=True)
+    date_updated  = models.DateField('PGS Last Update Date', null=True)
+
+    # Track changes
+    history = HistoricalRecords()
 
     # Key information (also) in the spreadsheet
     doi = models.CharField('digital object identifier (doi)', max_length=100)
@@ -389,8 +394,12 @@ class Score(models.Model):
     name = models.CharField('PGS Name', max_length=100)
 
     # Curation/release information
-    date_released = models.DateField('PGS Catalog Release Date', null=True)
+    date_released = models.DateField('PGS Release Date', null=True)
+    date_updated  = models.DateField('PGS Last Update Date', null=True)
     curation_notes = models.TextField('Curation Notes', default='')
+
+    # Track changes
+    history = HistoricalRecords()
 
     # Links to related models
     publication = models.ForeignKey(Publication, on_delete=models.PROTECT, verbose_name='PGS Publication (PGP) ID')
@@ -480,8 +489,12 @@ class Performance(models.Model):
     id = models.CharField('PGS Performance Metric (PPM) ID', max_length=30)
 
     # Curation information
-    date_released = models.DateField('PGS Catalog Release Date', null=True)
+    date_released = models.DateField('PGS Release Date', null=True)
+    date_updated  = models.DateField('PGS Last Update Date', null=True)
     curation_notes = models.TextField('Curation Notes', default='')
+
+    # Track changes
+    history = HistoricalRecords()
 
     # Links to related objects
     score = models.ForeignKey(Score, on_delete=models.CASCADE,
@@ -617,10 +630,13 @@ class Metric(models.Model):
 class Release(models.Model):
     """Class to store and manipulate the releases information"""
     date = models.DateField("Release date", null=False)
-    score_count =  models.IntegerField('Number of new PGS scores released', default=0)
+    score_count = models.IntegerField('Number of new PGS scores released', default=0)
     performance_count = models.IntegerField('Number of new PGS Performance metrics released', default=0)
     publication_count = models.IntegerField('Number of new PGS Publication released', default=0)
     notes = models.TextField(verbose_name='Release notes', max_length=600, blank=True)
+    updated_score_count = models.IntegerField('Number of PGS scores updated', default=0)
+    updated_performance_count = models.IntegerField('Number of PGS Performance metrics updated', default=0)
+    updated_publication_count = models.IntegerField('Number of PGS Publication updated', default=0)
 
     def __str__(self):
         return str(self.date)
@@ -640,5 +656,24 @@ class Release(models.Model):
     @property
     def released_performance_ids(self):
         performances = Performance.objects.filter(date_released__exact=self.date)
+        #return [x.id for x in performances]
+        return ['PPM000015','PPM000021','PPM000032']
+
+
+    @property
+    def updated_score_ids(self):
+        scores = Score.objects.filter(date_updated__exact=self.date)
+        #return [x.id for x in scores]
+        return ['PGS000001','PGS000002','PGS000018']
+
+    @property
+    def updated_publication_ids(self):
+        publications = Publication.objects.filter(date_updated__exact=self.date)
+        #return [x.id for x in publications]
+        return ['PGP000010','PGP000011','PGP000022']
+
+    @property
+    def updated_performance_ids(self):
+        performances = Performance.objects.filter(date_updated__exact=self.date)
         #return [x.id for x in performances]
         return ['PPM000015','PPM000021','PPM000032']

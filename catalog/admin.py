@@ -39,7 +39,7 @@ class PerformanceAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ["num","id"]
+            return ["num","id","date_released","date_updated"]
         else:
             return []
 
@@ -51,19 +51,19 @@ class PublicationAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ["num","id"]
+            return ["num","id","date_released","date_updated"]
         else:
             return []
 
 
 @admin.register(Release)
 class ReleaseAdmin(admin.ModelAdmin):
-    list_display = ["date", "score_count", "performance_count", "publication_count"]
+    list_display = ["date", "score_count", "performance_count", "publication_count", "updated_score_count", "updated_performance_count", "updated_publication_count"]
     ordering = ("-date",)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ["id"]
+            return ["id", "date", "score_count", "performance_count", "publication_count", "updated_score_count", "updated_performance_count", "updated_publication_count"]
         else:
             return []
 
@@ -92,7 +92,7 @@ class ScoreAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ["num","id"]
+            return ["num","id","date_released","date_updated"]
         else:
             return []
 
