@@ -2,14 +2,13 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.postgres.fields import DecimalRangeField
 
-
 class Publication(models.Model):
     """Class for publications with PGS"""
     # Stable identifiers
-    num = models.IntegerField('PGS Catalog Publication/Study (PGP) Number', primary_key=True)
-    id = models.CharField('PGS Catalog Publication/Study (PGP) ID', max_length=30)
+    num = models.IntegerField('PGS Publication/Study (PGP) Number', primary_key=True)
+    id = models.CharField('PGS Publication/Study (PGP) ID', max_length=30)
 
-    date_released = models.DateField('PGS Catalog Release Date', null=True)
+    date_released = models.DateField('PGS Release Date', null=True)
 
     # Key information (also) in the spreadsheet
     doi = models.CharField('digital object identifier (doi)', max_length=100)
@@ -59,10 +58,6 @@ class Publication(models.Model):
         performances = Performance.objects.filter(publication=self)
         return len(performances.values('score').distinct())
 
-    @property
-    def pub_year(self):
-        return self.date_publication.strftime('%Y')
-      
     def parse_EuropePMC(self, doi=None, PMID=None):
         '''Function to get the citation information from the EuropePMC API'''
         import requests
@@ -93,6 +88,7 @@ class Publication(models.Model):
                 if 'pmid' in r:
                     self.PMID=r['pmid']
 
+
 class Cohort(models.Model):
     """Class to describe cohorts used in samples"""
     name_short = models.CharField('Cohort(Short Name)', max_length=100)
@@ -101,13 +97,14 @@ class Cohort(models.Model):
     def __str__(self):
         return self.name_short
 
+
 class EFOTrait(models.Model):
     '''Class to hold information related to controlled trait vocabulary
     (mainly to link multiple EFO to a single score)'''
-    id = models.CharField('Experimental Factor Ontology ID (EFO_ID)', max_length=30, primary_key=True)
-    label = models.CharField('EFO Label', max_length=500)
-    description = models.TextField('EFO Description', null=True)
-    url = models.CharField('EFO URL', max_length=500)
+    id = models.CharField('Ontology Trait ID', max_length=30, primary_key=True)
+    label = models.CharField('Ontology Trait Label', max_length=500)
+    description = models.TextField('Ontology Trait Description')
+    url = models.CharField('Ontology URL', max_length=500)
 
     def parse_api(self):
         import requests
@@ -132,26 +129,92 @@ class EFOTrait(models.Model):
             except:
                 self.description = response['description']
 
+
+    def get_category(self):
+        """ Test to fetch the GWAS trait category from an EFO ID """
+        import requests
+
+        response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/parentMapping/%s'%self.id)
+        response_json = response.json()
+        print("Response JSON:")
+        print(response_json)
+        if response_json and response_json['trait'] != 'None':
+            print(response_json['parent'])
+            print(response_json['colourLabel'])
+            print(response_json['colour'])
+
+
     def __str__(self):
         return '%s | %s '%(self.id, self.label)
+
+    @property
+    def display_label(self):
+        return '<a href="../../trait/%s">%s</a>'%(self.id, self.label)
+
+    def display_id_url(self):
+        return '<a href="%s">%s</a><span class="only_export">: %s</span>'%(self.url, self.id, self.url)
 
     @property
     def scores_count(self):
         return Score.objects.filter(trait_efo=self).count()
 
+    @property
+    def category_labels(self):
+        categories = TraitCategory.objects.filter(efotraits__id__exact=self.id)
+
+        categories_data = ''
+        if len(categories) > 0:
+            category_labels = [x.label for x in categories]
+            categories_data = ', '.join(category_labels)
+
+        return categories_data
+
+    @property
+    def category_list(self):
+        return TraitCategory.objects.filter(efotraits__id__exact=self.id)
+
+
+class TraitCategory(models.Model):
+    # Stable identifiers for declaring a set of traits
+    label = models.CharField('Trait category', max_length=50)
+    colour = models.CharField('Trait category colour', max_length=30)
+    parent = models.CharField('Trait category (parent term)', max_length=50)
+
+    # Link to the description of the sample(s) in the other table
+    efotraits = models.ManyToManyField(EFOTrait, verbose_name='Traits', related_name='efotrait')
+
+
+    class Meta:
+        verbose_name_plural = "Trait categories"
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def count_scores(self):
+        scores_count = 0
+        for trait in self.efotraits.all():
+            scores_count += trait.scores_count
+
+        return scores_count
+
+
+
 class Demographic(models.Model):
-    estimate = models.FloatField(verbose_name='Estimate (value)', null=False)
+    estimate = models.FloatField(verbose_name='Estimate (value)', null=False, default=0)
     estimate_type = models.CharField(verbose_name='Estimate (type)', max_length=100, null=False, default='mean') #e.g. mean, median, mode
     unit = models.TextField(verbose_name='Unit', max_length=100, null=True)
     ci = DecimalRangeField(verbose_name='95% Confidence Interval', null=True)
     range = DecimalRangeField(verbose_name='Range', null=True)
     se = models.FloatField(verbose_name='Standard Error', null=True)
 
+
 class Sample(models.Model):
     """Class to describe samples used in variant associations and PGS training/testing"""
+
     # Sample Information
     ## Numbers
-    sample_number = models.IntegerField('Number of Individuals')
+    sample_number = models.IntegerField('Number of Individuals', validators=[MinValueValidator(1)])
     sample_cases = models.IntegerField('Number of Cases', null=True)
     sample_controls = models.IntegerField('Number of Controls', null=True)
     sample_percent_male = models.FloatField('Percent of Participants Who are Male', validators=[MinValueValidator(0), MaxValueValidator(100)], null=True)
@@ -194,7 +257,7 @@ class Sample(models.Model):
             ids.add(x['id'])
         ids = list(ids)
         ids.sort()
-        return ids
+        return list(ids)
 
     def associated_PSS(self):
         ids = set()
@@ -202,7 +265,7 @@ class Sample(models.Model):
             ids.add(x['id'])
         ids = list(ids)
         ids.sort()
-        return ids
+        return list(ids)
 
     def list_cohortids(self):
         return [x.name_full for x in self.cohorts.all()]
@@ -217,13 +280,76 @@ class Sample(models.Model):
         if self.sample_cases != None:
             sstring = '[ {:,} cases'.format(self.sample_cases)
             if self.sample_controls != None:
-                sstring += ', {:,} controls]'.format(self.sample_controls)
+                sstring += ', {:,} controls ]'.format(self.sample_controls)
             else:
-                sstring += ']'
+                sstring += ' ]'
             sinfo.append(sstring)
         if self.sample_percent_male != None:
-            sinfo.append('{:.2f} %% Male samples'.format(self.sample_percent_male))
+            sinfo.append('%s %% Male samples'%str(round(self.sample_percent_male,2)))
         return sinfo
+
+    @property
+    def display_samples_for_table(self):
+        div_id = "sample_"+str(self.pk)
+        sstring = ''
+        if self.sample_cases != None:
+            sstring += '<div><a class="toggle_table_btn" id="'+div_id+'" title="Click to show/hide the details">{:,} individuals <i class="fa fa-plus-circle"></i></a></div>'.format(self.sample_number)
+            sstring += '<div class="toggle_list" id="list_'+div_id+'">'
+            sstring += '<span class="only_export">[</span>'
+            sstring += '<ul>\n<li>{:,} cases</li>\n'.format(self.sample_cases)
+            if self.sample_controls != None:
+                sstring += '<li><span class="only_export">, </span>'
+                sstring += '{:,} controls</li>'.format(self.sample_controls)
+            sstring += '</ul>'
+            sstring += '<span class="only_export">]</span>'
+            sstring += '</div>'
+        else:
+            sstring += '{:,} individuals'.format(self.sample_number)
+        if self.sample_percent_male != None:
+            sstring += '<span class="only_export">, </span>'
+            sstring += '<div class="mt-2 smaller-90">%s %% Male samples</div>'%str(round(self.sample_percent_male,2))
+        return sstring
+
+    @property
+    def display_sample_number_total(self):
+        ssinfo = '{:,} individuals'.format(self.sample_number)
+        return ssinfo
+
+    @property
+    def display_sample_number_detail(self):
+        sinfo = []
+        if self.sample_cases != None:
+            sinfo.append('{:,} cases'.format(self.sample_cases))
+            if self.sample_controls != None:
+                sinfo.append('{:,} controls'.format(self.sample_controls))
+        if self.sample_percent_male != None:
+            sinfo.append('%s %% Male samples'%str(round(self.sample_percent_male,2)))
+        return sinfo
+
+    @property
+    def display_sample_category_number(self):
+        categories = []
+        numbers = []
+        if self.sample_cases != None:
+            #sinfo['Cases'] = self.sample_cases
+            categories.append("Cases")
+            numbers.append(self.sample_cases)
+            if self.sample_controls != None:
+                #sinfo['Controls'] = self.sample_controls
+                categories.append('Controls')
+                numbers.append(self.sample_controls)
+        return [categories,numbers]
+
+    @property
+    def display_sample_gender_percentage(self):
+        categories = []
+        numbers = []
+        if self.sample_percent_male != None:
+            percent_male = round(self.sample_percent_male,2)
+            categories = ["% Male", "% Female"]
+            numbers    = [percent_male, round(100-percent_male,2)]
+        return [categories,numbers]
+
 
     @property
     def display_sources(self):
@@ -239,10 +365,19 @@ class Sample(models.Model):
         if self.ancestry_free in ['NR', '', None]:
             return self.ancestry_broad
         else:
-            return '{}</br>({})'.format(self.ancestry_broad, self.ancestry_free)
+            return '{}<br/>({})'.format(self.ancestry_broad, self.ancestry_free)
+
+    @property
+    def display_ancestry_inline(self):
+        if self.ancestry_free in ['NR', '', None]:
+            return self.ancestry_broad
+        else:
+            return '{} ({})'.format(self.ancestry_broad, self.ancestry_free)
+
 
 class Score(models.Model):
     """Class for individual Polygenic Score (PGS)"""
+
     # Stable identifiers
     num = models.IntegerField('Polygenic Score (PGS) Number', primary_key=True)
     id = models.CharField('Polygenic Score (PGS) ID', max_length=30)
@@ -254,7 +389,7 @@ class Score(models.Model):
     curation_notes = models.TextField('Curation Notes', default='')
 
     # Links to related models
-    publication = models.ForeignKey(Publication, on_delete=models.PROTECT, verbose_name='Publication ID')
+    publication = models.ForeignKey(Publication, on_delete=models.PROTECT, verbose_name='PGS Publication (PGP) ID')
     ## Contributing Samples
     samples_variants = models.ManyToManyField(Sample, verbose_name='Source of Variant Associations (GWAS)', related_name='score_variants')
     samples_training = models.ManyToManyField(Sample, verbose_name='Score Development/Training', related_name='score_training')
@@ -262,13 +397,13 @@ class Score(models.Model):
     # Trait information
     trait_reported = models.TextField('Reported Trait')
     trait_additional = models.TextField('Additional Trait Information', null=True)
-    trait_efo = models.ManyToManyField(EFOTrait, verbose_name='Mapped Trait(s) (EFO)')
+    trait_efo = models.ManyToManyField(EFOTrait, verbose_name='Mapped Trait(s) (EFO terms)')
 
     # PGS Development/method details
     method_name = models.TextField('PGS Development Method')
     method_params = models.TextField('PGS Development Details/Relevant Parameters')
 
-    variants_number = models.IntegerField('Number of Variants')
+    variants_number = models.IntegerField('Number of Variants', validators=[MinValueValidator(1)])
     variants_interactions = models.IntegerField('Number of Interaction Terms', default=0)
     variants_genomebuild = models.CharField('Original Genome Build', max_length=10, default='NR')
 
@@ -279,6 +414,7 @@ class Score(models.Model):
     def set_score_ids(self, n):
         self.num = n
         self.id = 'PGS' + str(n).zfill(6)
+
 
     class Meta:
         get_latest_by = 'num'
@@ -298,8 +434,8 @@ class Score(models.Model):
 
 class SampleSet(models.Model):
     # Stable identifiers for declaring a set of related samples
-    num = models.IntegerField('PGS Catalog Sample Set (PSS) Number', primary_key=True)
-    id = models.CharField('PGS Catalog Sample Set (PSS) ID', max_length=30)
+    num = models.IntegerField('PGS Sample Set (PSS) Number', primary_key=True)
+    id = models.CharField('PGS Sample Set (PSS) ID', max_length=30)
 
     # Link to the description of the sample(s) in the other table
     samples = models.ManyToManyField(Sample, verbose_name='Sample Set Descriptions', related_name='sampleset')
@@ -310,6 +446,27 @@ class SampleSet(models.Model):
     def set_ids(self, n):
         self.num = n
         self.id = 'PSS' + str(n).zfill(6)
+
+    @property
+    def samples_ancestry(self):
+        ancestry_list = []
+        for sample in self.samples.all():
+            ancestry = sample.display_ancestry_inline
+            if ancestry not in ancestry_list:
+                ancestry_list.append(ancestry)
+        if len(ancestry_list) > 0:
+            return ', '.join(ancestry_list)
+        else:
+            return '-'
+
+    @property
+    def count_samples(self):
+        return len(self.samples.all())
+
+    @property
+    def count_performances(self):
+        return len(Performance.objects.filter(sampleset_id=self.num))
+
 
 
 class Performance(models.Model):
@@ -327,7 +484,7 @@ class Performance(models.Model):
                               verbose_name='Evaluated Score') # PGS that the metrics are associated with
     phenotyping_efo = models.ManyToManyField(EFOTrait, verbose_name='Mapped Trait(s) (EFO)')
     sampleset = models.ForeignKey(SampleSet, on_delete=models.PROTECT,
-                                  verbose_name='PGS Catalog Sample Set (PSS)') # Samples used for evaluation
+                                  verbose_name='PGS Sample Set (PSS)') # Samples used for evaluation
     publication = models.ForeignKey(Publication, on_delete=models.PROTECT,
                                     verbose_name='Peformance Source') # Study that reported performance metrics
 
@@ -342,7 +499,7 @@ class Performance(models.Model):
     class Meta:
         get_latest_by = 'num'
 
-    def set_score_ids(self, n):
+    def set_performance_id(self, n):
         self.num = n
         self.id = 'PPM' + str(n).zfill(6)\
 
@@ -396,7 +553,7 @@ class Performance(models.Model):
     def publication_withexternality(self):
         '''This function checks whether the evaluation is internal or external to the score development paper'''
         p = self.publication
-        info = [' '.join([p.firstauthor, '<i>et al.</i>', '(%s)' % p.date_publication.strftime('%Y')]), self.publication.id]
+        info = [' '.join([p.id, '<br/><small><i class="fa fa-angle-double-right"></i> ',p.firstauthor, '<i>et al.</i>', '(%s)' % p.date_publication.strftime('%Y'), '</small>']), self.publication.id]
 
         if self.publication == self.score.publication:
             info.append('D')
@@ -404,6 +561,7 @@ class Performance(models.Model):
             info.append('E')
 
         return '|'.join(info)
+
 
 class Metric(models.Model):
     """Class to hold metric type, name, value and confidence intervals of a performance metric"""
@@ -427,6 +585,17 @@ class Metric(models.Model):
     ci = DecimalRangeField(verbose_name='95% Confidence Interval', null=True)
     se = models.FloatField(verbose_name='Standard error of the effect', null=True)
 
+    def __str__(self):
+        if self.ci != None:
+            s = '{} {}'.format(self.estimate, self.ci)
+        else:
+            s = '{}'.format(self.estimate)
+
+        if (self.name_short):
+            return '%s (%s): %s'%(self.name, self.name_short, s)
+        else:
+            return '%s: %s'%(self.name, s)
+
     def display_value(self):
         if self.ci != None:
             s = '{} {}'.format(self.estimate, self.ci)
@@ -439,3 +608,15 @@ class Metric(models.Model):
             return (self.name, self.name)
         else:
             return (self.name, self.name_short)
+
+
+class Release(models.Model):
+    """Class to store and manipulate the releases information"""
+    date = models.DateField("Release date", null=False)
+    score_count =  models.IntegerField('Number of new PGS scores released', default=0)
+    performance_count = models.IntegerField('Number of new PGS Performance metrics released', default=0)
+    publication_count = models.IntegerField('Number of new PGS Publication released', default=0)
+    notes = models.TextField(verbose_name='Release notes', max_length=600, blank=True)
+
+    def __str__(self):
+        return str(self.date)
