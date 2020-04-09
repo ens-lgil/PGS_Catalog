@@ -1,0 +1,76 @@
+import json
+
+from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
+
+from .documents import *
+
+
+class EFOTraitDocumentSerializer(DocumentSerializer):
+    """Serializer for the EFOTrait document."""
+
+    class Meta:
+        """Meta options."""
+
+        # List the serializer fields. Note, that the order of the fields
+        # is preserved in the ViewSet.
+        fields = (
+            'id',
+            'label',
+            'synonyms',
+            'mapped_terms',
+            'traitcategory'
+        )
+
+    def get_tags(self, obj):
+        """Get tags."""
+        if obj.tags:
+            return list(obj.tags)
+        else:
+            return []
+
+
+class PublicationDocumentSerializer(DocumentSerializer):
+    """Serializer for the Publication document."""
+
+    class Meta(object):
+        """Meta options."""
+
+        # List the serializer fields. Note, that the order of the fields
+        # is preserved in the ViewSet.
+        fields = (
+            'id',
+            'title',
+            'doi',
+            'PMID',
+            'authors'
+        )
+
+    def get_tags(self, obj):
+        """Get tags."""
+        if obj.tags:
+            return list(obj.tags)
+        else:
+            return []
+
+
+class ScoreDocumentSerializer(DocumentSerializer):
+    """Serializer for the Score document."""
+
+    class Meta(object):
+        """Meta options."""
+
+        # List the serializer fields. Note, that the order of the fields
+        # is preserved in the ViewSet.
+        fields = (
+            'id',
+            'name',
+            'publication',
+            'trait_efo'
+        )
+
+    def get_tags(self, obj):
+        """Get tags."""
+        if obj.tags:
+            return list(obj.tags)
+        else:
+            return []

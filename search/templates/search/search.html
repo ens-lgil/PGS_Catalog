@@ -1,0 +1,88 @@
+{% extends 'catalog/base.html' %}
+{% load render_table from django_tables2 %}
+
+{% block title %}Search with ES{% endblock %}
+
+{% block content %}
+
+  <form method="get">
+    <input id="q" name="q" type="text" placeholder="Search...">
+  </form>
+
+  {% if table_scores or table_efo_traits or table_publications %}
+    <div class="mt-4">
+      {% if table_scores %}
+        <span class="search_facet selected" id="scores_facet">
+          <i class="fa fa-check-circle"></i>
+          <div>Scores</div>
+          <span class="badge badge-pill badge-pgs">{{ scores_count }}</span>
+        </span>
+      {% endif %}
+
+      {% if table_efo_traits %}
+        {% if table_scores %}
+          <span class="search_facet" id="efo_traits_facet">
+        {% else %}
+            <span class="search_facet selected" id="efo_traits_facet">
+        {% endif %}
+          <i class="fa fa-circle-o"></i>
+          <div>Traits</div>
+          <span class="badge badge-pill badge-pgs">{{ efo_traits_count }}</span>
+        </span>
+      {% endif %}
+
+      {% if table_publications %}
+        {% if table_efo_traits or table_scores %}
+          <span class="search_facet" id="publications_facet">
+        {% else %}
+            <span class="search_facet selected" id="publications_facet">
+        {% endif %}
+          <i class="fa fa-circle-o"></i>
+          <div>Publications</div>
+          <span class="badge badge-pill badge-pgs">{{ publications_count }}</span>
+        </span>
+      {% endif %}
+    </div>
+
+
+    {% if scores_count %}
+      <div class="table_results" id="scores_results">
+        <h3>Score results</h3>
+        {{ table_scores|safe }}
+        <!--<ul>
+        {% for item in scores %}
+          <li>{{ item.id }}: {{ item.name }} | {{ item.publication.title }}</li>
+        {% endfor %}
+        </ul>-->
+      </div>
+    {% endif %}
+
+    {% if efo_traits_count %}
+      <div class="table_results" id="efo_traits_results" {% if scores_count %}style="display:none"{% endif %}>
+        <h3>Trait results</h3>
+        {{ table_efo_traits|safe }}
+        <!--<ul>
+        {% for item in efo_traits %}
+          <li>{{ item.id }}: {{ item.label }} | {{ item.traitcategory_set.0.label }} | {{ item.mapped_terms }}</li>
+        {% endfor %}
+        </ul>-->
+      </div>
+    {% endif %}
+
+    {% if publications_count %}
+      <div class="table_results" id="publications_results" {% if scores_count or efo_traits_count %}style="display:none"{% endif %}>
+        <h3>Publication results</h3>
+        {{ table_publications|safe }}
+        <!--<ul>
+        {% for item in publications %}
+          <li>{{ item.id }}: {{ item.title }}</li>
+        {% endfor %}
+        </ul>-->
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div>No results found</div>
+  {% endif %}
+
+{% endblock %}

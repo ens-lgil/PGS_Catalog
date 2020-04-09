@@ -43,6 +43,7 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
     'release.apps.ReleaseConfig',
+    'search.apps.SearchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,7 +51,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_tables2',
-    'django_extensions'
+    'django_extensions',
+    'rest_framework',
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
+    'debug_toolbar' # Debug SQL queries
 ]
 
 MIDDLEWARE = [
@@ -58,9 +63,15 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', # Debug SQL queries
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# Debug SQL queries
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]
 
 ROOT_URLCONF = 'pgs_web.urls'
@@ -148,7 +159,7 @@ else:
             'USER': os.environ['DATABASE_USER'],
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': 'localhost',
-            'PORT': 5430
+            'PORT': 5432
         }
     }
 # [END db_setup]
@@ -198,6 +209,31 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder'
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
+    'ORDERING_PARAM': 'ordering',
+}
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'http://localhost:9200'
+    },
+}
+
+# Name of the Elasticsearch index
+ELASTICSEARCH_INDEX_NAMES = {
+    'search.documents.score': 'score',
+    'search.documents.efo_trait': 'efo_trait',
+    'search.documents.publication': 'publication',
+    #'search.documents.publisher': 'publisher',
+}
 
 COMPRESS_PRECOMPILERS = ''
 COMPRESS_ROOT = os.path.join(BASE_DIR, "static/")

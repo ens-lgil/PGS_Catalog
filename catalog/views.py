@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.db.models.functions import Lower
+from django.db.models import Q
 import re
 
 from .tables import *
@@ -270,6 +271,73 @@ class DownloadView(TemplateView):
 
 class CurrentTemplateView(RedirectView):
     url = settings.USEFUL_URLS['TEMPLATEGoogleDoc_URL']
+
+
+def get_query_search(query=None):
+    queryset = {
+        "scores" : set(),
+        "publications" : set(),
+        "efo_traits" : set()
+    }
+    queries = query.split(" ")
+
+    for q in queries:
+        scores = Score.objects.select_related('publication').filter(
+            Q(id__icontains=q) | Q(name__icontains=q) |
+            Q(publication__title__icontains=q) | Q(publication__firstauthor__icontains=q) |
+            Q(trait_efo__id__icontains=q) | Q(trait_efo__label__icontains=q)
+        ).prefetch_related('trait_efo').distinct()
+        for score in scores:
+            queryset["scores"].add(score)
+
+        efo_traits = EFOTrait.objects.filter(
+            Q(id__icontains=q) | Q(label__icontains=q) | Q(synonyms__icontains=q) | Q(mapped_terms__icontains=q) |
+            Q(traitcategory__label__icontains=q) | Q(traitcategory__parent__icontains=q)
+        ).prefetch_related('traitcategory_set').distinct()
+        for efo_trait in efo_traits:
+            queryset["efo_traits"].add(efo_trait)
+
+        publications = Publication.objects.filter(
+            Q(title__icontains=q) | Q(firstauthor__icontains=q)
+        ).prefetch_related('publication_score', 'publication_performance', 'publication_performance__score').distinct()
+        for publication in publications:
+            queryset["publications"].add(publication)
+
+    return(queryset)
+
+
+def search(request):
+    context = {}
+    query = ""
+
+    if request.GET:
+        query = request.GET['q']
+        context['query'] = str(query)
+    if query:
+        results = get_query_search(query)
+        scores = list(results["scores"])
+        publications = list(results["publications"])
+        efo_traits = list(results["efo_traits"])
+        #scores = sorted(get_query_search(query),key=Score.id)
+        context['scores_count'] = len(scores)
+        context['efo_traits_count'] = len(efo_traits)
+        context['publications_count'] = len(publications)
+
+        if scores:
+            table_scores = Browse_ScoreTable(scores)
+            context['table_scores'] = table_scores
+
+        if efo_traits:
+            table_efo_traits = Browse_TraitTable(efo_traits)
+            context['table_efo_traits'] = table_efo_traits
+
+        if publications:
+            table_publications = Browse_PublicationTable(publications)
+            context['table_publications'] = table_publications
+
+    context['has_table'] = 1
+
+    return render(request, 'catalog/search.html', context)
 
 
 # Method used for the App Engine warmup

@@ -1,0 +1,112 @@
+<table
+    data-toggle="table"
+    {{ attrs }}
+    data-search="true"
+    data-sortable="true"
+    data-sort-order="asc"
+    data-custom-sort="customSort"
+    data-show-export="true"
+    data-filter-control="true"
+    data-minimum-count-columns="1"
+    data-pagination="true"
+    data-page-size="15"
+    data-page-list="[15, 25, 50, 100, 200, All]"
+    data-export-data-type="all"
+    data-export-types="['json', 'xml', 'csv', 'txt', 'excel']">
+    <thead class="thead-light">
+        <tr>
+          {% for item in fields %}
+            <th
+                data-field="{{ item.key }}"
+                data-sortable="true"
+                data-filter-control="input">
+                {{ item.label }}
+            </th>
+          {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in table_data %}
+          <tr>
+            {% for cell in row %}
+              <td>{{ cell }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+          function customSort(sortName, sortOrder, data) {
+            var order = sortOrder === 'desc' ? -1 : 1;
+            data.sort(function (a, b) {
+
+              // Remove HTML tags
+              var aa = a[sortName].replace(/<\/?[^>]+(>|$)/g, "");
+              var bb = b[sortName].replace(/<\/?[^>]+(>|$)/g, "");
+
+              // Date (American notation)
+              if (aa.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                aa_date = aa.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                bb_date = bb.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+                if (aa_date && aa_date.length > 2) {
+                  aa = parseInt(aa_date[3]+''+aa_date[1]+''+aa_date[2]);
+                }
+                if (bb_date && bb_date.length > 2) {
+                  bb = parseInt(bb_date[3]+''+bb_date[1]+''+bb_date[2]);
+                }
+              }
+              // Numeric sort with or without strings after it
+              else if (aa.match(/^\d+/)) {
+                aa_num = aa.replace(/,/g, '').match(/(^\d+)(\D+|$)/);
+                bb_num = bb.replace(/,/g, '').match(/(^\d+)(\D+|$)/);
+
+                if (aa_num && aa_num.length > 1) {
+                  aa = parseInt(aa_num[1]);
+                }
+                if (bb_num && bb_num.length > 1) {
+                  bb = parseInt(bb_num[1]);
+                }
+              }
+              // Numeric value with strings before it (e.g. EFO_, HP_)
+              else if (aa.match(/^(EFO|HP)_\d+$/)) {
+                aa_num = aa.match(/^(EFO|HP)_(\d+)$/);
+                bb_num = bb.match(/^(EFO|HP)_(\d+)$/);
+
+                if (aa_num && aa_num.length > 1) {
+                  aa = parseFloat(aa_num[2]);
+                }
+                if (bb_num && bb_num.length > 1) {
+                  bb = parseFloat(bb_num[2]);
+                }
+              }
+              // Numeric value with strings before it (e.g. OR:, HR:, ...)
+              else if (aa.match(/^\w+\:\s*\d+/)) {
+                aa_num = aa.match(/^\w+\:\s*(\d+\.?\d*)(\D|$)/);
+                bb_num = bb.match(/^\w+\:\s*(\d+\.?\d*)(\D|$)/);
+
+                if (aa_num && aa_num.length > 1) {
+                  aa = parseFloat(aa_num[1]);
+                }
+                if (bb_num && bb_num.length > 1) {
+                  bb = parseFloat(bb_num[1]);
+                }
+              }
+              // String sort
+              else {
+                // Change all to lowercase
+                aa = aa.toLowerCase();
+                bb = bb.toLowerCase();
+              }
+
+              // Final sort
+              if (aa < bb) {
+                return order * -1;
+              }
+              if (aa > bb) {
+                return order
+              }
+              return 0;
+            })
+          }
+</script>

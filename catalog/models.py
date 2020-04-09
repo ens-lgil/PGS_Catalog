@@ -140,21 +140,6 @@ class EFOTrait(models.Model):
             except:
                 self.description = response['description']
 
-
-    def get_category(self):
-        """ Test to fetch the GWAS trait category from an EFO ID """
-        import requests
-
-        response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/parentMapping/%s'%self.id)
-        response_json = response.json()
-        print("Response JSON:")
-        print(response_json)
-        if response_json and response_json['trait'] != 'None':
-            print(response_json['parent'])
-            print(response_json['colourLabel'])
-            print(response_json['colour'])
-
-
     def __str__(self):
         return '%s | %s '%(self.id, self.label)
 

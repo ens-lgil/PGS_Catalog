@@ -4,6 +4,13 @@
         <a class="navbar-brand" href="../../" data-original-title="" title="Polygenic Score Catalog" style="margin-right:2rem;">
             <img src="{% static 'catalog/imgs/PGS_Logo.png' %}" style="height:60px"/> <span style="padding-left:5px">PGS Catalog</span>
         </a>
+        <!-- Search bar -->
+        <div class="search-bar">
+          <form method="get" action="/search/">
+            <!--<input type="text" class="form-control" name="q" id="id_q" placeholder="Search..." value="{{ query }}">-->
+            <input type="text" class="form-control" name="q" id="id_q" placeholder="Search...">
+          </form>
+        </div>
         <!--/.navbar-collapse - begin -->
         <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
           <span class="navbar-toggler-icon"></span>
@@ -39,3 +46,7 @@
         <!--/.navbar-collapse - end -->
     </nav>
   </div>
+
+  <script type="text/javascript">
+    document.getElementById("id_q").value = "{{ query }}"
+  </script>
