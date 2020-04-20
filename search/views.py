@@ -48,11 +48,17 @@ def scores_table(request, data):
     fields = [
         { 'key': 'id', 'label': "ID" },
         { 'key': 'name', 'label': "Name" },
+        { 'key': 'variants_number', 'label': "Number of variants" },
+        { 'key': 'trait_efo.label', 'label': "Trait (ontology term label)", 'multi': '1' },
+        { 'key': 'publication.firstauthor', 'label': 'Publication author' },
         { 'key': 'publication.title', 'label': 'Publication' }
     ]
     tags = []
+    multi_tags = set()
     for column in fields:
         tags.append(column['key'])
+        if 'multi' in column:
+            multi_tags.add(column['key'])
 
     formatted_data = []
     for d in sorted(data, key=lambda x: x.id):
@@ -63,7 +69,13 @@ def scores_table(request, data):
             if len(keys) == 1:
                 my_data.append(d[t])
             else:
-                my_data.append(d[keys[0]][keys[1]])
+                if t in multi_tags:
+                    content = []
+                    for item in d[keys[0]]:
+                        content.append(item[keys[1]])
+                    my_data.append(', '.join(content))
+                else:
+                    my_data.append(d[keys[0]][keys[1]])
         formatted_data.append(my_data)
 
     context = {'attrs': attrs, 'fields': fields, 'table_data': formatted_data}
@@ -112,9 +124,9 @@ def publications_table(request, data):
     fields = [
         { 'key': 'id', 'label': "PGS Publication/Study (PGP) ID" },
         { 'key': 'title', 'label': "Title" },
+        { 'key': 'firstauthor', 'label': 'Publication author' },
         { 'key': 'doi', 'label': "Digital object identifier (doi)"},
-        { 'key': 'PMID', 'label': "PubMed ID (PMID)" },
-        #{ 'key': 'traitcategory.label', 'label': 'Trait Category' }
+        { 'key': 'PMID', 'label': "PubMed ID (PMID)" }
     ]
 
     tags = []

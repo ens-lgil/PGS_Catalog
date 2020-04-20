@@ -31,6 +31,7 @@ class ScoreDocument(Document):
             'raw': fields.TextField(analyzer='keyword'),
         }
     )
+    variants_number = fields.IntegerField()
     publication = fields.ObjectField(
         properties={
             'title': fields.TextField(
@@ -40,6 +41,12 @@ class ScoreDocument(Document):
                 }
             ),
             'PMID': fields.IntegerField(),
+            'firstauthor': fields.TextField(
+                analyzer=html_strip,
+                fields={
+                    'raw': fields.TextField(analyzer='keyword'),
+                }
+            ),
             'authors': fields.TextField(
                 analyzer=html_strip,
                 fields={

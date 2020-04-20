@@ -32,6 +32,12 @@ class PublicationDocument(Document):
         }
     )
     PMID = fields.IntegerField()
+    firstauthor = fields.TextField(
+        analyzer=html_strip,
+        fields={
+            'raw': fields.TextField(analyzer='keyword'),
+        }
+    )
     authors = fields.TextField(
         analyzer=html_strip,
         fields={
