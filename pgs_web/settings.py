@@ -43,7 +43,8 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
     'release.apps.ReleaseConfig',
-    'search.apps.SearchConfig',
+    #'search.apps.SearchConfig',
+    'search_2.apps.SearchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -248,8 +249,9 @@ ELASTICSEARCH_DSL = {
 
 # Name of the Elasticsearch index
 ELASTICSEARCH_INDEX_NAMES = {
-    'search.documents.score': 'score',
-    'search.documents.efo_trait': 'efo_trait',
-    'search.documents.publication': 'publication',
-    #'search.documents.publisher': 'publisher',
+    'search_2.documents.efo_trait': 'efo_trait',
+    'search_2.documents.publication': 'publication',
+    #'search.documents.score': 'score',
+    #'search.documents.efo_trait': 'efo_trait',
+    #'search.documents.publication': 'publication',
 }

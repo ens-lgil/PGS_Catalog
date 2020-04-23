@@ -89,7 +89,10 @@ class ScoreDocument(Document):
         """Inner nested class Django."""
 
         model = Score  # The model associate with this Document
-        related_models = [Publication,EFOTrait]
+        related_models = [Publication, EFOTrait]
 
-        def get_instances_from_related(self, publication_instance):
-            return publication_instance.publication_score.all()
+        def get_instances_from_related(self, related_instance):
+            if isinstance(related_instance, Publication):
+                return related_instance.publication_score.all()
+            elif isinstance(related_instance, EFOTrait):
+                return related_instance.score_set.all()
