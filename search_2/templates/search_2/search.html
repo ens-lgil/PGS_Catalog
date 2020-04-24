@@ -24,23 +24,35 @@
             <span class="search_facet selected" id="efo_traits_facet">
         {% endif %}
           <i class="fa fa-circle-o"></i>
+          <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#BE4A81;color: white;border-radius: 50%;padding-left:0.35rem;padding-right:0.35rem">T</span>
           <div>Traits</div>
           <span class="badge badge-pill badge-pgs">{{ efo_traits_count }}</span>
         </span>
       {% endif %}
 
       {% if table_publications %}
-        {% if table_efo_traits or table_scores %}
+        {% if table_efo_traits %}
           <span class="search_facet" id="publications_facet">
         {% else %}
             <span class="search_facet selected" id="publications_facet">
         {% endif %}
           <i class="fa fa-circle-o"></i>
+          <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#f58f22;color: white;border-radius: 50%;padding-left:0.3rem;padding-right:0.3rem">P</span>
           <div>Publications</div>
           <span class="badge badge-pill badge-pgs">{{ publications_count }}</span>
         </span>
       {% endif %}
+
+      <span class="search_facet" id="all_facet">
+        <i class="fa fa-circle-o"></i>
+        <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#BE4A81;color: white;border-radius: 50%;padding-left:0.35rem;padding-right:0.35rem">T</span>
+        <div style="padding-right:0px"> + </div>
+        <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#f58f22;color: white;border-radius: 50%;padding-left:0.3rem;padding-right:0.3rem">P</span>
+        <div>All results</div>
+        <span class="badge badge-pill badge-pgs">{{ all_results|length }}</span>
+      </span>
     </div>
+
 
     {% if efo_traits_count %}
       <div class="table_results" id="efo_traits_results" {% if scores_count %}style="display:none"{% endif %}>
@@ -65,6 +77,20 @@
         <!--<ul>
         {% for item in publications %}
           <li>{{ item.id }}: {{ item.title }}</li>
+        {% endfor %}
+        </ul>-->
+      </div>
+    {% endif %}
+
+    {% if all_results %}
+      <div class="table_results" id="all_results" {% if scores_count or efo_traits_count or publications_count %}style="display:none"{% endif %}>
+        <h3 class="mt-4">All results</h3>
+        {% for result in all_results %}
+          {{ result|safe }}
+        {% endfor %}
+        <!--<ul>
+        {% for item in efo_traits %}
+          <li>{{ item.id }}: {{ item.label }} | {{ item.traitcategory_set.0.label }} | {{ item.mapped_terms }}</li>
         {% endfor %}
         </ul>-->
       </div>
