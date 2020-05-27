@@ -26,7 +26,14 @@ class TemplateTest(TestCase):
 
     saved_scores = {}
     testset_to_sampleset = {}
-    debug = True
+    debug = False #True
+
+    external_id_checked = {
+        'DOI'  : {},
+        'EFO'  : {},
+        'GWAS' : {},
+        'PMID' : {}
+    }
 
     def parse_study_template(self, study_name):
         self.study.file_loc  = '~/Workspace/datafiles/SourceFiles/{}/{}.xlsx'.format(study_name,study_name)
@@ -39,9 +46,13 @@ class TemplateTest(TestCase):
 
 
     def load_study_data(self):
+        print("#----------#\n#  Scores  #\n#----------#")
         self.load_scores()
+        print("\n#---------------------#\n#  Samples to Scores  #\n#---------------------#")
         self.link_samples_to_scores()
+        print("\n#---------------#\n#  Sample Sets  #\n#---------------#")
         self.load_sample_sets()
+        print("\n#-----------------------#\n#  Performance Metrics  #\n#-----------------------#")
         self.load_performance_metrics()
 
 
@@ -76,7 +87,6 @@ class TemplateTest(TestCase):
             # Test Score
             print("SCORE ID: "+str(score_db_id)+" ("+score_id+")")
             self.score_test(current_score, score_db_id, len(efos_toadd))
-
 
     def link_samples_to_scores(self):
 
@@ -118,7 +128,7 @@ class TemplateTest(TestCase):
                         print('ERROR: Unclear how to add samples')
 
                 # Test Score Samples
-                print("Score to Sample | SCORE ID: "+str(current_score.id)+" ("+current_score.name+")")
+                #print("Score to Sample | SCORE ID: "+str(current_score.id)+" ("+current_score.name+")")
                 self.score_sample_test(current_score)
 
 
@@ -165,6 +175,9 @@ class TemplateTest(TestCase):
             current_sampleset.save()
             self.testset_to_sampleset[test_name] = current_sampleset
 
+            # Test Sample Set
+            self.sampleset_test(current_sampleset)
+
 
     def load_performance_metrics(self):
 
@@ -188,18 +201,30 @@ class TemplateTest(TestCase):
                     setattr(current_metric, f, val)
                 current_metric.save()
 
+            # Test Performance
+            #print("Performance | PPM ID: "+str(current_performance.id)+" ( Score: "+str(current_score.id)+' - '+current_score.name+")")
+            self.performance_test(current_performance)
+
 
     #-------------------------------#
     #  Model oriented test methods  #
     #-------------------------------#
 
     def score_test(self, score, score_id, count_efo):
-        print("> Test Score")
+        print("\t> Test Score")
         # Instance
         self.assertIsInstance(score, Score)
         # Variables
         self.assertRegexpMatches(score.id, r'^PGS0*'+str(score_id)+'$')
-        self.assertIsNotNone(score.name)
+        self.assertRegexpMatches(score.name, r'\w+')
+        self.assertRegexpMatches(score.trait_reported, r'\w+')
+        self.assertRegexpMatches(score.method_name, r'\w+')
+        self.assertIsNotNone(score.method_params)
+        self.assertRegexpMatches(score.method_params, r'\w+')
+        self.assertIsInstance(score.variants_number, int)
+        self.assertIsInstance(score.variants_interactions, int)
+        self.assertRegexpMatches(score.variants_genomebuild, r'\w+')
+
         efo = score.trait_efo.all()
         self.assertEqual(len(efo), count_efo)
 
@@ -211,6 +236,7 @@ class TemplateTest(TestCase):
 
         if (score.trait_efo):
             efo_traits = score.trait_efo.all()
+            self.assertGreater(len(efo_traits), 0)
             self.assertTrue(isinstance(efo_traits[0], EFOTrait))
             for efo_trait in efo_traits:
                 self.efo_trait_test(efo_trait)
@@ -219,43 +245,179 @@ class TemplateTest(TestCase):
 
 
     def publication_test(self, publication):
-        print("> Test Publication")
+        print("\t> Test Publication")
+        # Instance
+        self.assertIsInstance(publication, Publication)
+        # Variables
         self.assertRegexpMatches(publication.id, r'^PGP0*\d+$')
-        self.assertIsNotNone(publication.title)
-        self.assertIsNotNone(publication.doi)
-        self.assertTrue(self.check_doi(publication.doi))
-        self.assertIsNotNone(publication.journal)
-        self.assertIsNotNone(publication.firstauthor)
-        self.assertIsNotNone(publication.authors)
+        self.assertRegexpMatches(publication.title, r'\w+')
+        if publication.doi in self.external_id_checked['DOI']:
+            self.assertTrue(self.external_id_checked['DOI'][publication.doi])
+        else:
+            self.assertRegexpMatches(publication.doi, r'\w+')
+            self.assertTrue(self.check_doi(publication.doi))
+        self.assertRegexpMatches(publication.journal, r'\w+')
+        self.assertRegexpMatches(publication.firstauthor, r'\w+')
+        self.assertRegexpMatches(publication.authors, r'\w+')
+        #self.assertRegexpMatches(publication.date_publication, r'\d+')
         self.assertIsNotNone(publication.date_publication)
 
         if (publication.PMID):
-            self.assertIsInstance(publication.PMID, int)
-            self.assertTrue(self.check_pubmed_id(publication.PMID))
+            self.pmid_test(publication.PMID)
 
 
     def efo_trait_test(self, efo_trait):
-        print("> Test EFO Trait")
+        print("\t> Test EFO Trait ")
         self.assertIsNotNone(efo_trait.id)
         # Check EFO exist
-        self.assertTrue(self.check_trait_in_efo(efo_trait.id))
+        if efo_trait.id in self.external_id_checked['EFO']:
+            self.assertTrue(self.external_id_checked['EFO'][efo_trait.id])
+        else:
+            self.assertTrue(self.check_trait_in_efo(efo_trait.id))
+
+
+    def performance_test(self, performance):
+        print("\t> Test Performance")
+        # Instance
+        self.assertIsInstance(performance, Performance)
+        # Variables
+        self.assertRegexpMatches(performance.id, r'^PPM0*\d+$')
+        self.assertIsNotNone(performance.score)
+        self.assertIsNotNone(performance.publication)
+        #if (performance.phenotyping_efo):
+        #    efo_traits = performance.phenotyping_efo.all()
+        #    self.assertTrue(isinstance(efo_traits[0], EFOTrait))
+        #    for efo_trait in efo_traits:
+        #        self.efo_trait_test(efo_trait)
+        self.assertRegexpMatches(performance.phenotyping_reported, r'\w+')
+        if performance.covariates:
+            self.assertRegexpMatches(performance.covariates, r'\w+')
+        if performance.performance_comments:
+            self.assertRegexpMatches(performance.performance_comments, r'\w+')
+
+        # Metrics
+        metrics = performance.performance_metric.all()
+        self.assertGreater(len(metrics), 0)
+        for metric in metrics:
+            self.metric_test(metric)
 
 
     def score_sample_test(self, score):
         if (score.samples_variants):
             for sample in score.samples_variants.all():
-                self.assertIsInstance(sample, Sample)
-                self.assertIsNotNone(sample.sample_number)
-                if sample.source_PMID:
-                    self.assertTrue(self.check_pubmed_id(sample.source_PMID))
-                if sample.source_GWAS_catalog:
-                    self.assertTrue(self.check_gwas_id(sample.source_GWAS_catalog))
+                self.sample_test(sample)
         if (score.samples_training):
             for sample in score.samples_training.all():
-                self.assertIsInstance(sample, Sample)
-                self.assertIsNotNone(sample.sample_number)
-                if sample.source_PMID:
-                    self.assertTrue(self.check_pubmed_id(sample.source_PMID))
+                self.sample_test(sample)
+
+
+    def sampleset_test(self, sampleset):
+        print("\t> Test Sample Set")
+        # Instance
+        self.assertIsInstance(sampleset, SampleSet)
+        # Variables
+        self.assertRegexpMatches(sampleset.id, r'^PSS0*\d+$')
+        samples = sampleset.samples.all()
+        self.assertGreater(len(samples), 0)
+        for sample in samples:
+            self.sample_test(sample)
+
+
+    def sample_test(self, sample):
+        print("\t\t- Test Sample")
+        # Instance
+        self.assertIsInstance(sample, Sample)
+
+        ## Numbers
+        self.assertIsInstance(sample.sample_number, int)
+        if sample.sample_cases:
+            self.assertIsInstance(sample.sample_cases, int)
+        if sample.sample_controls:
+            self.assertIsInstance(sample.sample_controls, int)
+        if sample.sample_percent_male:
+            self.assertIsInstance(sample.sample_percent_male, float)
+
+        ## Description
+        if sample.phenotyping_free:
+            self.assertRegexpMatches(sample.phenotyping_free, r'\w+')
+        if sample.sample_age:
+            self.demographic_test(sample.sample_age)
+        if sample.followup_time:
+            self.demographic_test(sample.followup_time)
+
+        ## Ancestry
+        self.assertRegexpMatches(sample.ancestry_broad, r'\w+')
+        if sample.ancestry_free:
+            self.assertRegexpMatches(sample.ancestry_free, r'\w+')
+        if sample.ancestry_country:
+            self.assertRegexpMatches(sample.ancestry_country, r'\w+')
+        if sample.ancestry_additional:
+            self.assertRegexpMatches(sample.ancestry_additional, r'\w+')
+
+        ## Sources
+        if sample.source_PMID:
+            self.pmid_test(sample.source_PMID)
+        if sample.source_GWAS_catalog:
+            if sample.source_GWAS_catalog in self.external_id_checked['GWAS']:
+                self.assertTrue(self.external_id_checked['GWAS'][sample.source_GWAS_catalog])
+            else:
+                self.assertRegexpMatches(sample.source_GWAS_catalog, r'^GCST\d+$')
+                self.assertTrue(self.check_gwas_id(sample.source_GWAS_catalog))
+
+        ## Cohorts
+        for cohort in sample.cohorts.all():
+            self.cohort_test(cohort)
+        if sample.cohorts_additional:
+            self.assertRegexpMatches(sample.cohorts_additional, r'\w+')
+
+
+    def cohort_test(self, cohort):
+        self.assertRegexpMatches(cohort.name_short, r'\w+')
+        self.assertRegexpMatches(cohort.name_full, r'\w+')
+
+
+    def metric_test(self, metric):
+        self.assertRegexpMatches(metric.name, r'\w+')
+        self.assertRegexpMatches(metric.name_short, r'\w+')
+        self.assertIsNotNone(metric.estimate)
+        self.assertIsInstance(metric.estimate, float)
+        if metric.unit:
+            self.assertRegexpMatches(metric.unit, r'\w+')
+        if metric.ci:
+            self.assertRegexpMatches(str(metric.ci), r'\[\d+\.?\d+\s?,\s?\d+\.?\d+\]')
+        if metric.se:
+            self.assertIsInstance(metric.se, float)
+
+
+    def demographic_test(self, demographic):
+        # Estimate
+        if demographic.estimate:
+            self.assertIsInstance(demographic.estimate, float)
+            self.assertIsNotNone(demographic.estimate)
+            self.assertRegexpMatches(demographic.estimate_type, r'\w+')
+        # Range
+        if demographic.range:
+            self.assertRegexpMatches(str(demographic.range), r'\[\d+\.?\d+\s?,\s?\d+\.?\d+\]')
+            self.assertRegexpMatches(demographic.range_type, r'\w+')
+        # Variability
+        if demographic.variability:
+            self.assertIsInstance(demographic.variability, float)
+            self.assertIsNotNone(demographic.variability)
+            self.assertRegexpMatches(demographic.variability_type, r'\w+')
+        self.assertRegexpMatches(demographic.unit, r'\w+')
+
+        if not demographic.estimate and not demographic.range and not demographic.variability:
+            print("\t\tMissing required data for 'sample_age' and/or 'followup_time'")
+
+
+    def pmid_test(self, pmid):
+        if pmid in self.external_id_checked['PMID']:
+            self.assertTrue(self.external_id_checked['PMID'][pmid])
+        else:
+            self.assertRegexpMatches(str(pmid), r'^\d+$')
+            self.assertTrue(self.check_pubmed_id(pmid))
+
+
 
     #--------------------#
     #  Main test method  #
@@ -275,54 +437,62 @@ class TemplateTest(TestCase):
         response = requests.get('https://www.ebi.ac.uk/ols/api/ontologies/efo/terms?obo_id=%s'%trait_id.replace('_', ':'))
         status = response.status_code
         if (self.debug):
-            print("> OLS STATUS: "+str(status))
+            print("\t> OLS STATUS: "+str(status))
         if status == 200:
-            return True
+            result = True
         elif status == 404:
             print("The trait ID: "+trait_id+" does not exist in EFO")
-            return False
+            result = False
         else:
             print("Issue with the OLS API: we can't check that the trait ID: "+trait_id+" exists in EFO")
-            return True
+            result = True
+        self.external_id_checked['EFO'][trait_id] = result
+        return result
 
     def check_pubmed_id(self, pmid_id):
         response = requests.get('https://pubmed.ncbi.nlm.nih.gov/%s'%pmid_id)
         status = response.status_code
         if (self.debug):
-            print("> PubMed STATUS: "+str(status))
+            print("\t> PubMed STATUS: "+str(status))
         if status == 200:
-            return True
+            result = True
         elif status == 404:
             print("The PubMed ID: "+pmid_id+" does not exist in PubMed")
-            return False
+            result = False
         else:
             print("Issue with the PubMed website: we can't check that the PubMed ID: "+pmid_id+" exists")
-            return True
+            result = True
+        self.external_id_checked['PMID'][pmid_id] = result
+        return result
 
     def check_doi(self, doi):
         response = requests.get('https://doi.org/api/handles/%s'%doi)
         status = response.status_code
         if (self.debug):
-            print("> DOI STATUS: "+str(status))
+            print("\t> DOI STATUS: "+str(status))
         if status == 200:
-            return True
+            result = True
         elif status == 404:
             print("The DOI: "+doi+" does not exist")
-            return False
+            result = False
         else:
             print("Issue with the DOI server: we can't check that the DOI: "+doi+" exists")
-            return True
+            result = True
+        self.external_id_checked['DOI'][doi] = result
+        return result
 
     def check_gwas_id(self, gwas_id):
         response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/studies/%s'%gwas_id)
         status = response.status_code
         if (self.debug):
-            print("> GWAS STATUS: "+str(status))
+            print("\t> GWAS STATUS: "+str(status))
         if status == 200:
-            return True
+            result = True
         elif status == 404:
             print("The GWAS Catalog Study ID: "+gwas_id+" does not exist")
-            return False
+            result = False
         else:
             print("Issue with the GWAS Catalog website: we can't check that the GWAS Study ID: "+gwas_id+" exists")
-            return True
+            result = True
+        self.external_id_checked['GWAS'][gwas_id] = result
+        return result
