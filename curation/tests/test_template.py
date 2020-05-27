@@ -7,15 +7,16 @@ import numpy as np
 class TemplateTest(TestCase):
     """ Test the template """
 
-    loc_curation2schema = '~/Workspace/datafiles/templates/TemplateColumns2Models_v5.xlsx'
+    root_dir = '~/Workspace/datafiles/'
+    loc_curation2schema = root_dir+'templates/TemplateColumns2Models_v5.xlsx'
     curation2schema = pd.read_excel(loc_curation2schema, index_col = 0)
 
-    loc_curation2schema_scoring = '~/Workspace/datafiles/templates/ScoringFileSchema.xlsx'
+    loc_curation2schema_scoring = root_dir+'templates/ScoringFileSchema.xlsx'
     curation2schema_scoring = pd.read_excel(loc_curation2schema_scoring, index_col = 0)
 
 
     #loc_localGWAS = '../pgs_DBSourceFiles/local_GWASCatalog/'
-    loc_localGWAS = '~/Workspace/datafiles/local_GWASCatalog/'
+    loc_localGWAS = root_dir+'local_GWASCatalog/'
     #gwas_studies, gwas_samples = load_GWAScatalog(loc_localGWAS, update = True)
     gwas_studies, gwas_samples = load_GWAScatalog(loc_localGWAS, update = False)
     gwas_studies.set_index('STUDY ACCESSION', inplace = True)
@@ -36,7 +37,7 @@ class TemplateTest(TestCase):
     }
 
     def parse_study_template(self, study_name):
-        self.study.file_loc  = '~/Workspace/datafiles/SourceFiles/{}/{}.xlsx'.format(study_name,study_name)
+        self.study.file_loc  = '{}SourceFiles/{}/{}.xlsx'.format(self.root_dir,study_name,study_name)
         self.study.read_curation()
         self.study.table_mapschema = self.curation2schema
         self.study.extract_publication()
@@ -378,7 +379,8 @@ class TemplateTest(TestCase):
 
     def metric_test(self, metric):
         self.assertRegexpMatches(metric.name, r'\w+')
-        self.assertRegexpMatches(metric.name_short, r'\w+')
+        if metric.name_short:
+            self.assertRegexpMatches(metric.name_short, r'\w+')
         self.assertIsNotNone(metric.estimate)
         self.assertIsInstance(metric.estimate, float)
         if metric.unit:
@@ -425,7 +427,13 @@ class TemplateTest(TestCase):
 
     def test_curation_template(self):
         print("Run test_curation_template")
-        self.parse_study_template('HoLe2016')
+        #study = 'HoLe2016'
+        study = 'Shi2019'
+        #study = 'Vuckovic2020'
+        #study = 'Wheeler2017'
+        #study = 'Zheutlin2019'
+
+        self.parse_study_template(study)
         self.load_study_data()
 
 
