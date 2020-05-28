@@ -42,6 +42,7 @@ class TemplateTest(TestCase):
 
     saved_scores = {}
     testset_to_sampleset = {}
+    samples_tested = []
     debug = False #True
 
     external_id_checked = {
@@ -227,7 +228,11 @@ class TemplateTest(TestCase):
     #-------------------------------#
 
     def score_test(self, score, score_id, count_efo):
-        print("\t> Test Score")
+        score_name = ''
+        if score.name:
+            score_name = " ("+str(score.name)+")"
+        print("\t> Test Score - "+str(score.id)+score_name)
+
         # Instance
         self.assertIsInstance(score, Score)
         # Variables
@@ -261,7 +266,11 @@ class TemplateTest(TestCase):
 
 
     def publication_test(self, publication):
-        print("\t> Test Publication")
+        title = ''
+        if publication.title:
+            title =  " ("+publication.title+")"
+        print("\t> Test Publication - "+str(publication.id)+title)
+
         # Instance
         self.assertIsInstance(publication, Publication)
         # Variables
@@ -283,7 +292,12 @@ class TemplateTest(TestCase):
 
 
     def efo_trait_test(self, efo_trait):
-        print("\t> Test EFO Trait ")
+        trait = ''
+        if efo_trait.label:
+            trait =  " ("+efo_trait.label+")"
+        print("\t> Test EFO Trait - "+str(efo_trait.id)+trait)
+
+
         self.assertIsNotNone(efo_trait.id)
         # Check EFO exist
         if efo_trait.id in self.external_id_checked['EFO']:
@@ -293,7 +307,8 @@ class TemplateTest(TestCase):
 
 
     def performance_test(self, performance):
-        print("\t> Test Performance")
+        print("\t> Test Performance - "+str(performance.id)+" (#"+str(performance.num)+")")
+
         # Instance
         self.assertIsInstance(performance, Performance)
         # Variables
@@ -319,16 +334,17 @@ class TemplateTest(TestCase):
 
 
     def score_sample_test(self, score):
+        score_label = "Score: "+score.id+" ("+score.name+")"
         if (score.samples_variants):
             for sample in score.samples_variants.all():
-                self.sample_test(sample)
+                self.sample_test(sample, score_label)
         if (score.samples_training):
             for sample in score.samples_training.all():
-                self.sample_test(sample)
+                self.sample_test(sample, score_label)
 
 
     def sampleset_test(self, sampleset):
-        print("\t> Test Sample Set")
+        print("\t> Test Sample Set - "+sampleset.id+" (#"+str(sampleset.num)+")")
         # Instance
         self.assertIsInstance(sampleset, SampleSet)
         # Variables
@@ -339,8 +355,18 @@ class TemplateTest(TestCase):
             self.sample_test(sample)
 
 
-    def sample_test(self, sample):
-        print("\t\t- Test Sample")
+    def sample_test(self, sample, associated_id=None):
+        # Check sample ID, to see if the object has already been tested
+        if sample.id in self.samples_tested:
+            return
+
+        prefix = '\t-'
+        association = ''
+        if associated_id:
+            association =  " | "+associated_id
+            prefix = '>'
+        print("\t"+prefix+" Test Sample - #"+str(sample.id)+association)
+
         # Instance
         self.assertIsInstance(sample, Sample)
 
@@ -385,6 +411,9 @@ class TemplateTest(TestCase):
             self.cohort_test(cohort)
         if sample.cohorts_additional:
             self.assertRegexpMatches(sample.cohorts_additional, r'\w+')
+
+        # Store sample ID, to avoid testing the same object several times
+        self.samples_tested.append(sample.id)
 
 
     def cohort_test(self, cohort):
