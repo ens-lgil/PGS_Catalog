@@ -7,7 +7,22 @@ import numpy as np
 class TemplateTest(TestCase):
     """ Test the template """
 
-    root_dir = '~/Workspace/datafiles/'
+    pgs_template_dir = 'pgs_template_dir'
+    if os.environ[pgs_template_dir]:
+        root_dir = os.environ[pgs_template_dir]
+        if not root_dir.endswith('/'):
+            root_dir += '/'
+    else:
+        print("Please provide an environment variable '"+pgs_template_dir+"'")
+        exit(1)
+
+    pgs_study_file = 'pgs_study_file'
+    if os.environ[pgs_study_file]:
+        study_file = os.environ[pgs_study_file]
+    else:
+        print("Please provide an environment variable '"+pgs_study_file+"'")
+        exit(1)
+
     loc_curation2schema = root_dir+'templates/TemplateColumns2Models_v5.xlsx'
     curation2schema = pd.read_excel(loc_curation2schema, index_col = 0)
 
@@ -36,8 +51,8 @@ class TemplateTest(TestCase):
         'PMID' : {}
     }
 
-    def parse_study_template(self, study_name):
-        self.study.file_loc  = '{}SourceFiles/{}/{}.xlsx'.format(self.root_dir,study_name,study_name)
+    def parse_study_template(self):
+        self.study.file_loc  = self.study_file
         self.study.read_curation()
         self.study.table_mapschema = self.curation2schema
         self.study.extract_publication()
@@ -427,14 +442,10 @@ class TemplateTest(TestCase):
 
     def test_curation_template(self):
         print("Run test_curation_template")
-        #study = 'HoLe2016'
-        study = 'Shi2019'
-        #study = 'Vuckovic2020'
-        #study = 'Wheeler2017'
-        #study = 'Zheutlin2019'
-
-        self.parse_study_template(study)
+        self.parse_study_template()
         self.load_study_data()
+
+
 
 
     #-------------------#
