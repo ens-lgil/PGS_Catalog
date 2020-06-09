@@ -57,17 +57,19 @@ class EFOTraitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EFOTrait
-        fields = ('id', 'label', 'description', 'url' )
+        fields = ('id', 'label', 'description', 'url')
         read_only_fields = ('id', 'label', 'description', 'url')
+
 
 
 class EFOTraitExtendedSerializer(EFOTraitSerializer):
     trait_synonyms = serializers.SerializerMethodField()
     trait_mapped_terms = serializers.SerializerMethodField()
+    trait_categories = serializers.SerializerMethodField('get_category_labels_list')
 
     class Meta(EFOTraitSerializer.Meta):
-        fields = EFOTraitSerializer.Meta.fields + ('trait_synonyms', 'trait_mapped_terms', 'associated_pgs_ids')
-        read_only_fields = EFOTraitSerializer.Meta.read_only_fields + ('trait_synonyms', 'trait_mapped_terms', 'associated_pgs_ids')
+        fields = EFOTraitSerializer.Meta.fields + ('trait_categories', 'trait_synonyms', 'trait_mapped_terms', 'associated_pgs_ids')
+        read_only_fields = EFOTraitSerializer.Meta.read_only_fields + ('trait_categories', 'trait_synonyms', 'trait_mapped_terms', 'associated_pgs_ids')
 
     def get_trait_synonyms(self, obj):
         if (obj.synonyms):
@@ -77,6 +79,8 @@ class EFOTraitExtendedSerializer(EFOTraitSerializer):
         if (obj.mapped_terms):
             return obj.mapped_terms_list
         return []
+    def get_category_labels_list(self, obj):
+        return obj.category_labels_list
 
 
 class MetricSerializer(serializers.ModelSerializer):
@@ -108,15 +112,19 @@ class ScoreSerializer(serializers.ModelSerializer):
     samples_variants = SampleSerializer(many=True, read_only=True)
     samples_training = SampleSerializer(many=True, read_only=True)
     trait_efo = EFOTraitSerializer(many=True, read_only=True)
+    matches_publication = serializers.SerializerMethodField('get_flag_asis')
 
     class Meta:
         model = Score
-        fields = ('id', 'name', 'ftp_scoring_file', 'publication', 'samples_variants', 'samples_training',
+        fields = ('id', 'name', 'ftp_scoring_file', 'publication', 'matches_publication', 'samples_variants', 'samples_training',
                   'trait_reported', 'trait_additional', 'trait_efo', 'method_name', 'method_params',
                   'variants_number', 'variants_interactions', 'variants_genomebuild')
-        read_only_fields = ('id', 'name', 'ftp_scoring_file', 'publication', 'samples_variants', 'samples_training',
+        read_only_fields = ('id', 'name', 'ftp_scoring_file', 'publication', 'matches_publication', 'samples_variants', 'samples_training',
                   'trait_reported', 'trait_additional', 'trait_efo', 'method_name', 'method_params',
                   'variants_number', 'variants_interactions', 'variants_genomebuild')
+
+    def get_flag_asis(self, obj):
+        return obj.flag_asis
 
 
 class PerformanceSerializer(serializers.ModelSerializer):
@@ -136,3 +144,12 @@ class ReleaseSerializer(serializers.ModelSerializer):
         model = Release
         fields = ('date', 'score_count', 'performance_count', 'publication_count', 'notes', 'released_score_ids', 'released_publication_ids', 'released_performance_ids')
         read_only_fields = ('date', 'score_count', 'performance_count', 'publication_count', 'notes', 'released_score_ids', 'released_publication_ids', 'released_performance_ids')
+
+
+class TraitCategorySerializer(serializers.ModelSerializer):
+    efotraits = EFOTraitSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TraitCategory
+        fields = ('label', 'efotraits')
+        read_only_fields = ('label', 'efotraits')

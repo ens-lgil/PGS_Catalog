@@ -164,7 +164,7 @@ class Browse_TraitTable(tables.Table):
     label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term label)', orderable=True)
     scores_count = tables.Column(accessor='scores_count', verbose_name='Number of Related PGS')
     id_url = Column_format_html(accessor='display_id_url', verbose_name='Trait Identifier (Experimental Factor Ontology ID)')
-    category_labels = tables.Column(accessor='category_labels', verbose_name='Trait Category')
+    category_labels = Column_format_html(accessor='display_category_labels', verbose_name='Trait Category')
 
     class Meta:
         model = EFOTrait
@@ -186,6 +186,7 @@ class Browse_TraitTable(tables.Table):
 class Browse_ScoreTable(tables.Table):
     '''Table to browse Scores (PGS) in the PGS Catalog'''
     list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
+    #display_list_traits = tables.Column(accessor='display_list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
 
     relative_path = '../..'
@@ -204,6 +205,7 @@ class Browse_ScoreTable(tables.Table):
             'publication',
             'trait_reported',
             'list_traits',
+            #'display_list_traits',
             'variants_number',
             'ftp_link'
         ]
@@ -225,6 +227,12 @@ class Browse_ScoreTable(tables.Table):
         for x in value:
             l.append('<a href=../../trait/{}>{}</a>'.format(x[0], x[1]))
         return format_html('<br>'.join(l))
+
+    #def render_display_list_traits(self, value):
+    #    l = []
+    #    for x in value:
+    #        l.append('{}<a href=../../trait/{}>{}</a>'.format(x[0], x[1], x[2]))
+    #    return format_html('<br>'.join(l))
 
     def render_ftp_link(self, value):
         id = value.split('.')[0]
@@ -396,7 +404,7 @@ class SampleTable_performance(tables.Table):
 
 
 class PerformanceTable(tables.Table):
-    '''On each PGS page - Displays PGS Performance metrics'''
+    '''Displays PGS Performance metrics'''
     id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance Metric ID<br />(PPM ID)'))
     sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'))
     trait_info = Column_trait(accessor='display_trait', verbose_name='Trait', orderable=False)
@@ -413,35 +421,6 @@ class PerformanceTable(tables.Table):
             "data-show-columns" : "true",
             "data-sort-name" : "id",
             "data-export-options" : '{"fileName": "pgs_performance_metrics_data"}'
-        }
-        fields = [
-            'id', 'sampleset', 'pub_withexternality',
-            'trait_info',
-            'effect_sizes', 'class_accuracy', 'othermetrics',
-            'covariates', 'performance_comments'
-        ]
-        template_name = 'catalog/pgs_catalog_django_table.html'
-
-    def render_sampleset(self, value):
-        return format_html('<a href="#{}">{}</a>', value, value)
-
-
-class PerformanceTable_PubTrait(tables.Table):
-    '''On each Performance/trait page - Displays PGS Performance metrics'''
-    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance Metric ID<br />(PPM ID)'))
-    trait_info = Column_trait(accessor='display_trait', verbose_name='Trait', orderable=False)
-    sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br/>(PSS ID)'), orderable=False)
-    effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br/>(per SD change)'), orderable=False)
-    class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='PGS Classification Metrics', orderable=False)
-    othermetrics = Column_metriclist(accessor='othermetrics_list', verbose_name='Other Metrics', orderable=False)
-    pub_withexternality = Column_pubexternality(accessor='publication_withexternality', verbose_name='Performance Source',orderable=False)
-
-    class Meta:
-        model = Performance
-        attrs = {
-            "data-show-columns" : "true",
-            "data-sort-name" : "id",
-            "data-export-options" : '{"fileName": "pgs_performance_metrics_pub-trait_data"}'
         }
         fields = [
             'id','score', 'sampleset', 'pub_withexternality',

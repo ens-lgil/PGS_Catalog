@@ -21,14 +21,21 @@ pgs_prefetch = {
     'perf' : ['score__publication', 'phenotyping_efo', 'sampleset__samples', 'sampleset__samples__sampleset', 'sampleset__samples__sample_age', 'sampleset__samples__followup_time', 'sampleset__samples__cohorts', 'performance_metric']
 }
 
+def disclaimer_formatting(content):
+    return '<div class="clearfix"><div class="mt-2 float_left pgs_note"><div><span>Disclaimer: </span>{}</div></div></div>'.format(content)
+
 def performance_disclaimer():
-    return """<span class="pgs_note_title">Disclaimer: </span>
-        The performance metrics are displayed as reported by the source studies.
+    return disclaimer_formatting("""The performance metrics are displayed as reported by the source studies.
         It is important to note that metrics are not necessarily comparable with
         each other. For example, metrics depend on the sample characteristics
         (described by the PGS Catalog Sample Set [PSS] ID), phenotyping, and
         statistical modelling. Please refer to the source publication for additional
-        guidance on performance."""
+        guidance on performance.""")
+
+def score_disclaimer(publication_url):
+    return disclaimer_formatting("""The original published polygenic score is unavailable.
+    The authors have provided an alternative polygenic for the Catalog.
+    Please note some details and performance metrics may differ from the <a href="https://doi.org/{}">publication</a>.""".format(publication_url))
 
 
 def get_efo_traits_data():
@@ -140,6 +147,8 @@ def pgs(request, pgs_id):
         'num_variants_pretty' : '{:,}'.format(score.variants_number),
         'has_table': 1
     }
+    if not score.flag_asis:
+        context['score_disclaimer'] = score_disclaimer(score.publication.doi)
 
     # Extract and display Sample Tables
     if score.samples_variants.count() > 0:
@@ -152,6 +161,7 @@ def pgs(request, pgs_id):
     # Extract + display Performance + associated samples
     pquery = Performance.objects.defer(*pgs_defer['perf']).select_related('score', 'publication').filter(score=score).prefetch_related(*pgs_prefetch['perf'])
     table = PerformanceTable(pquery)
+    table.exclude = ('score')
     context['table_performance'] = table
 
     pquery_samples = set()
@@ -201,7 +211,7 @@ def pgp(request, pub_id):
         context['table_evaluated'] = table
 
     #Find + table the evaluations
-    table = PerformanceTable_PubTrait(pquery)
+    table = PerformanceTable(pquery)
     context['table_performance'] = table
 
     pquery_samples = set()
@@ -242,7 +252,7 @@ def efo(request, efo_id):
 
     #Find the evaluations of these scores
     pquery = Performance.objects.defer(*pgs_defer['perf']).select_related('publication','score').filter(score__in=related_scores).prefetch_related(*pgs_prefetch['perf'])
-    table = PerformanceTable_PubTrait(pquery)
+    table = PerformanceTable(pquery)
     context['table_performance'] = table
 
     pquery_samples = set()
@@ -311,6 +321,19 @@ def pss(request, pss_id):
         'has_table': 1,
         'has_chart': 1
     }
+
+    related_performance = Performance.objects.defer(*pgs_defer['perf']).select_related('score', 'publication').filter(sampleset=sample_set).prefetch_related('score__publication', 'score__trait_efo', 'sampleset', 'phenotyping_efo', 'performance_metric')
+    if related_performance.count() > 0:
+        # Scores
+        related_scores = [x.score for x in related_performance]
+        table_scores = Browse_ScoreTable(related_scores)
+        context['table_scores'] = table_scores
+        # Display performance metrics associated with this sample set
+        table_performance = PerformanceTable(related_performance)
+        table_performance.exclude = ('sampleset')
+        context['table_performance'] = table_performance
+        context['performance_disclaimer'] = performance_disclaimer()
+
     return render(request, 'catalog/pss.html', context)
 
 

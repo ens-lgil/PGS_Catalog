@@ -1,9 +1,10 @@
 openapi: 3.0.2
 servers:
+  - url: http://127.0.0.1:8000/
   - url: https://www.pgscatalog.org/
 info:
   title: PGS Catalog REST API
-  version: '1.0'
+  version: '1.1'
   description: |
     Programatic access to the PGS Catalog metadata. More information about the metadata and its structure can be found [here](/docs/).
 
@@ -19,7 +20,7 @@ info:
         ```
           {
             "count": 137,
-            "next": "https://www.pgscatalog.org/rest/score/all/?limit=50&offset=50",
+            "next": "https://www.pgscatalog.org/rest/score/all?limit=50&offset=50",
             "previous": null,
             "results": [
               < list the results 1 to 50 >
@@ -55,6 +56,19 @@ info:
         * **message**: description of the error.
         * **availableIn**: number of seconds before the rate limit is reset.
       </div>
+
+    ---
+
+    <a class="toggle_btn" id="changelog">REST API version changelog <i class="fa fa-plus-circle"></i></a>
+    <div class="toggle_content" id="content_changelog" style="display:none">
+
+      * <span class="badge badge-pill badge-pgs">1.1</span> - June 2020:
+        * New endpoint `rest/trait_category/all`.
+        * New field **trait_categories** in the `rest/trait` endpoints.
+
+      * <span class="badge badge-pill badge-pgs">1.0</span> - May 2020:
+        * First version of the PGS Catalog REST API
+    </div>
 
     ---
   license:
@@ -174,6 +188,11 @@ components:
           required:
             - trait_id
           properties:
+            trait_categories:
+              type: array
+              description: "List of trait categories associated with the trait"
+              items:
+                type: string
             trait_synonyms:
               type: array
               description: "List of associated trait synonyms"
@@ -420,6 +439,9 @@ components:
           description: "URL to the scoring file on the PGS FTP"
         publication:
           $ref: '#/components/schemas/Publication'
+        matches_publication:
+          type: boolean
+          description: "Indicate if the PGS data matches the published polygenic score. If not, the authors have provided an alternative polygenic for the Catalog and some other data, such as performance metrics, may differ from the publication."
         samples_variants:
           type: array
           description: "List of samples used to define the variant associations/effect-sizes used in the PGS. These data are extracted from the NHGRI-EBI GWAS Catalog when a study ID (GCST) is available."
@@ -458,6 +480,18 @@ components:
           description: "The version of the genome assembly that the variants present in the PGS are associated with. Listed as NR (Not Reported) if unknown."
           example: "GRCh38"
 
+    TraitCategory:
+      type: object
+      description: "Trait category, as defined by the GWAS Catalog, to structure the numerous traits in broad groups"
+      properties:
+        label:
+          type: string
+          description: "Trait category name"
+          example: "Cancer"
+        efotraits:
+          $ref: '#/components/schemas/EFOTrait'
+
+
     Pagination:
       type: object
       properties:
@@ -491,6 +525,11 @@ paths:
         Retrieve a Cohort, based on its symbol, including:
           * Cohort full name
           * Associated PGS Scores(s), with the distinction between associations with the PGS Score at the development phase or at the evaluation phase
+
+          Example of request:
+          ```
+          https://www.pgscatalog.org/rest/cohort/ABCFS
+          ```
 
         __Notes__: A cohort symbol is not unique, therefore the API might return more than 1 result.
       parameters:
@@ -536,6 +575,11 @@ paths:
           * List of samples
             * Ancestry data
             * Corresponding cohort(s)
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/sample_set/PSS000070
+        ```
       parameters:
         - name: pss_id
           in: path
@@ -556,13 +600,17 @@ paths:
                 $ref: '#/components/schemas/SampleSet'
           description: 'List of samples used evaluate a PGS Score'
 
-  '/rest/sample_set/search/':
+  '/rest/sample_set/search':
     get:
       tags:
         - "Sample endpoints"
       operationId: searchSampleSet
       description: |
         Search PGS Sample Sets using defined parameters (cf. "Parameters" section below).<br />
+        The parameters can be used directly in the request URL, e.g.:
+        ```
+        https://www.pgscatalog.org/rest/sample_set/search?pgs_id=PGS000001
+        ```
         This returns a list of PGS Sample Sets, including for each of them:
           * List of samples
             * Ancestry data
@@ -616,6 +664,11 @@ paths:
           * Associated PGS Score(s)
           * Publication information
           * List of samples used for the evaluation, with their ancestry and corresponding cohorts
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/performance/PPM000001
+        ```
       parameters:
         - name: ppm_id
           in: path
@@ -636,13 +689,17 @@ paths:
                 $ref: '#/components/schemas/PerformanceMetric'
           description: 'Performance Metric + PGS Score + Publication + Sample Set'
 
-  '/rest/performance/search/':
+  '/rest/performance/search':
     get:
       tags:
         - "Performance Metric endpoints"
       operationId: searchPerformanceMetrics
       description: |
         Search PGS Performance Metrics using defined parameters (cf. "Parameters" section below).<br />
+        The parameters can be used directly in the request URL, e.g.:
+        ```
+        https://www.pgscatalog.org/rest/performance/search?pgs_id=PGS000001
+        ```
         This returns a list of PGS Performance Metrics, including for each of them:
           * Performance metrics metadata (odd ratio, beta coefficient, C-index, ...)
           * Reported phenotyping
@@ -686,7 +743,7 @@ paths:
 
 
   # Publication endpoints
-  '/rest/publication/all/':
+  '/rest/publication/all':
     get:
       tags:
         - "Publication endpoints"
@@ -696,6 +753,11 @@ paths:
           * Pubmed ID and doi
           * Publication title, journal, date and authors
           * Associated PGS Score(s)
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/publication/all
+        ```
       parameters: []
       responses:
         '200':
@@ -728,6 +790,11 @@ paths:
           * Pubmed ID and doi
           * Publication title, journal, date and authors
           * Associated PGS Score(s)
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/publication/PGP000001
+        ```
       parameters:
         - name: pgp_id
           in: path
@@ -748,13 +815,17 @@ paths:
                 $ref: '#/components/schemas/Publication_extended'
           description: 'Publication information'
 
-  '/rest/publication/search/':
+  '/rest/publication/search':
     get:
       tags:
           - "Publication endpoints"
       operationId: searchPublications
       description: |
         Search PGS Publications using defined parameters (cf. "Parameters" section below).<br />
+        The parameters can be used directly in the request URL, e.g.:
+        ```
+        https://www.pgscatalog.org/rest/publication/search?pgs_id=PGS000001
+        ```
         This returns a list of PGS Publications, including for each of them:
           * Pubmed ID and doi
           * Publication title, journal, data and authors
@@ -822,7 +893,7 @@ paths:
 
 
   # Release endpoints
-  '/rest/release/all/':
+  '/rest/release/all':
     get:
       tags:
         - "Release endpoints"
@@ -832,6 +903,11 @@ paths:
           * The release date (format YYYY-MM-DD)
           * The number of new PGS Scores, Publications and Performance Metrics
           * The list of new PGS Scores, Publications and Performance Metrics IDs
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/release/all
+        ```
       parameters: []
       responses:
         '200':
@@ -864,6 +940,11 @@ paths:
           * The release date (format YYYY-MM-DD)
           * The number of new PGS Scores, Publications and Performance Metrics
           * The list of new PGS Scores, Publications and Performance Metrics IDs
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/release/2020-02-12
+        ```
       parameters:
         - name: release_date
           in: path
@@ -884,7 +965,7 @@ paths:
                 $ref: '#/components/schemas/Release'
           description: 'Release information'
 
-  '/rest/release/current/':
+  '/rest/release/current':
     get:
       tags:
         - "Release endpoints"
@@ -894,6 +975,11 @@ paths:
           * The release date (format YYYY-MM-DD)
           * The number of new PGS Scores, Publications and Performance Metrics
           * The list of new PGS Scores, Publications and Performance Metrics IDs
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/release/current
+        ```
       parameters: []
       responses:
         '200':
@@ -905,7 +991,7 @@ paths:
 
 
   # Score endpoints
-  '/rest/score/all/':
+  '/rest/score/all':
     get:
       tags:
         - "Score endpoints"
@@ -918,6 +1004,11 @@ paths:
           * The different samples used during the PGS, with ancestry information and cohort(s):
             * **samples_variants**: samples used to define the variant associations/effect-sizes used in the PGS. These data are extracted from the NHGRI-EBI GWAS Catalog when a study ID (GCST) is available.
             * **samples_training**: samples used to develop or train the score (e.g. not used for variant discovery, and non-overlapping with the samples used to evaluate the PGS predictive ability).
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/score/all
+        ```
       parameters: []
       responses:
         '200':
@@ -959,6 +1050,11 @@ paths:
           * The different samples used during the PGS, with ancestry information and cohort(s):
             * **samples_variants**: samples used to define the variant associations/effect-sizes used in the PGS. These data are extracted from the NHGRI-EBI GWAS Catalog when a study ID (GCST) is available.
             * **samples_training**: samples used to develop or train the score (e.g. not used for variant discovery, and non-overlapping with the samples used to evaluate the PGS predictive ability).
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/score/PGS000001
+        ```
       parameters:
         - name: pgs_id
           in: path
@@ -985,13 +1081,17 @@ paths:
                   $ref: '#/components/schemas/Error_4XX'
           description: Client error (e.g. 400 - Bad request, 405 - Method not allowed)
 
-  '/rest/score/search/':
+  '/rest/score/search':
     get:
       tags:
         - "Score endpoints"
       operationId: searchScores
       description: |
         Search PGS Scores using defined parameters (cf. "Parameters" section below).<br />
+        The parameters can be used directly in the request URL, e.g.:
+        ```
+        https://www.pgscatalog.org/rest/score/search?trait_id=EFO_1000649
+        ```
         This returns a list of PGS Scores, including for each of them:
           * The URL to the scoring file
           * Publication information
@@ -1066,7 +1166,7 @@ paths:
 
 
   # Trait endpoints
-  '/rest/trait/all/':
+  '/rest/trait/all':
     get:
       tags:
         - "Trait endpoints"
@@ -1074,8 +1174,14 @@ paths:
       description: |
         Retrieve all the Traits, including for each of them:
           * Ontology ID, trait label, description and URL
+          * Trait categories
           * Synonyms and external mapped terms
           * Associated PGS Score(s)
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/trait/all
+        ```
       parameters: []
       responses:
         '200':
@@ -1106,8 +1212,14 @@ paths:
       description: |
         Retrieve a Trait, including:
           * Ontology ID, trait label, description and URL
+          * Trait categories
           * Synonyms and external mapped terms
           * Associated PGS Score(s)
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/trait/EFO_0000305
+        ```
       parameters:
         - name: trait_id
           in: path
@@ -1129,15 +1241,20 @@ paths:
           description: 'Trait information'
 
 
-  '/rest/trait/search/':
+  '/rest/trait/search':
     get:
       tags:
           - "Trait endpoints"
       operationId: searchTrait
       description: |
         Search Traits using defined parameters (cf. "Parameters" section below).<br />
+        The parameters can be used directly in the request URL, e.g.:
+        ```
+        https://www.pgscatalog.org/rest/trait/search?term=Alzheimer
+        ```
         This returns a list of Traits, including for each of them:
           * Ontology ID, trait label, description and URL
+          * Trait categories
           * Synonyms and external mapped terms
           * Associated PGS Score(s)
       parameters:
@@ -1146,14 +1263,17 @@ paths:
           schema:
             type: string
           required: false
-          description: 'Trait term or external ID'
+          description: 'Trait term, trait category or external ID'
           examples:
             Select an example or type a value/ID:
               value: ''
             Alzheimer:
               value: "Alzheimer"
+            "Neurological disorder":
+              value: "Neurological disorder"
             OMIM:605526:
               value: "OMIM:605526"
+
       responses:
         '200':
           content:
@@ -1175,6 +1295,45 @@ paths:
 
                   __Notes:__ This endpoint uses pagination.
 
+  # TraitCategory endpoint
+  '/rest/trait_category/all':
+    get:
+      tags:
+        - "Trait endpoints"
+      operationId: getAllTraitCategories
+      description: |
+        Retrieve all higher-level Trait Categories in the Catalog, including for each of them:
+          * Trait category name
+          * List of all PGS Traits (EFO Ontology Terms) associated with the category
+
+        Trait Category to Trait mappings are retrieved from the <a class="link external-link" href="https://www.ebi.ac.uk/gwas/rest/docs/api#custom-parent" target="_blank">NHGRI-EBI GWAS Catalog</a>, structuring the traits (ontology terms) into higher-level groups..
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/trait_category/all
+        ```
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                properties:
+                  results:
+                    description: "List of Trait Categories"
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TraitCategory'
+          description: |
+                  Trait categories in PGS Catalog
+
+                  ---
+
+                  __Notes:__ This endpoint uses pagination.
+
 
   # Other endpoints
   '/rest/gwas/get_score_ids/{gcst_id}':
@@ -1182,7 +1341,13 @@ paths:
       tags:
         - "Other endpoints"
       operationId: getGCST
-      description: Retrieve all the PGS Scores IDs using a given NHGRI-EBI GWAS Catalog study (GCST) as source of variant association
+      description: |
+        Retrieve all the PGS Scores IDs using a given NHGRI-EBI GWAS Catalog study (GCST) as source of variant association
+
+        Example of request:
+        ```
+        https://www.pgscatalog.org/rest/gwas/get_score_ids/GCST001937
+        ```
       parameters:
         - name: gcst_id
           in: path

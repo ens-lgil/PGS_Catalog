@@ -13,6 +13,8 @@ related_dict = {
     'perf_select': ['score', 'publication', 'sampleset'],
     'publication_score_prefetch': [Prefetch('publication_score', queryset=Score.objects.only('id','publication__id').all())],
     'score_set_prefetch': [Prefetch('score_set', queryset=Score.objects.only('id','trait_efo__id').all())],
+    'traitcategory_set_prefetch': [Prefetch('traitcategory_set', queryset=TraitCategory.objects.only('label','efotraits__id').all())],
+    'efotraits_prefetch': [Prefetch('efotraits', queryset=EFOTrait.objects.defer('synonyms','mapped_terms').all())],
     'score_defer': [*generic_defer,'publication__curation_status','publication__curation_notes','publication__date_released','publication__authors'],
     'perf_defer': [*generic_defer,'score__curation_notes','score__date_released','publication__curation_status','publication__curation_notes','publication__date_released','publication__authors'],
     'publication_defer': [*generic_defer,'curation_status']
@@ -218,7 +220,7 @@ class RestListEFOTraits(generics.ListAPIView):
     """
     Retrieve all the EFO Traits
     """
-    queryset = EFOTrait.objects.all().prefetch_related(*related_dict['score_set_prefetch']).order_by('label')
+    queryset = EFOTrait.objects.all().prefetch_related(*related_dict['score_set_prefetch'], *related_dict['traitcategory_set_prefetch']).order_by('label')
     serializer_class = EFOTraitExtendedSerializer
 
 
@@ -230,7 +232,7 @@ class RestEFOTrait(APIView):
     def get(self, request, trait_id):
         trait_id = trait_id.replace(':', '_')
         try:
-            queryset = EFOTrait.objects.prefetch_related(*related_dict['score_set_prefetch']).get(id=trait_id)
+            queryset = EFOTrait.objects.prefetch_related(*related_dict['score_set_prefetch'], *related_dict['traitcategory_set_prefetch']).get(id=trait_id)
         except EFOTrait.DoesNotExist:
             queryset = None
         serializer = EFOTraitExtendedSerializer(queryset,many=False)
@@ -245,15 +247,24 @@ class RestEFOTraitSearch(generics.ListAPIView):
 
     def get_queryset(self):
 
-        queryset = EFOTrait.objects.all().prefetch_related(*related_dict['score_set_prefetch']).order_by('label')
+        queryset = EFOTrait.objects.all().prefetch_related(*related_dict['score_set_prefetch'], *related_dict['traitcategory_set_prefetch']).order_by('label')
 
         # Search by trait term
         term = self.request.query_params.get('term')
         if term and term is not None:
-            queryset = queryset.filter(label__icontains=term) | queryset.filter(synonyms__icontains=term) | queryset.filter(mapped_terms__icontains=term)
+            queryset = queryset.filter(label__icontains=term) | queryset.filter(synonyms__icontains=term) | queryset.filter(mapped_terms__icontains=term) | queryset.filter(traitcategory__label__icontains=term)
         else:
             queryset = []
         return queryset
+
+## Trait Categories ##
+
+class RestListTraitCategories(generics.ListAPIView):
+    """
+    Retrieve all the Trait categories
+    """
+    queryset = TraitCategory.objects.defer('parent','colour').all().prefetch_related(*related_dict['efotraits_prefetch']).order_by('label')
+    serializer_class = TraitCategorySerializer
 
 
 ## Samples / Sample Sets ##
