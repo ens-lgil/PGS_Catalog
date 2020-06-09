@@ -10,21 +10,28 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
+
 import os
 
-if not os.getenv('GAE_APPLICATION', None):
-    import yaml
-    with open(os.path.join('./', 'app.yaml')) as secrets_file:
-        secrets = yaml.load(secrets_file, Loader=yaml.FullLoader)
-        for keyword in secrets['env_variables']:
-            os.environ[keyword] = secrets['env_variables'][keyword]
 
+if not os.getenv('GAE_APPLICATION', None):
+    app_settings = os.path.join('./', 'app.yaml')
+    if os.path.exists(app_settings):
+        import yaml
+        with open(app_settings) as secrets_file:
+            secrets = yaml.load(secrets_file, Loader=yaml.FullLoader)
+            for keyword in secrets['env_variables']:
+                os.environ[keyword] = secrets['env_variables'][keyword]
+    elif not os.environ['SECRET_KEY']:
+        print("Error: missing secret key")
+        exit(1)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
+# Seehttps://docs.djangoproject.com/en/3.0//howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['SECRET_KEY']
@@ -34,15 +41,15 @@ DEBUG = False
 if os.environ['DEBUG'] == 'True':
     DEBUG = True
 
+#ALLOWED_HOSTS = []
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
-
 
 # Application definition
 
 INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
     'rest_api.apps.RestApiConfig',
-    'release.apps.ReleaseConfig',
+    #'release.apps.ReleaseConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,7 +59,8 @@ INSTALLED_APPS = [
     'django_tables2',
     'django_extensions',
     'compressor',
-    'rest_framework'
+    'rest_framework',
+    'debug_toolbar' # Debug SQL queries
 ]
 
 MIDDLEWARE = [
@@ -60,54 +68,47 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', # Debug SQL queries
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Debug SQL queries
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
 ROOT_URLCONF = 'pgs_web.urls'
 
-if os.getenv('GAE_APPLICATION', None) and DEBUG==False:
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [os.path.join(BASE_DIR, 'templates')],
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.debug',
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages',
-                    'catalog.context_processors.pgs_urls',
-                    'catalog.context_processors.pgs_settings'
-                ],
-                'loaders': [
-                    ('django.template.loaders.cached.Loader', [
-                        'django.template.loaders.filesystem.Loader',
-                        'django.template.loaders.app_directories.Loader'
-                    ])
-                ]
-            },
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'catalog.context_processors.pgs_urls',
+                'catalog.context_processors.pgs_settings'
+            ],
         },
-    ]
-else:
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [],
-            'APP_DIRS': True,
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.debug',
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages',
-                    'catalog.context_processors.pgs_urls',
-                    'catalog.context_processors.pgs_settings'
-                ],
-            },
-        },
-    ]
+    },
+]
+
+if DEBUG == False:
+    TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates')]
+    TEMPLATES[0]['APP_DIRS'] = False
+    TEMPLATES[0]['OPTIONS']['loaders'] = [
+                                ('django.template.loaders.cached.Loader', [
+                                 'django.template.loaders.filesystem.Loader',
+                                 'django.template.loaders.app_directories.Loader'
+                                ])
+                            ]
 
 
 USEFUL_URLS = {
@@ -119,7 +120,8 @@ USEFUL_URLS = {
     'PGS_FTP_HTTP_ROOT' : 'http://ftp.ebi.ac.uk/pub/databases/spot/pgs',
     'PGS_TWITTER_URL'   : 'https://www.twitter.com/pgscatalog',
     'UOC_URL'           : 'https://www.phpc.cam.ac.uk/',
-    'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing'
+    'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing',
+    'CATALOG_PUBLICATION_URL' : 'https://doi.org/10.1101/2020.05.20.20108217',
 }
 if os.getenv('GAE_APPLICATION', None):
     PGS_ON_GAE = 1
@@ -129,9 +131,8 @@ else:
 WSGI_APPLICATION = 'pgs_web.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+#https://docs.djangoproject.com/en/3.0//ref/settings/#databases
 
-# [START db_setup]
 if os.getenv('GAE_APPLICATION', None):
     # Running on production App Engine, so connect to Google Cloud SQL using
     # the unix socket at /cloudsql/<your-cloudsql-connection string>
@@ -146,24 +147,24 @@ if os.getenv('GAE_APPLICATION', None):
         }
     }
 else:
-    # Running locally so connect to either a local PostgreSQL instance or connect
+    # Running locally so connect to either a local MySQL instance or connect
     # to Cloud SQL via the proxy.  To start the proxy via command line:
-    # $ cloud_sql_proxy -instances=pgs-catalog:europe-west2:pgs-*******=tcp:5430
-    # See https://cloud.google.com/sql/docs/postgres/connect-admin-proxy
+    #    $ cloud_sql_proxy -instances=pgs-catalog:europe-west1:pgs-db-server-1=tcp:3306
+    # See https://cloud.google.com/sql/docs/mysql-connect-proxy
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['DATABASE_NAME'],
             'USER': os.environ['DATABASE_USER'],
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
-            'HOST': 'localhost',
-            'PORT': 5430
+            'HOST': os.environ['DATABASE_HOST'],
+            'PORT': os.environ['DATABASE_PORT']
         }
     }
-# [END db_setup]
+
 
 # Password validation
-# https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
+#https://docs.djangoproject.com/en/3.0//ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -182,7 +183,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.0/topics/i18n/
+#https://docs.djangoproject.com/en/3.0//topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -196,7 +197,7 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.0/howto/static-files/
+#https://docs.djangoproject.com/en/3.0//howto/static-files/
 
 STATIC_URL = '/static/'
 
