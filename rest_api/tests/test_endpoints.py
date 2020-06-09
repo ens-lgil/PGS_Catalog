@@ -18,11 +18,12 @@ class BrowseEndpointTest(TestCase):
     index_result_mutliplicity = 2
     index_example = 3
 
+    # Tuple: ( Endpoint name | Base URL | Flag for results multiplicity | Parameter examples* )
     endpoints = [
-        ('Cohors/SYMBOL', 'cohort', 1, {'path': ['ABCFS','ESTHER']}),
+        ('Cohort/SYMBOL', 'cohort', 1, {'path': ['ABCFS','ESTHER']}),
         ('EFO Traits', 'trait/all', 1),
         ('EFO Trait/ID', 'trait', 0, {'path': ['EFO_0000305','EFO_0000378']}),
-        ('EFO Trait Search', 'trait/search', 1, {'query': ['term=Alzheimer','term=OMIM:605526']}),
+        ('EFO Trait Search', 'trait/search', 1, {'query': ['term=Alzheimer', 'term=Neurological disorder', 'term=OMIM:605526']}),
         ('Performance metric/ID', 'performance', 0, {'path': ['PPM000001','PPM000010']}),
         ('Performances Search','performance/search', 1, {'query': ['pgs_id=PGS000001','pgs_id=PGS000018']}),
         ('Publications', 'publication/all', 1),
@@ -37,6 +38,7 @@ class BrowseEndpointTest(TestCase):
         ('Score/ID', 'score', 0, {'path': ['PGS000001','PGS000018']}),
         ('Scores Search', 'score/search', 1, {'query': ['pmid=25855707','trait_id=EFO_1000649']}),
         ('Scores IDs from a GWAS/ID', 'gwas/get_score_ids', 2, {'path': ['GCST001937','GCST004988']}),
+        ('Trait Category', 'trait_category/all', 1),
     ]
 
     client = Client()
