@@ -13,10 +13,11 @@ INDEX.settings(
     number_of_replicas=1
 )
 
+
 html_strip = analyzer(
     'html_strip',
     tokenizer="standard",
-    filter=["lowercase", "stop", "snowball"],
+    filter=["lowercase", "stop", "snowball", "remove_duplicates"],
     char_filter=["html_strip"]
 )
 
@@ -43,7 +44,7 @@ class PublicationDocument(Document):
             'raw': fields.TextField(analyzer='keyword'),
         }
     )
-    PMID = fields.IntegerField()
+    PMID = fields.TextField(attr='PMID')
     firstauthor = fields.TextField(
         analyzer=html_strip,
         fields={

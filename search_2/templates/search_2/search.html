@@ -85,7 +85,7 @@
     {% if all_results %}
       <div class="table_results" id="all_results" {% if scores_count or efo_traits_count or publications_count %}style="display:none"{% endif %}>
         <h3 class="mt-4">All results</h3>
-        {% for result in all_results %}
+        {% for result in all_results%}
           {{ result|safe }}
         {% endfor %}
         <!--<ul>

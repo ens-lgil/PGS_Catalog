@@ -13,11 +13,13 @@ INDEX.settings(
     number_of_replicas=1
 )
 
+
 html_strip = analyzer(
     'html_strip',
     tokenizer="standard",
-    filter=["lowercase", "stop", "snowball"],
+    filter=["lowercase", "stop", "snowball", "remove_duplicates"],
     char_filter=["html_strip"]
+
 )
 
 @INDEX.doc_type

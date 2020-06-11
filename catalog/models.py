@@ -51,6 +51,10 @@ class Publication(models.Model):
         return self.PMID != None
 
     @property
+    def is_preprint(self):
+        return 'bioRxiv' in self.journal or 'medRxiv' in self.journal
+
+    @property
     def pub_year(self):
         return self.date_publication.strftime('%Y')
 
@@ -65,6 +69,14 @@ class Publication(models.Model):
         for performance in self.publication_performance.all():
             score_ids_set.add(performance.score.id)
         return len(list(score_ids_set))
+
+    @property
+    def associated_pgs_ids(self):
+        # Using 'all' and filter afterward uses less SQL queries than a direct distinct()
+        score_ids_set = set()
+        for score in self.publication_score.all():
+            score_ids_set.add(score.id)
+        return list(score_ids_set)
 
     def parse_EuropePMC(self, doi=None, PMID=None):
         '''Function to get the citation information from the EuropePMC API'''
@@ -106,6 +118,43 @@ class Cohort(models.Model):
         return self.name_short
 
 
+    @property
+    def associated_pgs_ids(self):
+
+        list_dev_associated_pgs_ids  = set()
+        list_eval_associated_pgs_ids = set()
+        sample_ids_list = set()
+        pss_ids_list = set()
+
+        for sample in self.sample_set.all():
+            if sample.id in sample_ids_list:
+                continue
+            list_pgs_ids = sample.associated_PGS()
+            for pgs_id in list_pgs_ids:
+                if pgs_id != '':
+                    list_dev_associated_pgs_ids.add(pgs_id)
+
+            pss_ids = sample.associated_PSS()
+            for pss_id in pss_ids:
+                pss_ids_list.add(pss_id)
+
+            sample_ids_list.add(sample.id)
+
+        list_dev_associated_pgs_ids = list(list_dev_associated_pgs_ids)
+        list_dev_associated_pgs_ids.sort()
+
+        sample_sets = SampleSet.objects.filter(id__in=list(pss_ids_list)).distinct()
+        perfs = Performance.objects.select_related('score').values('score__id').filter(sampleset__in=sample_sets).distinct()
+
+        for perf in perfs:
+            list_eval_associated_pgs_ids.add(perf['score__id'])
+
+        list_eval_associated_pgs_ids = list(list_eval_associated_pgs_ids)
+        list_eval_associated_pgs_ids.sort()
+
+        return { 'development': list_dev_associated_pgs_ids, 'evaluation': list_eval_associated_pgs_ids}
+
+
 class EFOTrait(models.Model):
     '''Class to hold information related to controlled trait vocabulary
     (mainly to link multiple EFO to a single score)'''
@@ -140,6 +189,7 @@ class EFOTrait(models.Model):
             except:
                 self.description = response['description']
 
+
     def __str__(self):
         return '%s | %s '%(self.id, self.label)
 
@@ -165,6 +215,14 @@ class EFOTrait(models.Model):
             return []
 
     @property
+    def associated_pgs_ids(self):
+        # Using 'all' and filter afterward uses less SQL queries than a direct distinct()
+        score_ids_set = set()
+        for score in self.score_set.all():
+            score_ids_set.add(score.id)
+        return list(score_ids_set)
+
+    @property
     def scores_count(self):
         return self.score_set.count()
 
@@ -175,6 +233,18 @@ class EFOTrait(models.Model):
         if len(categories) > 0:
             category_labels = [x.label for x in categories]
             categories_data = ', '.join(category_labels)
+
+        return categories_data
+
+    @property
+    def display_category_labels(self):
+        categories = self.traitcategory_set.all()
+        categories_data = ''
+        if len(categories) > 0:
+            category_labels = []
+            for category in categories:
+                category_labels.append('<div><span class="trait_colour" style="background-color:{}"></span>{}</div>'.format(category.colour,category.label))
+            categories_data = ''.join(category_labels)
 
         return categories_data
 
@@ -221,12 +291,8 @@ class Demographic(models.Model):
 
     def format_estimate(self):
         if self.estimate != None:
-            e = '{}:{}'.format(self.estimate_type, self.estimate)
-            if self.range != None and self.range_type.lower() == 'ci':
-                e += ' {}'.format(str(self.range))
-            return e
-        else:
-            return None
+            return '{}:{}'.format(self.estimate_type, self.estimate)
+        return None
 
     def format_range(self):
         if self.estimate == None and self.range != None:
@@ -289,6 +355,32 @@ class Demographic(models.Model):
         else:
             return ''
 
+    def display_values_dict(self):
+        l = {}
+
+        # Estimate
+        estimate = ''
+        if self.estimate != None:
+            estimate = str(self.estimate)
+            if self.range != None and self.range_type.lower() == 'ci':
+                estimate += str(self.range)
+            if estimate:
+                l[self.estimate_type] = estimate
+
+        # Range
+        if self.range != None and '[' not in estimate:
+            l[self.range_type] = str(self.range)
+
+        # Variability
+        if self.variability != None:
+            l[self.variability_type] = self.variability
+
+        # Unit
+        if self.unit != None:
+            l['unit'] = self.unit
+
+        return l
+
 
     def range_type_desc(self):
         desc_list = {
@@ -320,7 +412,7 @@ class Sample(models.Model):
     sample_age = models.OneToOneField(Demographic, on_delete=models.CASCADE,related_name='ages_of', null=True)
 
     ## Description
-    phenotyping_free = models.TextField('Detailed Phenotype Description')
+    phenotyping_free = models.TextField('Detailed Phenotype Description', null=True)
     followup_time = models.OneToOneField(Demographic, on_delete=models.CASCADE,related_name='followuptime_of', null=True)
 
     ## Ancestry
@@ -330,8 +422,8 @@ class Sample(models.Model):
     ancestry_additional = models.TextField('Additional Ancestry Description', null=True)
 
     ## Cohorts/Sources
-    source_GWAS_catalog = models.CharField('GWAS Catalog Study ID (GCST...)', max_length=20)
-    source_PMID = models.CharField('Source PubMed ID (PMID)', max_length=20)
+    source_GWAS_catalog = models.CharField('GWAS Catalog Study ID (GCST...)', max_length=20, null=True)
+    source_PMID = models.CharField('Source PubMed ID (PMID) or doi', max_length=100, null=True)
     cohorts = models.ManyToManyField(Cohort, verbose_name='Cohort(s)')
     cohorts_additional = models.TextField('Additional Sample/Cohort Information', null=True)
 
@@ -367,7 +459,7 @@ class Sample(models.Model):
         return ids
 
     def list_cohortids(self):
-        return [x.name_full for x in self.cohorts.all()]
+        return [x.name_short for x in self.cohorts.all()]
 
     @property
     def display_sampleset(self):
@@ -453,9 +545,9 @@ class Sample(models.Model):
     @property
     def display_sources(self):
         d = {}
-        if self.source_GWAS_catalog.startswith('GCST'):
+        if self.source_GWAS_catalog:
             d['GCST'] = self.source_GWAS_catalog
-        if self.source_PMID != None:
+        if self.source_PMID:
             d['PMID'] = self.source_PMID
         return d
 
@@ -487,6 +579,9 @@ class Score(models.Model):
     date_released = models.DateField('PGS Catalog Release Date', null=True, db_index=True)
     curation_notes = models.TextField('Curation Notes', default='')
 
+    # Used to identify scores that don't match the original publication
+    flag_asis = models.BooleanField('Score and results match the original publication', default=True)
+
     # Links to related models
     publication = models.ForeignKey(Publication, on_delete=models.PROTECT, related_name='publication_score', verbose_name='PGS Publication (PGP) ID')
     ## Contributing Samples
@@ -500,7 +595,7 @@ class Score(models.Model):
 
     # PGS Development/method details
     method_name = models.TextField('PGS Development Method')
-    method_params = models.TextField('PGS Development Details/Relevant Parameters')
+    method_params = models.TextField('PGS Development Details/Relevant Parameters', default='NR')
 
     variants_number = models.IntegerField('Number of Variants', validators=[MinValueValidator(1)])
     variants_interactions = models.IntegerField('Number of Interaction Terms', default=0)
@@ -526,7 +621,7 @@ class Score(models.Model):
 
     @property
     def ftp_scoring_file(self):
-        ftp_url = '{}/scores/{}/ScoringFiles/{}'.format(settings.USEFUL_URLS['PGS_FTP_ROOT'], self.id, self.link_filename)
+        ftp_url = '{}/scores/{}/ScoringFiles/{}'.format(settings.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], self.id, self.link_filename)
         return ftp_url
 
     @property
@@ -535,6 +630,7 @@ class Score(models.Model):
         for t in self.trait_efo.all():
             l.append((t.id, t.label))
         return(l)
+
 
 class SampleSet(models.Model):
     # Stable identifiers for declaring a set of related samples
@@ -556,7 +652,7 @@ class SampleSet(models.Model):
         ancestry_list = []
         for sample in self.samples.all():
             ancestry = sample.display_ancestry_inline
-            if ancestry not in ancestry_list:
+            if ancestry and ancestry not in ancestry_list:
                 ancestry_list.append(ancestry)
         if len(ancestry_list) > 0:
             return ', '.join(ancestry_list)
@@ -569,8 +665,7 @@ class SampleSet(models.Model):
 
     @property
     def count_performances(self):
-        return len(Performance.objects.filter(sampleset_id=self.num))
-
+        return len(Performance.objects.values('id').filter(sampleset_id=self.num))
 
 
 class Performance(models.Model):
@@ -594,8 +689,8 @@ class Performance(models.Model):
 
     # [Links to Performance metrics are made by ForeignKey in Metrics table, previously they were parameterized here]
     phenotyping_reported = models.CharField('Reported Trait', max_length=200)
-    covariates = models.TextField('Covariates Included in PGS Model')
-    performance_comments = models.TextField('PGS Performance: Other Relevant Information')
+    covariates = models.TextField('Covariates Included in the Model', null=True)
+    performance_comments = models.TextField('PGS Performance: Other Relevant Information', null=True)
 
     def __str__(self):
         return '%s | %s -> %s'%(self.id, self.score.id, self.sampleset.id)
@@ -610,6 +705,10 @@ class Performance(models.Model):
     def samples(self):
         """ Method working as a shortcut to fetch all the samples related to the sampleset  """
         return list(self.sampleset.samples.all())
+
+    @property
+    def associated_pgs_id(self):
+        return self.score.id
 
     @property
     def display_trait(self):
@@ -637,6 +736,35 @@ class Performance(models.Model):
     def othermetrics_list(self):
         return self.get_metric_data('Other Metric')
 
+
+    @property
+    def performance_metrics(self):
+        perf_metrics = {}
+
+        effect_sizes_list = self.effect_sizes_list
+        effect_sizes_data = []
+        if effect_sizes_list:
+            for effect_size in self.effect_sizes_list:
+                effect_sizes_data.append({'labels': effect_size[0], 'value': effect_size[1]})
+        perf_metrics['effect_sizes'] = effect_sizes_data
+
+        class_acc_list = self.class_acc_list
+        class_acc_data = []
+        if class_acc_list:
+            for class_acc in self.class_acc_list:
+                class_acc_data.append({'labels': class_acc[0], 'value': class_acc[1]})
+        perf_metrics['class_acc'] = class_acc_data
+
+        othermetrics_list = self.othermetrics_list
+        othermetrics_data = []
+        if othermetrics_list:
+            for othermetrics in othermetrics_list:
+                othermetrics_data.append({'labels': othermetrics[0], 'value': othermetrics[1]})
+        perf_metrics['othermetrics'] = othermetrics_data
+
+        return perf_metrics
+
+
     @property
     def publication_withexternality(self):
         '''This function checks whether the evaluation is internal or external to the score development paper'''
@@ -647,6 +775,11 @@ class Performance(models.Model):
             info.append('D')
         else:
             info.append('E')
+
+        if self.publication.is_preprint:
+            info.append('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
+        else:
+            info.append('')
 
         return '|'.join(info)
 
@@ -660,9 +793,9 @@ class Performance(models.Model):
             for m in metrics:
                 if (m.type == metric_type):
                     l.append((m.name_tuple(), m.display_value()))
-            return l
-        else:
-            return None
+            if len(l) != 0:
+                return l
+        return None
 
 
 class Metric(models.Model):
@@ -729,15 +862,15 @@ class Release(models.Model):
 
     @property
     def released_score_ids(self):
-        scores = Score.objects.filter(date_released__exact=self.date)
-        return [x.id for x in scores]
+        scores = Score.objects.values('id').filter(date_released__exact=self.date).order_by('id')
+        return [x['id'] for x in scores]
 
     @property
     def released_publication_ids(self):
-        publications = Publication.objects.filter(date_released__exact=self.date)
-        return [x.id for x in publications]
+        publications = Publication.objects.values('id').filter(date_released__exact=self.date).order_by('id')
+        return [x['id'] for x in publications]
 
     @property
     def released_performance_ids(self):
-        performances = Performance.objects.filter(date_released__exact=self.date)
-        return [x.id for x in performances]
+        performances = Performance.objects.values('id').filter(date_released__exact=self.date).order_by('id')
+        return [x['id'] for x in performances]

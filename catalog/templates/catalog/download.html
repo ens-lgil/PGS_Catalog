@@ -42,6 +42,13 @@
             </td>
             <td><a class="btn btn-pgs pgs_no_icon_link" href="{{ pgs_ftp_http_root }}/metadata/pgs_all_metadata.xlsx" target="_blank" download><span class="fa fa-download"></span> Bulk Metadata Downloads<span class="badge badge-pill badge-pgs-white ml-2">.xlsx</span></a></td>
           </tr>
+          <tr>
+            <td>
+              <span class="pgs_h_big_header">PGS Catalog REST API</span>
+              <span class="pgs_no_icon_link info-icon" href="#dl_ftp_metadata" data-toggle="tooltip" data-placement="bottom" title="Programatic access to the PGS Catalog metadata."><i class="fa fa-info-circle"></i></span>
+            </td>
+            <td><a class="btn btn-pgs pgs_no_icon_link" href="../rest/"><span class="fa fa-code"></span> REST API endpoint descriptions</a></td>
+          </tr>
         </tbody>
       </table>
     </section>
@@ -79,7 +86,7 @@
       </section>
 
       <section>
-        <h3>PGS Scoring Files</h3>
+        <h3 id="dl_ftp_scoring">PGS Scoring Files</h3>
         <p>Each scoring file (variant information, effect alleles/weights) is formatted to be a gzipped <b>tab-delimited</b> text file, labelled by its PGS Catalog Score ID (e.g. <code>PGS000001.txt.gz</code>).
         <p>In the current catalog the scores have been extracted from the relevant publication and only been reformatted to have a consistent header (lines starting with <code>#</code>)
            listing relevant PGS Catalog information, e.g.:

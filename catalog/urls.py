@@ -3,12 +3,13 @@ from django.views.generic.base import TemplateView
 
 from . import views
 
-
 urlpatterns = [
     path('', views.index, name='index'),
 
-    # ex: /pgs/PGS000029/
-    path('pgs/<str:pgs_id>/', views.pgs, name='PGS'),
+    # ex: /score/PGS000029/
+    path('score/<str:pgs_id>/', views.pgs, name='Score'),
+    # /!\ Legacy URL /!\ ex: /pgs/PGS000029/
+    path('pgs/<str:pgs_id>/', views.redirect_pgs_to_score, name='PGS'),
 
     # ex: /publication/PGP000001/
     path('publication/<str:pub_id>/', views.pgp, name='Publication'),
@@ -19,8 +20,11 @@ urlpatterns = [
     # ex: /sampleset/PSS000001/
     path('sampleset/<str:pss_id>/', views.pss, name='Sample Set'),
 
+    # ex: /gwas/GCST001937/
+    path('gwas/<str:gcst_id>/', views.gwas_gcst, name='NHGRI-EBI GWAS Catalog Study'),
+
     # ex: /browse/{scores, traits, studies}/
-    path('browse/<str:view_selection>/', views.browseby, name='Browse Scores'),
+    path('browse/<str:view_selection>/', views.browseby, name='Browse data'),
 
     # ex: /about/
     path('about/', views.AboutView.as_view(), name='About'),
@@ -31,9 +35,6 @@ urlpatterns = [
     # ex: /downloads/
     path('downloads/', views.DownloadView.as_view(), name='Downloads'),
 
-    # ex: /docs/
-    path('search/', views.search, name='Search'),
-
     #ex: /template/current
     path('template/current', views.CurrentTemplateView.as_view(), name='Current Curation Template'),
 
@@ -43,6 +44,7 @@ urlpatterns = [
     # Setup robots.txt
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"))
 ]
+
 
 # Debug SQL queries
 from django.conf import settings

@@ -162,23 +162,6 @@ $(document).ready(function() {
     $('.pgs-ftp-btn').hover(function() {
       $(this).children('span').toggleClass('fa-folder fa-folder-open');
     });
-
-
-    // Buttons in the Search page results
-    /*$('.search_facet').click(function(){
-      id = $(this).attr('id');
-      table_id = id.replace('facet','results');
-
-      if ($(this).find('i.fa-circle-o')) {
-        $('.search_facet.selected').find('i').removeClass("fa-check-circle").addClass("fa-circle-o");
-        $('.search_facet.selected').removeClass("selected");
-
-        $(this).find('i').removeClass("fa-circle-o").addClass("fa-check-circle");
-        $(this).addClass("selected");
-        $(".table_results").hide();
-        $('#'+table_id).show();
-      }
-    });*/
 });
 
 
@@ -305,6 +288,7 @@ $('.search_facet').click(function(){
     $('#'+table_id).show();
   }
 });
+
 
 // Build and draw the Trait category piechart
 function draw_trait_category_piechart(data_chart) {
