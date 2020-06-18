@@ -2,166 +2,136 @@ from django.shortcuts import render
 from elasticsearch_dsl import Q
 from search.documents.efo_trait import EFOTraitDocument
 from search.documents.publication import PublicationDocument
-from search.documents.score import ScoreDocument
+from search.search import EFOTraitSearch, PublicationSearch
 
-#from search.tables import *
+all_results_scores = {}
 
 def search(request):
+    global all_results_scores
 
     q = request.GET.get('q')
+    trait_children = None
+    #trait_children = request.GET.get('include_children')
     scores_count = 0
-    efo_traits_count = 0
-    publications_count = 0
+    efo_trait_count = 0
+    publication_count = 0
     table_scores = None
     table_efo_traits = None
     table_publications = None
-    if q:
-        # Scores
-        score_query = Q("multi_match", query=q, fields=["id","name","publication.title","publication.doi","publication.authors","trait_efo.id","trait_efo.label","trait_efo.synonyms","trait_efo.mapped_terms"])
-        scores = ScoreDocument.search().query(score_query)
-        scores_count = scores.count()
-        scores_all = scores.scan()
-        # EFO Traits
-        efo_trait_query = Q("multi_match", query=q, fields=["id","label","synonyms","mapped_terms","traitcategory_set.label","traitcategory_set.parent"])
-        efo_traits = EFOTraitDocument.search().query(efo_trait_query)
-        efo_traits_count = efo_traits.count()
-        efo_traits_all = efo_traits.scan()
-        # Publications
-        publication_query = Q("multi_match", query=q, fields=["id","title","doi","authors"])
-        publications = PublicationDocument.search().query(publication_query)
-        publications_count = publications.count()
-        publications_all = publications.scan()
+    all_results = None
+    all_results_scores = {}
 
-        #print("COUNT:"+str(scores_count))
-        table_scores = scores_table(request, scores_all)
-        table_efo_traits = efo_traits_table(request, efo_traits_all)
-        table_publications = publications_table(request, publications_all)
+    if q:
+        # EFO Traits
+        efo_trait_search = EFOTraitSearch(q, trait_children)
+        efo_trait_results = efo_trait_search.search()
+        efo_trait_count = efo_trait_search.count
+
+        # Publications
+        publication_search = PublicationSearch(q)
+        publication_results = publication_search.search()
+        publication_count = publication_search.count
+
+        table_efo_traits = efo_traits_table(request, efo_trait_results)
+        table_publications = publications_table(request, publication_results)
+        if all_results_scores:
+            all_results = []
+            for score in sorted(all_results_scores, reverse=True):
+                for result in all_results_scores[score]:
+                    all_results.append(result)
+
+
     context = {
         'query': q,
-        'table_scores': table_scores,
-        'table_efo_traits': table_efo_traits,
-        'table_publications': table_publications,
-        'scores_count': scores_count,
-        'efo_traits_count': efo_traits_count,
-        'publications_count': publications_count,
+        #'table_scores': table_scores,
+        #'table_efo_traits': table_efo_traits,
+        #'table_publications': table_publications,
+        'all_results': all_results,
+        #'all_results': sorted(all_results),
+        #'scores_count': scores_count,
+        'efo_traits_count': efo_trait_count,
+        'publications_count': publication_count,
         'has_table': 1
     }
     return render(request, 'search/search.html', context)
 
 
-def scores_table(request, data):
-
-    attrs = 'data-show-columns="true" data-sort-name="id"'
-    #attrs = 'data-show-columns="true" data-sort-name="id" data-page-size="50"'
-    fields = [
-        { 'key': 'id', 'label': "ID" },
-        { 'key': 'name', 'label': "Name" },
-        { 'key': 'variants_number', 'label': "Number of variants" },
-        { 'key': 'trait_efo.label', 'label': "Trait (ontology term label)", 'multi': '1' },
-        { 'key': 'publication.firstauthor', 'label': 'Publication author' },
-        { 'key': 'publication.title', 'label': 'Publication' }
-    ]
-    tags = []
-    multi_tags = set()
-    for column in fields:
-        tags.append(column['key'])
-        if 'multi' in column:
-            multi_tags.add(column['key'])
-
-    formatted_data = []
-    for d in sorted(data, key=lambda x: x.id):
-        #print("DATA: "+str(d))
-        my_data = []
-        for t in tags:
-            keys = t.split('.')
-            if len(keys) == 1:
-                my_data.append(d[t])
-            else:
-                if t in multi_tags:
-                    content = []
-                    for item in d[keys[0]]:
-                        content.append(item[keys[1]])
-                    my_data.append(', '.join(content))
-                else:
-                    my_data.append(d[keys[0]][keys[1]])
-        formatted_data.append(my_data)
-
-    context = {'attrs': attrs, 'fields': fields, 'table_data': formatted_data}
-    render_html = render(request, 'search/pgs_catalog_result_table.html', context)
-
-    return render_html.content.decode("utf-8")
-    #return render(request, 'search/pgs_catalog_result_table.html', context)
-
-
 def efo_traits_table(request, data):
 
-    attrs = 'data-show-columns="true" data-sort-name="label"'
-    #attrs = 'data-show-columns="true" data-sort-name="id" data-page-size="50"'
-    fields = [
-        { 'key': 'label', 'label': "Trait (ontology term label)" },
-        { 'key': 'id', 'label': "Trait Identifier (Experimental Factor Ontology ID)" },
-        { 'key': 'traitcategory_set.label', 'label': "Trait Category", 'multi': '1'}
-    ]
+    results = []
+    icon = '<span class="mr-3" style="font-weight:bold;font-size:18px;background-color:#BE4A81;padding: 4px 9px;color: white;display: inline-block;vertical-align: middle;border-radius: 50%">T</span>'
+    for d in data:
+        desc = d.description
+        if desc:
+            desc = desc.replace("['",'').replace("']",'')
+        else:
+            desc = ''
 
-    tags = []
-    multi_tags = set()
-    for column in fields:
-        tags.append(column['key'])
-        if 'multi' in column:
-            multi_tags.add(column['key'])
+        score_html =  score_mini_table(d.id, d.score_set)
 
-    formatted_data = []
-    for d in sorted(data, key=lambda x: x.label.lower()):
-        my_data = []
-        for t in tags:
-            keys = t.split('.')
-            if len(keys) == 1:
-                my_data.append(d[t])
-            else:
-                if t in multi_tags:
-                    content = []
-                    for item in d[keys[0]]:
-                        content.append(item[keys[1]])
-                    my_data.append(', '.join(content))
-                else:
-                    my_data.append(d[keys[0]][keys[1]])
-        formatted_data.append(my_data)
+        categories = ', '.join([x.label for x in d.traitcategory_set])
+        hmtl_results =  '<div class="pgs_result efo_traits_entry mb-4" title='+str(d.meta.score)+'>'
+        hmtl_results += '<div class="pgs_result_title clearfix">'
+        hmtl_results += '  <h4 class="mt-0 mb-2 mr-3 float-left">'
+        hmtl_results += '    '+icon+'<a href="/trait/{}">{}</a>'.format(d.id, d.label)
+        hmtl_results += '  </h4>'
+        hmtl_results += '  <div class="mt-0 mb-2 pl-3 mr-3 float-left">{}</div>'.format(categories)
+        hmtl_results += '  <div class="pl-3 float-left">{}</div>'.format(d.id)
+        hmtl_results += '</div>'
+        hmtl_results += '<div class="more">{}</div>'.format(desc)
+        hmtl_results += '<div class="mt-1">Associated PGS scores <span class="badge badge-pill badge-pgs">{}</span> {}</div>'.format(d.scores_count, score_html)
+        hmtl_results += '</div>'
+        results.append(hmtl_results)
 
-    context = {'attrs': attrs, 'fields': fields, 'table_data': formatted_data}
-    render_html = render(request, 'search/pgs_catalog_result_table.html', context)
+        result_score = d.meta.score
+        if result_score in all_results_scores:
+            all_results_scores[result_score].append(hmtl_results)
+        else:
+            all_results_scores[result_score] = [hmtl_results]
 
-    return render_html.content.decode("utf-8")
+    return results
 
 
 def publications_table(request, data):
 
-    attrs = 'data-show-columns="true" data-sort-name="id"'
-    #attrs = 'data-show-columns="true" data-sort-name="id" data-page-size="50"'
-    fields = [
-        { 'key': 'id', 'label': "PGS Publication/Study (PGP) ID" },
-        { 'key': 'title', 'label': "Title" },
-        { 'key': 'firstauthor', 'label': 'Publication author' },
-        { 'key': 'doi', 'label': "Digital object identifier (doi)"},
-        { 'key': 'PMID', 'label': "PubMed ID (PMID)" }
-    ]
+    results = []
+    doi_url = 'https://doi.org/'
+    pubmed_url = 'https://www.ncbi.nlm.nih.gov/pubmed/'
+    icon = '<span class="mr-3" style="font-weight:bold;font-size:18px;background-color:#f58f22;padding: 4px 8.5px;color: white;display: inline-block;vertical-align: middle;border-radius: 50%">P</span>'
+    #for d in data:
+    for idx, d in enumerate(data):
 
-    tags = []
-    for column in fields:
-        tags.append(column['key'])
+        score_html =  score_mini_table("pub_"+str(idx), d.publication_score)
 
-    formatted_data = []
-    for d in sorted(data, key=lambda x: x.id):
-        my_data = []
-        for t in tags:
-            keys = t.split('.')
-            if len(keys) == 1:
-                my_data.append(d[t])
-            else:
-                #print("MULTI ("+t+"): "+keys[0]+" | "+keys[1])
-                my_data.append(d[keys[0]][keys[1]])
-        formatted_data.append(my_data)
+        hmtl_results =  '<div class="pgs_result publications_entry mb-4" title='+str(d.meta.score)+'>'
+        hmtl_results += '<div class="pgs_result_title"><h4 class="mt-0 mb-2">'+icon+'<a href="/publication/{}">{}</a></h4></div>'.format(d.id, d.title)
+        hmtl_results += '<div class="pgs_result_content">{} et al. ({}) - {}'.format(d.firstauthor, d.pub_year, d.journal)
+        hmtl_results += '<span class="ml-2 pl-2"><b>PMID</b>:{}</span>'.format( d.PMID)
+        hmtl_results += '<span class="ml-2 pl-2"><b>doi</b>:{}</span></div>'.format(d.doi)
+        hmtl_results += '<div class="mt-1">Associated PGS scores <span class="badge badge-pill badge-pgs">{}</span> {}</div>'.format(d.scores_count, score_html)
+        hmtl_results += '</div>'
+        results.append(hmtl_results)
 
-    context = {'attrs': attrs, 'fields': fields, 'table_data': formatted_data}
-    render_html = render(request, 'search/pgs_catalog_result_table.html', context)
+        result_score = d.meta.score
+        if result_score in all_results_scores:
+            all_results_scores[result_score].append(hmtl_results)
+        else:
+            all_results_scores[result_score] = [hmtl_results]
 
-    return render_html.content.decode("utf-8")
+    return results
+
+
+def score_mini_table(id, scores):
+
+    score_html =  '<a class="toggle_btn" id="{}_scores"><i class="fa fa-plus-circle"></i></a>'.format(id)
+    score_html += '<div class="toggle_content" id="list_{}_scores" style="display:none">'.format(id)
+    score_html += """<table class="table table-striped table_pgs_score_results mt-2">
+      <thead class="thead-light">
+        <tr><th>PGS ID</th><th>PGS Name</th></tr>
+      </thead>
+      <tbody>"""
+    for score in scores:
+        score_html += '<tr><td><a href="/score/{}">{}</a></td><td>{}</td></tr>'.format(score.id, score.id, score.name)
+    score_html += '</tbody></table></div>'
+
+    return score_html

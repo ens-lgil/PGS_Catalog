@@ -5,85 +5,77 @@
 
 {% block content %}
 
-  <form class="input-group" method="get" style="max-width:350px">
-    <input class="form-control" id="q" name="q" type="text" placeholder="Search...">
-    <div class="input-group-append">
-      <button type="submit" value="Submit" class="btn btn-pgs pgs_no_icon_link">
+  <script type="text/javascript">
+    $(document).ready(function() {
+      id = $('.search_facet.selected').attr('id');
+      type = id.replace('_facet', '');
+      if (type != 'all') {
+        entry_class = type+'_entry';
+        $('.'+entry_class).show();
+        $('.pgs_result').not('.'+entry_class).hide();
+      }
+    });
+  </script>
+
+  <!--<form class="input-group" method="get">
+    <input class="form-control" id="q" name="q" type="text" placeholder="Search..." style="max-width:320px">
+    <div class="input-group-append" style="padding-right: 2rem">
+      <button type="submit" value="Submit" class="btn btn-pgs pgs_no_icon_link" style="height:38px;border-top-right-radius:4px;border-bottom-right-radius:4px">
         <span class="fa fa-search"></span>
       </button>
     </div>
-  </form>
+    <div>
+      <a class="toggle_btn" id="advanced_search"><i class="fa fa-plus-circle"></i> Advanced search</a>
+      <div class="toggle_content mt-1" id="list_advanced_search" style="display:none;border-radius:4px; border:1px solid #007C82;padding:8px 8px 0px">
+        <input class="form-check-input" type="checkbox" id="include_children" name="include_children" value="True" checked>
+        <label for="include_children" style="padding-left:5px"> Include children term (Trait)</label>
+      </div>
+    </div>
+  </form>-->
 
-  {% if table_scores or table_efo_traits or table_publications %}
+  {% if efo_traits_count or publications_count %}
     <h3 class="mt-4 mb-4 pb-2" style="border-bottom:1px solid #222">Results for "<i class="pgs_color_1">{{ query }}</i>"</h3>
     <div class="mt-4">
-      {% if table_scores %}
-        <span class="search_facet selected" id="scores_facet">
+      {% if efo_traits_count %}
+          <span class="search_facet selected" id="efo_traits_facet">
           <i class="fa fa-check-circle"></i>
-          <div>Scores</div>
-          <span class="badge badge-pill badge-pgs">{{ scores_count }}</span>
-        </span>
-      {% endif %}
-
-      {% if table_efo_traits %}
-        {% if table_scores %}
-          <span class="search_facet" id="efo_traits_facet">
-        {% else %}
-            <span class="search_facet selected" id="efo_traits_facet">
-        {% endif %}
-          <i class="fa fa-circle-o"></i>
+          <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#BE4A81;color: white;border-radius: 50%;padding-left:0.35rem;padding-right:0.35rem">T</span>
           <div>Traits</div>
           <span class="badge badge-pill badge-pgs">{{ efo_traits_count }}</span>
         </span>
       {% endif %}
 
-      {% if table_publications %}
-        {% if table_efo_traits or table_scores %}
+      {% if publications_count %}
+        {% if efo_traits_count %}
           <span class="search_facet" id="publications_facet">
+          <i class="fa fa-circle-o"></i>
         {% else %}
             <span class="search_facet selected" id="publications_facet">
+            <i class="fa fa-check-circle"></i>
         {% endif %}
-          <i class="fa fa-circle-o"></i>
+          <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#f58f22;color: white;border-radius: 50%;padding-left:0.3rem;padding-right:0.3rem">P</span>
           <div>Publications</div>
           <span class="badge badge-pill badge-pgs">{{ publications_count }}</span>
         </span>
       {% endif %}
+
+      <span class="search_facet" id="all_facet">
+        <i class="fa fa-circle-o"></i>
+        <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#BE4A81;color: white;border-radius: 50%;padding-left:0.35rem;padding-right:0.35rem">T</span>
+        <div style="padding-right:0px"> + </div>
+        <span class="badge badge-pill" style="font-weight:bold;font-size:85%;background-color:#f58f22;color: white;border-radius: 50%;padding-left:0.3rem;padding-right:0.3rem">P</span>
+        <div>All results</div>
+        <span class="badge badge-pill badge-pgs">{{ all_results|length }}</span>
+      </span>
+
     </div>
 
-
-    {% if scores_count %}
-      <div class="table_results" id="scores_results">
-        <h3 class="mt-4">Score results</h3>
-        {{ table_scores|safe }}
-        <!--<ul>
-        {% for item in scores %}
-          <li>{{ item.id }}: {{ item.name }} | {{ item.publication.title }}</li>
+    {% if efo_traits_count or publications_count %}
+      <div class="table_results" id="all_results">
+        <h3 class="mt-4">All results</h3>
+        {% for result in all_results%}
+          {{ result|safe }}
         {% endfor %}
-        </ul>-->
-      </div>
-    {% endif %}
-
-    {% if efo_traits_count %}
-      <div class="table_results" id="efo_traits_results" {% if scores_count %}style="display:none"{% endif %}>
-        <h3 class="mt-4">Trait results</h3>
-        {{ table_efo_traits|safe }}
-        <!--<ul>
-        {% for item in efo_traits %}
-          <li>{{ item.id }}: {{ item.label }} | {{ item.traitcategory_set.0.label }} | {{ item.mapped_terms }}</li>
-        {% endfor %}
-        </ul>-->
-      </div>
-    {% endif %}
-
-    {% if publications_count %}
-      <div class="table_results" id="publications_results" {% if scores_count or efo_traits_count %}style="display:none"{% endif %}>
-        <h3 class="mt-4">Publication results</h3>
-        {{ table_publications|safe }}
-        <!--<ul>
-        {% for item in publications %}
-          <li>{{ item.id }}: {{ item.title }}</li>
-        {% endfor %}
-        </ul>-->
       </div>
     {% endif %}
 

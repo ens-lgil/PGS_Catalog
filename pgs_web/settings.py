@@ -13,11 +13,16 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 if not os.getenv('GAE_APPLICATION', None):
-    import yaml
-    with open(os.path.join('./', 'app.yaml')) as secrets_file:
-        secrets = yaml.load(secrets_file, Loader=yaml.FullLoader)
-        for keyword in secrets['env_variables']:
-            os.environ[keyword] = secrets['env_variables'][keyword]
+    app_settings = os.path.join('./', 'app.yaml')
+    if os.path.exists(app_settings):
+        import yaml
+        with open(app_settings) as secrets_file:
+            secrets = yaml.load(secrets_file, Loader=yaml.FullLoader)
+            for keyword in secrets['env_variables']:
+                os.environ[keyword] = secrets['env_variables'][keyword]
+    elif not os.environ['SECRET_KEY']:
+        print("Error: missing secret key")
+        exit(1)
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -42,9 +47,7 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
 INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
-    'release.apps.ReleaseConfig',
-    #'search.apps.SearchConfig',
-    'search_2.apps.SearchConfig',
+    'search.apps.SearchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,7 +59,7 @@ INSTALLED_APPS = [
     'compressor',
     'rest_framework',
     'django_elasticsearch_dsl',
-    'django_elasticsearch_dsl_drf',
+    #'django_elasticsearch_dsl_drf',
     'debug_toolbar' # Debug SQL queries
 ]
 
@@ -130,7 +133,8 @@ USEFUL_URLS = {
     'PGS_FTP_HTTP_ROOT' : 'http://ftp.ebi.ac.uk/pub/databases/spot/pgs',
     'PGS_TWITTER_URL'   : 'https://www.twitter.com/pgscatalog',
     'UOC_URL'           : 'https://www.phpc.cam.ac.uk/',
-    'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing'
+    'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing',
+    'CATALOG_PUBLICATION_URL' : 'https://doi.org/10.1101/2020.05.20.20108217',
 }
 if os.getenv('GAE_APPLICATION', None):
     PGS_ON_GAE = 1
@@ -153,7 +157,7 @@ if os.getenv('GAE_APPLICATION', None):
             'USER': os.environ['DATABASE_USER'],
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': os.environ['DATABASE_HOST'],
-            'PORT': 5432
+            'PORT': os.environ['DATABASE_PORT']
         }
     }
 else:
@@ -168,7 +172,7 @@ else:
             'USER': os.environ['DATABASE_USER'],
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': 'localhost',
-            'PORT': 5432
+            'PORT': os.environ['DATABASE_PORT']
         }
     }
 # [END db_setup]
@@ -244,13 +248,15 @@ REST_FRAMEWORK = {
 ELASTICSEARCH_DSL = {
     'default': {
         'hosts': 'http://localhost:9200'
+        #'hosts': os.environ['ELASTICSEARCH_URL_ROOT'],
+        #'timeout': 20,  # Custom timeout
     },
 }
 
 # Name of the Elasticsearch index
 ELASTICSEARCH_INDEX_NAMES = {
-    'search_2.documents.efo_trait': 'efo_trait',
-    'search_2.documents.publication': 'publication',
+    'search.documents.efo_trait': 'efo_trait',
+    'search.documents.publication': 'publication',
     #'search.documents.score': 'score',
     #'search.documents.efo_trait': 'efo_trait',
     #'search.documents.publication': 'publication',

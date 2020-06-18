@@ -1,13 +1,16 @@
 {% load static %}
   <div>
-    <nav class="navbar fixed-top navbar-expand-md">
-        <a class="navbar-brand" href="../../" data-original-title="" title="Polygenic Score Catalog" style="margin-right:2rem;">
-            <img src="{% static 'catalog/imgs/PGS_Logo.png' %}" style="height:60px"/> <span style="padding-left:5px">PGS Catalog</span>
-        </a>
-        <!--/.navbar-collapse - begin -->
+    <nav class="navbar fixed-top navbar-expand-lg">
         <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
           <span class="navbar-toggler-icon"></span>
         </button>
+
+        <a class="navbar-brand" href="../../" data-original-title="" title="Polygenic Score Catalog">
+            <img src="{% static 'catalog/imgs/PGS_Logo.png' %}" style="height:60px"/> <span>PGS Catalog</span>
+        </a>
+
+        <!--/.navbar-collapse - begin -->
+
         <!-- Horizontal menu -->
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="nav navbar-nav">
@@ -24,7 +27,7 @@
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Downloads</a>
                 <div class="dropdown-menu">
                   <a class="dropdown-item"  href="../../downloads/">Data Downloads</a>
-                  <a class="dropdown-item"  href="../../rest/">REST API</a>
+                  <!--a class="dropdown-item"  href="../../rest/">REST API</a>-->
                 </div>
               </li>
               <li class="nav-item dropdown">
@@ -37,5 +40,21 @@
             </ul>
           </div>
         <!--/.navbar-collapse - end -->
+
+        <div style="color:#FFF;display:block">
+          <form class="input-group search_box" action="/search/search" method="get">
+            <input class="form-control" id="q" name="q" type="text" placeholder="Search...">
+            <div class="input-group-append">
+              <button type="submit" value="Submit" class="btn btn-pgs pgs_no_icon_link" >
+                <span class="fa fa-search"></span>
+              </button>
+            </div>
+          </form>
+          <div class="search_examples">
+            <a href="/search?q=breast cancer">breast cancer</a>, <a href="/search?q=glaucoma">glaucoma</a>
+          </div>
+        </div>
+
+
     </nav>
   </div>

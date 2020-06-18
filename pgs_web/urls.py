@@ -17,8 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls import url
 
-#from search import views as search_views
-from search_2 import views as search_views
+from search import views as search_views
 
 urlpatterns = [
 	path('', include('catalog.urls')),

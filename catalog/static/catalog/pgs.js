@@ -275,17 +275,44 @@ function add_search_term(term) {
 
 // Buttons in the Search page results
 $('.search_facet').click(function(){
-  id = $(this).attr('id');
-  table_id = id.replace('facet','results');
+  /*id = $(this).attr('id');
+  type = id.replace('_facet', '');
+  if (type == 'all') {
+    $('.pgs_result').show();
+  }
+  else {
+    table_id = type+'_results';
+    entry_class = type+'_entry';
+    $('.pgs_result').hide();
+    $('.'+entry_class).show();
+  }
+  title = type.charAt(0).toUpperCase() + type.slice(1);*/
+
 
   if ($(this).find('i.fa-circle-o')) {
+    id = $(this).attr('id');
+    type = id.replace('_facet', '');
+    if (type == 'all') {
+      $('.pgs_result').show();
+    }
+    else {
+      //table_id = type+'_results';
+      entry_class = type+'_entry';
+      console.log("ENTRY: "+entry_class);
+      //$('.pgs_result').hide();
+      $('.'+entry_class).show();
+      $('.pgs_result').not('.'+entry_class).hide();
+    }
+    title = type.charAt(0).toUpperCase() + type.slice(1);
+
+
     $('.search_facet.selected').find('i').removeClass("fa-check-circle").addClass("fa-circle-o");
     $('.search_facet.selected').removeClass("selected");
 
     $(this).find('i').removeClass("fa-circle-o").addClass("fa-check-circle");
     $(this).addClass("selected");
-    $(".table_results").hide();
-    $('#'+table_id).show();
+    //$(".table_results").hide();
+    //$('#'+table_id).show();
   }
 });
 
