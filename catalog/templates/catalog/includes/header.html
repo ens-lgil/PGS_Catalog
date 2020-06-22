@@ -27,7 +27,7 @@
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Downloads</a>
                 <div class="dropdown-menu">
                   <a class="dropdown-item"  href="../../downloads/">Data Downloads</a>
-                  <!--a class="dropdown-item"  href="../../rest/">REST API</a>-->
+                  <a class="dropdown-item"  href="../../rest/">REST API</a>
                 </div>
               </li>
               <li class="nav-item dropdown">
@@ -41,8 +41,8 @@
           </div>
         <!--/.navbar-collapse - end -->
 
-        <div style="color:#FFF;display:block">
-          <form class="input-group search_box" action="/search/search" method="get">
+        <div class="search_box">
+          <form class="input-group search_form" action="/search/search" method="get">
             <input class="form-control" id="q" name="q" type="text" placeholder="Search...">
             <div class="input-group-append">
               <button type="submit" value="Submit" class="btn btn-pgs pgs_no_icon_link" >
@@ -50,11 +50,25 @@
               </button>
             </div>
           </form>
-          <div class="search_examples">
-            <a href="/search?q=breast cancer">breast cancer</a>, <a href="/search?q=glaucoma">glaucoma</a>
+          <div class="search_examples" style="overflow:hidden">
+            {{ pgs_search_examples|safe }}
+            <!--<a href="/search?q=breast cancer">breast cancer</a>, <a href="/search?q=glaucoma">glaucoma</a><span class="extra_example">, <a href="/search?q=EFO_0001645">EFO_0001645</a></span>-->
           </div>
         </div>
 
-
     </nav>
+  </div>
+  <div class="search_box_2" style="display:none">
+    <form class="input-group search_form" action="/search/search" method="get">
+      <input class="form-control" id="q" name="q" type="text" placeholder="Search...">
+      <div class="input-group-append">
+        <button type="submit" value="Submit" class="btn btn-pgs pgs_no_icon_link" >
+          <span class="fa fa-search"></span>
+        </button>
+      </div>
+    </form>
+    <div class="search_examples" >
+      Examples: {{ pgs_search_examples|safe }}
+      <!--Examples: <a href="/search?q=breast cancer">breast cancer</a>, <a href="/search?q=glaucoma">glaucoma</a>, <a href="/search?q=EFO_0001645">EFO_0001645</a>-->
+    </div>
   </div>

@@ -1,4 +1,4 @@
-import requests
+import os, requests
 from requests.exceptions import HTTPError
 import json
 import time
@@ -14,7 +14,7 @@ pipeline_name = "efo_trait_update"
 
 efo_parents_list = {}
 #es_root_url = 'http://127.0.0.1:9200/'
-es_root_url = 'http://34.72.12.76:9200'
+es_root_url = os.environ['ELASTICSEARCH_URL_ROOT']
 exclude_terms = ['disposition', 'experimental factor', 'material property', 'Thing']
 
 def get_efo_parents(trait):
@@ -142,6 +142,8 @@ def clone_new_efo_trait_index(es):
     es.indices.put_settings(body = { "index": { "blocks.write": True } }, index = efo_trait_index_tmp)
     print("- Clone index '"+efo_trait_index_tmp+"' into '"+efo_trait_index+"'")
     es.indices.clone(efo_trait_index_tmp, efo_trait_index)
+    print("- Delete index '"+efo_trait_index_tmp+"'")
+    es.indices.delete(efo_trait_index_tmp)
 
 
 def create_parents_index(es):
@@ -226,7 +228,7 @@ def count_index_documents(es,index):
 
 def run(*args):
     """ Get all EFO parents of the EFO entries."""
-
+    print("SERVER: "+str(es_root_url))
     try:
         es = Elasticsearch([es_root_url], timeout=20)
         print("Connected")

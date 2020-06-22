@@ -93,7 +93,8 @@ if os.getenv('GAE_APPLICATION', None) and DEBUG==False:
                     'django.contrib.auth.context_processors.auth',
                     'django.contrib.messages.context_processors.messages',
                     'catalog.context_processors.pgs_urls',
-                    'catalog.context_processors.pgs_settings'
+                    'catalog.context_processors.pgs_settings',
+                    'catalog.context_processors.pgs_search_examples'
                 ],
                 'loaders': [
                     ('django.template.loaders.cached.Loader', [
@@ -117,7 +118,8 @@ else:
                     'django.contrib.auth.context_processors.auth',
                     'django.contrib.messages.context_processors.messages',
                     'catalog.context_processors.pgs_urls',
-                    'catalog.context_processors.pgs_settings'
+                    'catalog.context_processors.pgs_settings',
+                    'catalog.context_processors.pgs_search_examples'
                 ],
             },
         },
@@ -247,10 +249,8 @@ REST_FRAMEWORK = {
 # Elasticsearch configuration
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'http://localhost:9200'
-        #'hosts': os.environ['ELASTICSEARCH_URL_ROOT'],
-        #'timeout': 20,  # Custom timeout
-    },
+        'hosts': os.environ['ELASTICSEARCH_URL_ROOT']
+    }
 }
 
 # Name of the Elasticsearch index

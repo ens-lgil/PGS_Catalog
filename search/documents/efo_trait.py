@@ -91,7 +91,14 @@ class EFOTraitDocument(Document):
                 fields={
                     'raw': fields.TextField(analyzer='keyword'),
                 }
+            ),
+            'trait_reported': fields.TextField(
+                analyzer=html_strip,
+                fields={
+                    'raw': fields.TextField(analyzer='keyword'),
+                }
             )
+
         }
     )
 
