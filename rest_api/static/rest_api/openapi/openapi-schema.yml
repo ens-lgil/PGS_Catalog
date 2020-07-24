@@ -1,5 +1,6 @@
 openapi: 3.0.2
 servers:
+  - url: http://127.0.0.1:8000/
   - url: https://www.pgscatalog.org/
 info:
   title: PGS Catalog REST API

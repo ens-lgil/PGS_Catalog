@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'compressor',
     'rest_framework',
-    'django_elasticsearch_dsl'
+    'django_elasticsearch_dsl',
+    'debug_toolbar' # Debug SQL queries
 ]
 if os.environ['PGS_LIVE_SITE'] == 'False':
     INSTALLED_APPS.append('release.apps.ReleaseConfig')
@@ -68,11 +69,16 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', # Debug SQL queries
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Debug SQL queries
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 ROOT_URLCONF = 'pgs_web.urls'
 
