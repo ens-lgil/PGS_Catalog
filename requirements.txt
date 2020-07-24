@@ -19,3 +19,6 @@ elasticsearch-dsl==7.2.1
 django-elasticsearch-dsl==7.1.1
 #### Version checking library for Django
 django-nine==0.2.3
+
+# For testing only:
+django-debug-toolbar==2.2
