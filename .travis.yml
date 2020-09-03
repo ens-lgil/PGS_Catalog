@@ -26,6 +26,6 @@ before_script:
   - python manage.py makemigrations
   - python manage.py migrate
   - python manage.py makemigrations benchmark
-  - python manage.py migrate benchmark --database=travis_ci_test_2
+  - python manage.py migrate benchmark --database=benchmark
 script:
   - python manage.py test catalog/tests rest_api/tests
