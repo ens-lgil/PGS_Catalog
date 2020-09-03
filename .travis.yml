@@ -23,9 +23,9 @@ before_script:
   - sleep 10
   - psql -c 'create database travis_ci_test;' -U postgres
   - psql -c 'create database travis_ci_test_2;' -U postgres
-  #- python manage.py makemigrations catalog
-  #- python manage.py migrate catalog --database=travis_ci_test
-  #- python manage.py makemigrations benchmark
-  #- python manage.py migrate benchmark --database=travis_ci_test_2
+  - python manage.py makemigrations catalog
+  - python manage.py migrate catalog --database=travis_ci_test
+  - python manage.py makemigrations benchmark
+  - python manage.py migrate benchmark --database=travis_ci_test_2
 script:
   - python manage.py test catalog/tests rest_api/tests
