@@ -354,6 +354,63 @@ def pss(request, pss_id):
 
     return render(request, 'catalog/pss.html', context)
 
+def releases(request):
+
+    release_data = []
+
+    total_score = 0
+    total_perf = 0
+    total_publi = 0
+    max_score = 0
+    max_publi = 0
+    max_perf = 0
+    max_width = 100
+
+    releases_list = Release.objects.order_by('date')
+
+    # Get max data
+    for release in releases_list:
+        score = release.score_count
+        perf  = release.performance_count
+        publi = release.publication_count
+        if score > max_score:
+            max_score = score
+        if publi > max_publi:
+            max_publi = publi
+        if perf > max_perf:
+            max_perf = perf
+
+    for release in releases_list:
+        score = release.score_count
+        perf  = release.performance_count
+        publi = release.publication_count
+        date  = release.date
+
+        release_item = {
+                        'date': date.strftime('%d/%m/%y'),
+                        'score_count': score,
+                        'performance_count': perf,
+                        'publication_count': publi,
+                        'total_score_count': total_score,
+                        'total_performance_count': total_perf,
+                        'total_publication_count': total_publi,
+                       }
+        total_score += score
+        total_perf += perf
+        total_publi += publi
+
+        release_data.append(release_item)
+
+    context = {
+        'releases_list': releases_list.order_by('-date'),
+        'releases_data': release_data,
+        'max_score': max_score,
+        'max_publi': max_publi,
+        'max_perf': max_perf,
+        'has_table': 1,
+        'has_chart': 1
+    }
+    return render(request, 'catalog/releases.html', context)
 
 class AboutView(TemplateView):
     template_name = "catalog/about.html"
@@ -366,6 +423,9 @@ class DownloadView(TemplateView):
 
 class CurrentTemplateView(RedirectView):
     url = settings.USEFUL_URLS['TEMPLATEGoogleDoc_URL']
+
+class CurationDocView(RedirectView):
+    url = settings.USEFUL_URLS['CurationGoogleDoc_URL']
 
 
 # Method used for the App Engine warmup
