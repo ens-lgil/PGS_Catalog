@@ -8,6 +8,7 @@ class BrowseUrlTest(TestCase):
         urls = [
             '/',
             '/about/',
+            '/benchmark/',
             '/browse/all/',
             '/browse/traits/',
             '/browse/studies/',
