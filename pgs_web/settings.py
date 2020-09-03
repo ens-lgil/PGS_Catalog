@@ -48,6 +48,8 @@ INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
     'rest_api.apps.RestApiConfig',
     'search.apps.SearchConfig',
+    'release.apps.ReleaseConfig',
+    'benchmark.apps.BenchmarkConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,8 +63,8 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',
     'debug_toolbar' # Debug SQL queries
 ]
-if os.environ['PGS_LIVE_SITE'] == 'False':
-    INSTALLED_APPS.append('release.apps.ReleaseConfig')
+#if os.environ['PGS_LIVE_SITE'] == False:
+#    INSTALLED_APPS.append('release.apps.ReleaseConfig')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -137,12 +139,15 @@ USEFUL_URLS = {
     'PGS_TWITTER_URL'   : 'https://www.twitter.com/pgscatalog',
     'UOC_URL'           : 'https://www.phpc.cam.ac.uk/',
     'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing',
+    'CurationGoogleDoc_URL' : 'https://drive.google.com/file/d/1iYoa0R3um7PtyfVO37itlGbK1emoZmD-/view',
     'CATALOG_PUBLICATION_URL' : 'https://doi.org/10.1101/2020.05.20.20108217'
 }
 if os.getenv('GAE_APPLICATION', None):
     PGS_ON_GAE = 1
 else:
     PGS_ON_GAE = 0
+
+PGS_ON_LIVE_SITE = os.environ['PGS_LIVE_SITE']
 
 WSGI_APPLICATION = 'pgs_web.wsgi.application'
 
@@ -161,6 +166,14 @@ if os.getenv('GAE_APPLICATION', None):
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': os.environ['DATABASE_HOST'],
             'PORT': os.environ['DATABASE_PORT']
+        },
+        'benchmark': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['DATABASE_NAME_2'],
+            'USER': os.environ['DATABASE_USER'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'HOST': os.environ['DATABASE_HOST'],
+            'PORT': os.environ['DATABASE_PORT']
         }
     }
 else:
@@ -172,6 +185,14 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['DATABASE_NAME'],
+            'USER': os.environ['DATABASE_USER'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'HOST': 'localhost',
+            'PORT': os.environ['DATABASE_PORT']
+        },
+        'benchmark': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['DATABASE_NAME_2'],
             'USER': os.environ['DATABASE_USER'],
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': 'localhost',

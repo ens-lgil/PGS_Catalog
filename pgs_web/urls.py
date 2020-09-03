@@ -22,6 +22,7 @@ from search import views as search_views
 urlpatterns = [
 	path('', include('catalog.urls')),
     path('', include('rest_api.urls')),
+    path('', include('benchmark.urls')),
     url(r'^search/', search_views.search, name="PGS Catalog Search")
 ]
 if not 'PGS_LIVE_SITE' in os.environ:

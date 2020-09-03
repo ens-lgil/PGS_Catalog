@@ -241,7 +241,7 @@ class Browse_SampleSetTable(tables.Table):
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
-    phenotyping_free = Column_shorten_text_content(accessor='phenotyping_free', verbose_name='Detailed Phenotype Description')
+    phenotyping_free = Column_shorten_text_content(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
     class Meta:
@@ -271,32 +271,6 @@ class Browse_SampleSetTable(tables.Table):
         return format_html('<span class="more">{}</span>', value)
 
 
-class SampleTable_variants_details(tables.Table):
-    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
-    sources = Column_joinlist(accessor='display_sources', verbose_name='PubMed ID', orderable=False)
-    sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
-
-    class Meta:
-        model = Sample
-        attrs = {
-            "data-show-columns" : "true",
-            "data-sort-name" : "display_ancestry",
-            "data-export-options" : '{"fileName": "pgs_sample_variants_data"}'
-        }
-        fields = [
-            'sources',
-            'sample_merged', 'sample_ancestry', 'ancestry_country'
-        ]
-        template_name = 'catalog/pgs_catalog_django_table.html'
-
-
-    def render_sources(self, value):
-        pmid = ''
-        if 'PMID' in value and value['PMID']:
-            pmid = '<a href="https://europepmc.org/search?query={}">{}</a>'.format(value['PMID'], value['PMID'])
-        return format_html(pmid)
-
-
 class SampleTable_variants(tables.Table):
     '''Table on PGS page - displays information about the GWAS samples used'''
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
@@ -306,7 +280,7 @@ class SampleTable_variants(tables.Table):
     class Meta:
         model = Sample
         attrs = {
-            "data-show-columns" : "true",
+            "data-show-columns" : "false",
             "data-export-options" : '{"fileName": "pgs_sample_source_data"}'
         }
         fields = [
@@ -324,6 +298,25 @@ class SampleTable_variants(tables.Table):
             l.append('EuropePMC: <a href="https://europepmc.org/search?query={}">{}</a>'.format(value['PMID'], value['PMID']))
         return format_html('<br>'.join(l))
 
+
+class SampleTable_variants_simple(SampleTable_variants):
+
+    class Meta:
+        attrs = {
+            "data-show-columns" : "false",
+            "data-sort-name" : "display_ancestry",
+            'data-search' : "false",
+            'data-filter-control': "false",
+            "data-export-options" : '{"fileName": "pgs_sample_variants_data"}'
+        }
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+
+    def render_sources(self, value):
+        pmid = ''
+        if 'PMID' in value and value['PMID']:
+            pmid = '<a href="https://europepmc.org/search?query={}">{}</a>'.format(value['PMID'], value['PMID'])
+        return format_html(pmid)
 
 class SampleTable_training(tables.Table):
     '''Table on PGS page - displays information about the samples used in Score Development'''
@@ -360,7 +353,7 @@ class SampleTable_performance(tables.Table):
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
-    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Detailed Phenotype Description')
+    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
     # Demographics (Column_demographic)
