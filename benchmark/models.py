@@ -328,7 +328,19 @@ class BM_Sample(models.Model):
     #cohorts_additional = models.TextField('Additional Sample/Cohort Information', null=True)
 
     def __str__(self):
-        s = 'Sample: {}'.format(str(self.pk))
+        return 'Sample: {}'.format(str(self.pk))
+
+    @property
+    def display_samples(self):
+        sinfo = ['{:,} individuals'.format(self.sample_number)]
+        if self.sample_cases != None:
+            sstring = '[ {:,} cases'.format(self.sample_cases)
+            if self.sample_controls != None:
+                sstring += ', {:,} controls ]'.format(self.sample_controls)
+            else:
+                sstring += ' ]'
+            sinfo.append(sstring)
+        return sinfo
 
     @property
     def display_samples_for_table(self):
@@ -410,10 +422,6 @@ class BM_Performance(models.Model):
 
     class Meta:
         get_latest_by = 'num'
-
-    def set_performance_id(self, n):
-        self.num = n
-        self.id = 'PPM' + str(n).zfill(6)\
 
     @property
     def effect_sizes_list(self):
