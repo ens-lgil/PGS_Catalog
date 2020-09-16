@@ -28,4 +28,4 @@ before_script:
   - python manage.py makemigrations benchmark
   - python manage.py migrate benchmark --database=benchmark
 script:
-  - python manage.py test catalog/tests rest_api/tests
+  - python manage.py test catalog/tests rest_api/tests benchmark/tests
