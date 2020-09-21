@@ -418,7 +418,7 @@ class BM_Performance(models.Model):
     cohort = models.ForeignKey(BM_Cohort, verbose_name='Cohort', on_delete=models.PROTECT, related_name='cohort_performance')
 
     def __str__(self):
-        return '%s | %s | %s'%(self.id, self.efotrait.id, self.score_id)
+        return '%s | %s | %s'%(self.efotrait.id, self.score_id, self.cohort.name_short)
 
     class Meta:
         get_latest_by = 'num'

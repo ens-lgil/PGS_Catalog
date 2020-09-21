@@ -245,7 +245,9 @@ class BM_EFOTraitTest(TestCase):
         bm_coding = codingtest.get_bm_coding(icd_id, icd_label, icd_type)
         bm_efo_trait_1.phenotype_structured.add(bm_coding)
         icd_data = bm_efo_trait_1.display_phenotype_structured
-        self.assertEqual(icd_data[0].id, icd_id)
+        self.assertTrue(isinstance(bm_efo_trait_1.phenotype_structured.all()[0], BM_Coding))
+        coding_display = r'^\<b\>'+icd_id+'\<\/b\>\:\s'+icd_label+'$'
+        self.assertRegexpMatches(bm_efo_trait_1.display_phenotype_structured[0], coding_display)
 
 
         # Test empty synonyms & mapped_terms
@@ -396,6 +398,8 @@ class BM_PerformanceTest(TestCase):
         self.assertTrue(isinstance(bm_performance.sample, BM_Sample))
         self.assertTrue(isinstance(bm_performance.cohort, BM_Cohort))
         self.assertTrue(isinstance(bm_performance.efotrait, BM_EFOTrait))
+        # Other methods
+        self.assertRegexpMatches(bm_performance.__str__(), r'^'+efo_id+' | '+score_id+' | '+cohort_name+'$')
 
         # EFOTrait tests
         bm_efotrait.count_scores
