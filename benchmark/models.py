@@ -74,13 +74,13 @@ class BM_EFOTrait(models.Model):
             #scores = set()
             #for bm_performance in BM_Performance.objects.using("benchmark").filter(efotrait=self).order_by('id'):
             #    scores.add(bm_performance.score_id)
-        return str(len(self.bm_data['scores']))
+        return len(self.bm_data['scores'])
 
     @property
     def count_cohorts(self):
         if not hasattr(self, 'bm_data'):
             self.get_bm_data()
-        return str(len(self.bm_data['cohorts']))
+        return len(self.bm_data['cohorts'])
         #cohorts = set()
         #for bm_performance in BM_Performance.objects.using("benchmark").filter(efotrait=self).order_by('id'):
         #    cohorts.add(bm_performance.cohort.id)
@@ -90,7 +90,7 @@ class BM_EFOTrait(models.Model):
     def count_samples(self):
         if not hasattr(self, 'bm_data'):
             self.get_bm_data()
-        return str(len(self.bm_data['samples']))
+        return len(self.bm_data['samples'])
     #def display_id_url(self):
     #    return '<a href="%s">%s</a><span class="only_export">: %s</span>'%(self.url, self.id, self.url)
 

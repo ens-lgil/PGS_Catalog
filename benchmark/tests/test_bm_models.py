@@ -13,7 +13,13 @@ efo_id = 'EFO_0000305'
 efo_name = 'breast carcinoma'
 efo_desc = 'A carcinoma that arises from epithelial cells of the breast [MONDO: DesignPattern]'
 
+icd_id = "ICD10: C18.0"
+icd_label = 'Malignant neoplasm of cecum'
+icd_type = "ICD10"
+
 score_id = 'PGS000001'
+
+broad_ancestry = 'European'
 
 
 class BM_CodingTest(TestCase):
@@ -25,11 +31,18 @@ class BM_CodingTest(TestCase):
     label = 'Malignant neoplasm of cecum'
     type = "ICD10"
 
-    def create_bm_coding(self, id=id, label=label, type=type):
+    def create_bm_coding(self, id=icd_id, label=icd_label, type=icd_type):
         return BM_Coding.objects.using(benchmark_db).create(id=id, label=label, type=type)
 
+    def get_bm_coding(self, id, label, type):
+        try:
+            bm_coding = BM_Coding.objects.using(benchmark_db).get(id=id)
+        except BM_Coding.DoesNotExist:
+            bm_coding = self.create_bm_coding(id=id, label=label, type=type)
+        return bm_coding
+
     def test_bm_coding(self):
-        bm_coding = self.create_bm_coding()
+        bm_coding = self.get_bm_coding(icd_id, icd_label, icd_type)
         # Instance
         self.assertTrue(isinstance(bm_coding, BM_Coding))
         # Variables
@@ -46,7 +59,7 @@ class BM_CohortTest(TestCase):
     #name = "ABC"
     #desc = "Cohort description"
 
-    def create_bm_cohort(self, name_short=cohort_name,name_full=cohort_desc):
+    def create_bm_cohort(self, name_short=cohort_name, name_full=cohort_desc):
         return BM_Cohort.objects.using(benchmark_db).create(name_short=name_short,name_full=name_full)
 
     def get_bm_cohort(self,name_short):
@@ -61,6 +74,7 @@ class BM_CohortTest(TestCase):
         # Instance
         self.assertTrue(isinstance(bm_cohort, BM_Cohort))
         # Variables
+        self.assertEqual(bm_cohort.__str__(), cohort_name)
         self.assertEqual(bm_cohort.name_short, cohort_name)
         self.assertEqual(bm_cohort.name_full, cohort_desc)
 
@@ -216,6 +230,8 @@ class BM_EFOTraitTest(TestCase):
         #self.assertEqual(bm_efo_trait_1.mapped_terms_list, self.efo_mapped_terms_list)
         # Other methods
         self.assertEqual(bm_efo_trait_1.__str__(), efo_id+' | '+efo_name+' ')
+        label_url =  r'^\<a\s.*href=.+\/trait\/'+efo_id+r'.*\>'+efo_name+r'\<\/a\>$'
+        self.assertRegexpMatches(bm_efo_trait_1.display_label, label_url)
         #label_url =  r'^\<a\s.*href=.+\/trait\/'+self.efo_id+r'.*\>'+self.efo_name+r'\<\/a\>$'
         #self.assertRegexpMatches(bm_efo_trait_1.display_label, label_url)
         #id_url = r'^\<a\s.*href=.+\>'+self.efo_id+r'</a>.+$'
@@ -223,6 +239,14 @@ class BM_EFOTraitTest(TestCase):
         self.assertEqual(bm_efo_trait_1.label, efo_name)
         self.assertEqual(bm_efo_trait_1.description, efo_desc)
         #self.assertIsNotNone(bm_efo_trait_1.url)
+
+        # Coding object(s)
+        codingtest = BM_CodingTest()
+        bm_coding = codingtest.get_bm_coding(icd_id, icd_label, icd_type)
+        bm_efo_trait_1.phenotype_structured.add(bm_coding)
+        icd_data = bm_efo_trait_1.display_phenotype_structured
+        self.assertEqual(icd_data[0].id, icd_id)
+
 
         # Test empty synonyms & mapped_terms
         bm_efo_trait_2 = self.create_bm_efo_trait(efo_id='EFO_0000306')#, syn=None, terms=None)
@@ -373,6 +397,18 @@ class BM_PerformanceTest(TestCase):
         self.assertTrue(isinstance(bm_performance.cohort, BM_Cohort))
         self.assertTrue(isinstance(bm_performance.efotrait, BM_EFOTrait))
 
+        # EFOTrait tests
+        bm_efotrait.count_scores
+        self.assertEqual(bm_efotrait.bm_data['scores'], [score_id])
+        self.assertEqual(bm_efotrait.bm_data['cohorts'], [bm_cohort])
+        self.assertEqual(bm_efotrait.bm_data['samples'], [bm_sample.id])
+        self.assertEqual(bm_efotrait.bm_data['ancestries'], [bm_sample.ancestry_broad])
+        self.assertEqual(bm_efotrait.count_scores, 1)
+        self.assertEqual(bm_efotrait.count_cohorts, 1)
+        self.assertEqual(bm_efotrait.count_samples, 1)
+        self.assertEqual(bm_efotrait.cohorts_list, [bm_cohort])
+        self.assertEqual(bm_efotrait.ancestries_list, [bm_sample.ancestry_broad])
+
 
 class BM_SampleTest(TestCase):
     """ Test the BM_Sample model """
@@ -402,8 +438,8 @@ class BM_SampleTest(TestCase):
             bm_sample = self.create_bm_sample(bm_cohort, sample_number=sample_number)
         return bm_sample
 
-    def create_bm_sample(self, cohort, sample_number=number):
-        return BM_Sample.objects.using(benchmark_db).create(sample_number=sample_number,cohort=cohort)
+    def create_bm_sample(self, cohort, sample_number=number, broad=broad_ancestry):
+        return BM_Sample.objects.using(benchmark_db).create(sample_number=sample_number,cohort=cohort, ancestry_broad=broad)
 
     def create_bm_sample_numbers(self, cohort, sample_number=number,sample_cases=cases,sample_controls=controls,sample_sex=sample_sex):
         return BM_Sample.objects.using(benchmark_db).create(sample_number=sample_number,sample_cases=sample_cases,sample_controls=sample_controls,sample_sex=sample_sex,cohort=cohort)
