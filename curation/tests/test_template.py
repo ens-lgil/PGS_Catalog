@@ -4,21 +4,31 @@ import os, gzip
 import requests
 import numpy as np
 
+
 class TemplateTest(TestCase):
     """ Test the template """
 
+    # Check template directory variable
     pgs_template_dir = 'pgs_template_dir'
     if os.environ[pgs_template_dir]:
         root_dir = os.environ[pgs_template_dir]
+        if not os.path.isdir(root_dir):
+            print("Directory '"+root_dir+"' can't be found")
+            exit(1)
         if not root_dir.endswith('/'):
             root_dir += '/'
     else:
         print("Please provide an environment variable '"+pgs_template_dir+"'")
         exit(1)
 
+
+    # Check variable containing the data file to validate
     pgs_study_file = 'pgs_study_file'
     if os.environ[pgs_study_file]:
         study_file = os.environ[pgs_study_file]
+        if not os.path.isfile(study_file):
+            print("File '"+study_file+"' can't be found")
+            exit(1)
     else:
         print("Please provide an environment variable '"+pgs_study_file+"'")
         exit(1)
@@ -29,8 +39,7 @@ class TemplateTest(TestCase):
     loc_curation2schema_scoring = root_dir+'templates/ScoringFileSchema.xlsx'
     curation2schema_scoring = pd.read_excel(loc_curation2schema_scoring, index_col = 0)
 
-
-    #loc_localGWAS = '../pgs_DBSourceFiles/local_GWASCatalog/'
+    # Download and load GWAS data
     loc_localGWAS = root_dir+'local_GWASCatalog/'
     #gwas_studies, gwas_samples = load_GWAScatalog(loc_localGWAS, update = True)
     gwas_studies, gwas_samples = load_GWAScatalog(loc_localGWAS, update = False)
@@ -53,7 +62,8 @@ class TemplateTest(TestCase):
     }
 
     def parse_study_template(self):
-        self.study.file_loc  = self.study_file
+        """ Parse the Excel spreadsheet """
+        self.study.file_loc = self.study_file
         self.study.read_curation()
         self.study.table_mapschema = self.curation2schema
         self.study.extract_publication()
@@ -63,6 +73,7 @@ class TemplateTest(TestCase):
 
 
     def load_study_data(self):
+        """ Summary of the parsed data from the study """
         print("#----------#\n#  Scores  #\n#----------#")
         self.load_scores()
         print("\n#---------------------#\n#  Samples to Scores  #\n#---------------------#")
@@ -74,6 +85,7 @@ class TemplateTest(TestCase):
 
 
     def load_scores(self):
+        """ Insert the score data into the test database (including traits)"""
         # Scores
         for score_id, fields in self.study.parsed_scores.items():
             current_score = Score()
@@ -106,7 +118,7 @@ class TemplateTest(TestCase):
             self.score_test(current_score, score_db_id, len(efos_toadd))
 
     def link_samples_to_scores(self):
-
+        """ Insert the sample score data into the test database (including cohorts and demographic) """
         # Attach Samples 2 Scores
         for x in self.study.parsed_samples_scores:
             scores = []
@@ -150,7 +162,7 @@ class TemplateTest(TestCase):
 
 
     def load_sample_sets(self):
-
+        """ Insert the sample set data into the test database (including samples, cohorts and demographic) """
         # Create testing sample sets
         self.testset_to_sampleset = {}
         for x in self.study.parsed_samples_testing:
@@ -197,7 +209,7 @@ class TemplateTest(TestCase):
 
 
     def load_performance_metrics(self):
-
+        """ Insert the performance data into the test database (including scores, metrics) """
         for x in self.study.parsed_performances:
             i, fields = x
             if i[0] in self.saved_scores:
@@ -228,6 +240,7 @@ class TemplateTest(TestCase):
     #-------------------------------#
 
     def score_test(self, score, score_id, count_efo):
+        """ Test Scores and related EFOTraits """
         score_name = ''
         if score.name:
             score_name = " ("+str(score.name)+")"
@@ -266,6 +279,7 @@ class TemplateTest(TestCase):
 
 
     def publication_test(self, publication):
+        """ Test Publications """
         title = ''
         if publication.title:
             title =  " ("+publication.title+")"
@@ -292,6 +306,7 @@ class TemplateTest(TestCase):
 
 
     def efo_trait_test(self, efo_trait):
+        """ Test EFOTraits """
         trait = ''
         if efo_trait.label:
             trait =  " ("+efo_trait.label+")"
@@ -307,6 +322,7 @@ class TemplateTest(TestCase):
 
 
     def performance_test(self, performance):
+        """ Test Performances and Metrics """
         print("\t> Test Performance - "+str(performance.id)+" (#"+str(performance.num)+")")
 
         # Instance
@@ -334,6 +350,7 @@ class TemplateTest(TestCase):
 
 
     def score_sample_test(self, score):
+        """ Test Samples related to a given Score """
         score_label = "Score: "+score.id+" ("+score.name+")"
         if (score.samples_variants):
             for sample in score.samples_variants.all():
@@ -344,6 +361,7 @@ class TemplateTest(TestCase):
 
 
     def sampleset_test(self, sampleset):
+        """ Test SampleSets and related Samples """
         print("\t> Test Sample Set - "+sampleset.id+" (#"+str(sampleset.num)+")")
         # Instance
         self.assertIsInstance(sampleset, SampleSet)
@@ -356,6 +374,7 @@ class TemplateTest(TestCase):
 
 
     def sample_test(self, sample, associated_id=None):
+        """ Test Sample """
         # Check sample ID, to see if the object has already been tested
         if sample.id in self.samples_tested:
             return
@@ -417,11 +436,13 @@ class TemplateTest(TestCase):
 
 
     def cohort_test(self, cohort):
+        """ Test Cohort """
         self.assertRegexpMatches(cohort.name_short, r'\w+')
         self.assertRegexpMatches(cohort.name_full, r'\w+')
 
 
     def metric_test(self, metric):
+        """ Test Metric """
         self.assertRegexpMatches(metric.name, r'\w+')
         if metric.name_short:
             self.assertRegexpMatches(metric.name_short, r'\w+')
@@ -436,6 +457,7 @@ class TemplateTest(TestCase):
 
 
     def demographic_test(self, demographic):
+        """ Test Demographic """
         # Estimate
         if demographic.estimate:
             self.assertIsInstance(demographic.estimate, float)
@@ -457,6 +479,7 @@ class TemplateTest(TestCase):
 
 
     def pmid_test(self, pmid):
+        """ Check PubMed ID """
         if pmid in self.external_id_checked['PMID']:
             self.assertTrue(self.external_id_checked['PMID'][pmid])
         else:
@@ -470,6 +493,7 @@ class TemplateTest(TestCase):
     #--------------------#
 
     def test_curation_template(self):
+        """ Run curation template test """
         print("Run test_curation_template")
         self.parse_study_template()
         self.load_study_data()
@@ -482,6 +506,7 @@ class TemplateTest(TestCase):
     #-------------------#
 
     def check_trait_in_efo(self, trait_id):
+        """ Check that Trait ID is valid """
         response = requests.get('https://www.ebi.ac.uk/ols/api/ontologies/efo/terms?obo_id=%s'%trait_id.replace('_', ':'))
         status = response.status_code
         if (self.debug):
@@ -498,6 +523,7 @@ class TemplateTest(TestCase):
         return result
 
     def check_pubmed_id(self, pmid_id):
+        """ Check that PubMed ID is valid """
         response = requests.get('https://pubmed.ncbi.nlm.nih.gov/%s'%pmid_id)
         status = response.status_code
         if (self.debug):
@@ -514,6 +540,7 @@ class TemplateTest(TestCase):
         return result
 
     def check_doi(self, doi):
+        """ Check that DOI is valid """
         response = requests.get('https://doi.org/api/handles/%s'%doi)
         status = response.status_code
         if (self.debug):
@@ -530,6 +557,7 @@ class TemplateTest(TestCase):
         return result
 
     def check_gwas_id(self, gwas_id):
+        """ Check that GWAS Study ID is valid """
         response = requests.get('https://www.ebi.ac.uk/gwas/rest/api/studies/%s'%gwas_id)
         status = response.status_code
         if (self.debug):
