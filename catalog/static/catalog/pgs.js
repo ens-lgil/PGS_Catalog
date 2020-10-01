@@ -1,5 +1,6 @@
 $(document).ready(function() {
 
+
     // Fix issue with internal links because of the sticky header
     function offsetAnchor() {
       if(location.hash.length !== 0) {
@@ -186,14 +187,38 @@ $(document).ready(function() {
         $('#search_form_2').submit();
       }
     })
+
+    // Load google from iframe
+    $('#g_iframe').on("load", function () {
+      $('#iframe_loading').removeClass('d-flex');
+      $('#iframe_loading').css('display', 'none');
+    });
+
+
+    /*$('.trait_item').mouseover(function(d) {
+      var id = $(this).attr('id');
+      var id_path = id.replace("_id", "");
+      current_color = d3.select("path[data-id='"+id_path+"']").style("fill");
+      d3.select("path[data-id='"+id_path+"']")
+        .attr("d", arcOver)
+        .attr("fill", d3.hsl(current_color).darker(0.5));
+    });
+    $('.trait_item').mouseout(function(d) {
+      var id = $(this).attr('id');
+      var id_path = id.replace("_id", "");
+      current_color = d3.select("path[data-id='"+id_path+"']").style("fill");
+      d3.select("path[data-id='"+id_path+"']")
+        .attr("d", arc)
+        .attr("fill", d3.hsl(current_color).brighter(0.5));
+    });*/
 });
 
 function search_validator(){
-   //  ...bla bla bla... the checks
    if($('#q').val()){
       $('#search_form').submit();
       return(true);
-   }else{
+   }
+   else {
       return(false);
    }
 }
@@ -296,14 +321,14 @@ function add_search_term(term) {
   var elems = $('.search-input');
   if (elems.length > 0) {
     elem = elems[0];
-    elem.focus();
+    elem.focus({preventScroll: true});
     elem.value = term;
     elem.blur();
 
     setTimeout(function(){
       $('table.table[data-toggle="table"] tbody a[href^="http"]').attr('target','_blank');
       $('table.table[data-toggle="table"] tbody a[href^="http"]').not('[class*="pgs_no_icon_link"]').addClass("external-link");
-    }, 1000);
+    }, 500);
   }
 }
 
@@ -333,7 +358,7 @@ $('.search_facet').click(function(){
 
 
 // Build and draw the Trait category piechart
-function draw_trait_category_piechart(data_chart) {
+/*function draw_trait_category_piechart(data_chart) {
 
   var labels_list = [];
   var bg_list = [];
@@ -378,7 +403,7 @@ function draw_trait_category_piechart(data_chart) {
       }
     }
   });
-}
+}*/
 
 
 function display_category_list(data_json) {
@@ -402,6 +427,7 @@ function display_category_list(data_json) {
     cat_index = parseInt(cat_index);
 
     var name     = data_json[cat_index].name;
+    var cat_id   = data_json[cat_index].id+"_id";
     var div_id   = data_json[cat_index].id+"_list";
     var t_colour = data_json[cat_index].colour;
     var size_g   = data_json[cat_index].size_g;
@@ -424,6 +450,7 @@ function display_category_list(data_json) {
     var e = document.createElement('div');
     e.className = "trait_item";
     e.innerHTML = colour_span+'<span>'+name+'</span>'+count_badge.replace(count_to_replace,size_g);
+    e.id = cat_id;
     e.setAttribute("data-toggle", "tooltip");
     e.setAttribute("data-placement", "left");
     e.setAttribute("data-delay", "800");
@@ -512,7 +539,7 @@ function display_category_list(data_json) {
 
 
 // Build and draw sample distribution piecharts
-function draw_samples_piechart(data_chart, id, type) {
+/*function draw_samples_piechart(data_chart, id, type) {
 
   var pc_class   = (type == 'sample') ? "sample_piechart_" : "sample_piechart_gender_";
   var pc_colours = (type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
@@ -540,5 +567,216 @@ function draw_samples_piechart(data_chart, id, type) {
         }
       }
     }
+  });
+}*/
+
+//----------------------//
+//  D3 chart functions  //
+//----------------------//
+
+// Return a D3 arc object
+function get_d3_arc(radius,inner_coef, outer_coef) {
+    if (!outer_coef) {
+      outer_coef = 1;
+    }
+   return d3.arc().innerRadius(radius * inner_coef).outerRadius(radius * outer_coef);
+}
+
+// Add a Bootstrap tooltip to the D3 chart
+function add_tooltip(elem, title) {
+  elem.tooltip({
+    'title': title,
+    'placement': 'right',
+    'html': true
+  });
+}
+
+
+// Build and draw the Trait category piechart
+function draw_trait_category_piechart_d3(data) {
+
+  var height = 260;
+  var width = 300;
+
+  var color = d3.scaleOrdinal()
+    .domain(data.map(d => d.name))
+    .range(data.map(d => d.colour))
+
+  var margin = 10;
+  var radius = Math.min(width, height - margin) / 2;
+
+  var arc = get_d3_arc(radius, 0.55);
+
+  var arcOver = get_d3_arc(radius, 0.53, 1.02);
+
+  var pie = d3.pie()
+    .padAngle(0.01)
+    .sort(null) // Do not sort group by size
+    .value(d => d.size_g)
+
+  var arcs = pie(data);
+
+  var svg = d3.select("#trait_cat_piechart")
+    .attr("width", width)
+    .attr("height", height);
+
+  var g = svg.append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+  g.selectAll("path")
+    .data(arcs)
+    .join("path")
+      .attr("fill", d => color(d.data.name))
+      .attr("d", arc)
+      .attr("cursor", "pointer")
+      .attr("data-label", d => d.data.name)
+      .attr("data-id", d => d.data.id)
+      // Tooltip
+      .each(function(d,i){
+        var title = '<b>'+d.data.name +"</b>: "+d.data.size_g+" PGS";
+        add_tooltip($(this), title);
+      })
+      .on("click", function(d,i){
+          var label = $(this).attr('data-label');
+          var id = $(this).attr('data-id');
+          showhide_trait(id+"_list", label);
+      })
+      .on("mouseover", function(d) {
+        current_color = d3.select(this).style("fill");
+        d3.select(this)
+          .attr("d", arcOver)
+          .attr("fill", d3.hsl(current_color).darker(0.5));
+        var id = $(this).attr('data-id');
+        $('#'+id+"_id").addClass('trait_item_selected');
+        $('#'+id+"_id").removeClass('trait_item');
+
+      })
+      .on("mouseout", function(d) {
+        current_color = d3.select(this).style("fill");
+        d3.select(this)
+          .attr("d", arc)
+          .attr("fill", d3.hsl(current_color).brighter(0.5));
+          var id = $(this).attr('data-id');
+          $('#'+id+"_id").addClass('trait_item');
+          $('#'+id+"_id").removeClass('trait_item_selected');
+      });
+}
+
+
+// Build and draw sample distribution piecharts
+function draw_samples_piechart_d3(data, id, type) {
+
+  var pc_svg_id  = (type == 'sample') ? "sample_piechart_"+id : "sample_piechart_gender_"+id;
+  var pc_colours = (type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
+
+  var height = 160;
+  var width = 200;
+  var margin = 60;
+
+  var color = d3.scaleOrdinal()
+    .domain(data.map(d => d.name))
+    .range(pc_colours)
+
+  var radius = Math.min(width, height - margin) / 2;
+
+  var arc = get_d3_arc(radius, 0.58);
+
+  var arcOver = get_d3_arc(radius, 0.56, 1.02);
+
+  var pie = d3.pie()
+    .padAngle(0.025)
+    .sort(null) // Do not sort group by size
+    .value(d => d.value)
+
+  var arcs = pie(data);
+
+  var svg = d3.select("#"+pc_svg_id)
+    .attr("width", width)
+    .attr("height", height);
+
+  var g = svg.append("g")
+    .attr("transform", "translate(" + width / 2 + "," + ((height - (margin - 20)) / 2) + ")");
+
+  g.selectAll("path")
+    .data(arcs)
+    .join("path")
+      .attr("fill", d => color(d.data.name))
+      .each(function(d,i){
+        var title = '<b>'+d.data.name +"</b>: "+d.data.value;
+        add_tooltip($(this), title);
+      })
+      .on("mouseover", function(d) {
+        current_color = d3.select(this).style("fill");
+        d3.select(this)
+          .attr("d", arcOver)
+          .attr("fill", d3.hsl(current_color).darker(0.5));
+      })
+      .on("mouseout", function(d) {
+        current_color = d3.select(this).style("fill");
+        d3.select(this)
+          .attr("d", arc)
+          .attr("fill", d3.hsl(current_color).brighter(0.5));
+      })
+      .transition()
+        .duration(500)
+        .attrTween('d', function(d) {
+          var i = d3.interpolate(d.startAngle+0.1, d.endAngle);
+          return function(t) {
+            d.endAngle = i(t);
+            return arc(d);
+          }
+        });
+
+  // Legend
+  var rect_width = 20;
+  var rect_height = 14;
+
+  // Reverse orders to match the piechart display
+  data_legend = data;
+  data_legend.reverse()
+
+  var pc_colours_legend = pc_colours;
+  pc_colours_legend.reverse()
+
+  var color_legend = d3.scaleOrdinal()
+    .domain(data_legend.map(d => d.name))
+    .range(pc_colours_legend)
+
+  var nodeWidth = (d) => d.getBBox().width;
+
+  // Create D3 legend
+  const legend = svg.append('g')
+    .attr('class', 'legend')
+    .attr('transform', 'translate(0,0)');
+
+  const lg = legend.selectAll('g')
+    .data(data_legend)
+    .enter()
+    .append('g')
+      .attr('transform', (d,i) => `translate(${i * 100},${height/2 + 15})`);
+
+  lg.append('rect')
+    .style('fill', d => color_legend(d.value))
+    .attr('x', 0)
+    .attr('y', 0)
+    .attr('width', rect_width)
+    .attr('height', rect_height);
+
+  lg.append('text')
+    .style('font-size', rect_height - 2)
+    .style('fill', '#555')
+    .attr('x', rect_width + 5)
+    .attr('y', rect_height - 3)
+    .text(d => d.name);
+
+  var offset = 0;
+  lg.attr('transform', function(d, i) {
+    var x = offset;
+    offset += nodeWidth(this) + 10;
+    return `translate(${x},${height - margin/2 - 4})`;
+  });
+
+  legend.attr('transform', function() {
+    return `translate(${(width - nodeWidth(this)) / 2},${0})`
   });
 }

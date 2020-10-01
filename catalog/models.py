@@ -197,7 +197,7 @@ class EFOTrait_Base(models.Model):
 
     @property
     def display_label(self):
-        return '<a href="../../trait/%s">%s</a>'%(self.id, self.label)
+        return '<a href="/trait/%s">%s</a>'%(self.id, self.label)
 
     def display_id_url(self):
         return '<a href="%s">%s</a><span class="only_export">: %s</span>'%(self.url, self.id, self.url)
@@ -431,16 +431,10 @@ class Sample(models.Model):
     cohorts_additional = models.TextField('Additional Sample/Cohort Information', null=True)
 
     def __str__(self):
-        s = 'Sample: {}'.format(str(self.pk))
-
-        #Check if any PGS
-        ids = self.associated_PGS()
-        if len(ids) > 0:
-            s += ' | {}'.format(' '.join(ids))
-        # Check if any PSS
-        ids = self.associated_PSS()
-        if len(ids) > 0:
-            s += ' | {}'.format(' '.join(ids))
+        s = 'Sample {}'.format(str(self.pk))
+        if self.ancestry_broad:
+            s += ' - {}'.format(self.ancestry_broad)
+        s += ' ({} individuals)'.format(self.sample_number)
         return s
 
     def associated_PGS(self):
@@ -466,7 +460,11 @@ class Sample(models.Model):
 
     @property
     def display_sampleset(self):
-        return self.sampleset.all()[0]
+        samplesets = self.sampleset.all()
+        if samplesets:
+            return samplesets[0]
+        else:
+            return None
 
     @property
     def display_samples(self):
@@ -522,27 +520,23 @@ class Sample(models.Model):
 
     @property
     def display_sample_category_number(self):
-        categories = []
-        numbers = []
+        data = []
         if self.sample_cases != None:
-            #sinfo['Cases'] = self.sample_cases
-            categories.append("Cases")
-            numbers.append(self.sample_cases)
+            data.append({'name': 'Cases', 'value': self.sample_cases})
             if self.sample_controls != None:
-                #sinfo['Controls'] = self.sample_controls
-                categories.append('Controls')
-                numbers.append(self.sample_controls)
-        return [categories,numbers]
+                data.append({'name': 'Controls', 'value': self.sample_controls})
+        return data
 
     @property
     def display_sample_gender_percentage(self):
-        categories = []
-        numbers = []
+        data = []
         if self.sample_percent_male != None:
             percent_male = round(self.sample_percent_male,2)
-            categories = ["% Male", "% Female"]
-            numbers    = [percent_male, round(100-percent_male,2)]
-        return [categories,numbers]
+            data = [
+                { 'name': '% Male', 'value': percent_male },
+                { 'name': '% Female', 'value': round(100-percent_male,2) }
+            ]
+        return data
 
 
     @property

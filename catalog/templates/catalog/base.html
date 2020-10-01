@@ -60,14 +60,9 @@
     {% endcompress %}
   {% endif %}
 
-  <!-- Chart.js -->
-  {% if has_chart %}
-    <link rel="stylesheet" href="{% static 'catalog/Chart.min.css' %}" type="text/css" media="all" />
-    <script defer type="text/javascript" src="{% static 'catalog/Chart.bundle.min.js' %}"></script>
-  {% endif %}
-
   <!-- jQuery, bootstrap, bootstrap-table (and extensions), table-export libraries -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+
   <!-- Bootstrap bundle include Popper.js and Bootstrap JS -->
   <script defer src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js" integrity="sha384-LtrjvnR4Twt/qOuYxE721u19sVFLVSA4hf/rRt6PrZTmiPltdZcI7q7PXQBYTKyf" crossorigin="anonymous"></script>
   {% if has_table %}
@@ -75,6 +70,17 @@
     <script defer src="https://unpkg.com/bootstrap-table@1.17.1/dist/bootstrap-table.min.js"></script>
     <script defer src="https://unpkg.com/bootstrap-table@1.17.1/dist/extensions/export/bootstrap-table-export.min.js"></script>
     <script defer src="https://unpkg.com/bootstrap-table@1.17.1/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+  {% endif %}
+
+  <!-- D3 graph library -->
+  {% if has_chart %}
+    <script src="https://unpkg.com/d3@6.2.0/dist/d3.min.js"></script>
+  {% endif %}
+
+  <!-- Chart.js -->
+  {% if has_chart_js %}
+    <link rel="stylesheet" href="{% static 'catalog/Chart.min.css' %}" type="text/css" media="all" />
+    <script defer type="text/javascript" src="{% static 'catalog/Chart.bundle.min.js' %}"></script>
   {% endif %}
 
   <!-- PGS Javascript file -->
@@ -88,7 +94,6 @@
 
   <!-- Benchmark -->
   {% if is_benchmark %}
-    <script src="https://unpkg.com/d3@5.16.0/dist/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
     <script src="https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"></script>
     <script src="{% static 'benchmark/benchmark.js' %}"></script>

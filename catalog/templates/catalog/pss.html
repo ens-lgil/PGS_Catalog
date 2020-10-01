@@ -128,12 +128,14 @@
           <script type="text/javascript">
             document.addEventListener("DOMContentLoaded", function(event) {
               var data_chart = {{ sample.display_sample_category_number|safe }};
-              draw_samples_piechart(data_chart,{{ forloop.counter }},'sample');
+              //draw_samples_piechart(data_chart,{{ forloop.counter }},'sample');
+              draw_samples_piechart_d3(data_chart,{{ forloop.counter }},'sample');
             });
           </script>
           <div class="sample_piechart_container mr-5">
+            <div>Sample distribution</div>
             <div>
-              <canvas id="sample_piechart_{{ forloop.counter }}" width="200" height="150"></canvas>
+              <svg id="sample_piechart_{{ forloop.counter }}"></svg>
             </div>
           </div>
         {% endif %}
@@ -142,12 +144,14 @@
           <script type="text/javascript">
             document.addEventListener("DOMContentLoaded", function(event) {
               var data_chart = {{ sample.display_sample_gender_percentage|safe }};
-              draw_samples_piechart(data_chart,{{ forloop.counter }},'gender');
+              //draw_samples_piechart(data_chart,{{ forloop.counter }},'gender');
+              draw_samples_piechart_d3(data_chart,{{ forloop.counter }},'gender');
             });
           </script>
           <div class="sample_piechart_container">
+            <div>Sample gender distribution</div>
             <div>
-              <canvas id="sample_piechart_gender_{{ forloop.counter }}" width="200" height="150"></canvas>
+              <svg id="sample_piechart_gender_{{ forloop.counter }}" width="200" height="150"></svg>
             </div>
           </div>
         {% endif %}

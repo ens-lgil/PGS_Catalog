@@ -6,7 +6,7 @@
 {% block content %}
     <nav aria-label="You are here:">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="../../">PGS Catalog</a></li>
+        <li class="breadcrumb-item"><a href="/">PGS Catalog</a></li>
         <li class="breadcrumb-item">Browse</li>
         <li class="breadcrumb-item">{{ view_name }}</li>
       </ol>
@@ -17,7 +17,7 @@
         {% if scores_list %}
             <ul>
                 {% for score in scores_list %}
-                    <li><a href="../../pgs/{{ score.PGS_id }}/">{{ score }}</a></li>
+                    <li><a href="/pgs/{{ score.PGS_id }}/">{{ score }}</a></li>
                 {% endfor %}
             </ul>
         {% elif table %}
@@ -26,7 +26,8 @@
               document.addEventListener("DOMContentLoaded", function(event) {
                 var data_chart = {{ data_chart|safe }};
                 // Draw the PGS Scores per trait category piechart
-                draw_trait_category_piechart(data_chart);
+                //draw_trait_category_piechart(data_chart);
+                draw_trait_category_piechart_d3(data_chart);
                 // Build the categories and sub-categories
                 display_category_list(data_chart);
               });
@@ -41,7 +42,8 @@
             <div class="trait_graph_container">
               <div class="trait_piechart_container clearfix">
                 <div class="trait_piechart">
-                  <canvas id="trait_cat_piechart" width="300" height="250"></canvas>
+                  <!--<canvas id="trait_cat_piechart" width="300" height="250"></canvas>-->
+                  <svg id="trait_cat_piechart" ></svg>
                 </div>
               </div>
               <div class="trait_cat_container clearfix">

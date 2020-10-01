@@ -25,7 +25,7 @@ $pgs_facet_2: #f58f22;
 $header_height_with_margin: 97px;
 $header_height_with_margin_mobile: $header_height_with_margin + 58px;
 $footer_height: 97px;
-
+$footer_height_mobile:150px;
 
 /* CSS mixin */
 
@@ -120,12 +120,13 @@ h2 {
   padding-right:3rem;
 }
 .container-extra {
-  padding-top: $header_height_with_margin;
-  margin-bottom:-$footer_height;
+  position: relative;
+  top: $header_height_with_margin;
+  margin-bottom:$footer_height;
   &:after {
     content: "";
     display: block;
-    height: $footer_height;
+    height: 3rem;
   }
 }
 
@@ -140,6 +141,7 @@ h2 {
     clear:both;
   }
 }
+
 
 /* Navbar and horizontal menu */
 .navbar {
@@ -188,6 +190,13 @@ h2 {
       font-size:10px;
       cursor:pointer;
     }
+  }
+}
+.search_form {
+  [type='text']:focus {
+      outline: none;
+      border: 1px solid $pgs_colour_1_lighter;
+      transition: border-color 0.5s ease-in-out;
   }
 }
 
@@ -330,6 +339,7 @@ h2 {
   font-size:18px;
   color: white;
   display: inline-block;
+  margin-right: 1rem;
   vertical-align: middle;
   border-radius: 50%;
 }
@@ -769,7 +779,7 @@ td > ul {
 
 .release_label {
     position:absolute;
-    top: $header_height_with_margin - 20px;
+    top: -20px;
     right:10px;
 }
 
@@ -1028,7 +1038,14 @@ a.link-with-btn {
 .sample_piechart_container {
   float:left;
   border:1px solid $pgs_darkC;
-  > div {
+  text-align: center;
+  padding-top: 6px;
+  > div:first-child {
+    font-size: 12px;
+    font-weight: bold;
+    color: $pgs_dark5;
+  }
+  > div:last-child {
     width:200px;
     height:150px;
   }
@@ -1198,6 +1215,18 @@ td.trait_categories {
     margin-right: 8px;
   }
 }
+.trait_item_selected {
+  display:block;
+  white-space: nowrap;
+  padding: 4px 6px;
+  border-radius:8px;
+  color: $pgs_colour_1_lighter;
+  border: 1px solid $pgs_colour_1_lighter;
+  margin-bottom:4px;
+  span:nth-child(2) {
+    margin-right: 8px;
+  }
+}
 .trait_link {
   padding-right: 8px;
   color: $pgs_colour_1_lighter !important;
@@ -1234,14 +1263,6 @@ footer {
   margin-top:2rem;
   background-color: $pgs_dark3;
   color: #FFF;
-  a {
-    color: $pgs_colour_1;
-    border:none;
-    &:hover {
-      color: $pgs_colour_1_lighter;
-      border:none;
-    }
-  }
   .footer_first_row {
     display:flex;
     justify-content:space-around;
@@ -1258,10 +1279,16 @@ footer {
     }
   }
   .footer-copyright {
+    span:not(:last-child) {
+      padding-right: 5px;
+      margin-right: 5px;
+      border-right: 1px solid #FFF;
+    }
     a {
-      color: $pgs_colour_1_lighter;
+      color:#FFF !important;
+      border-bottom: 1px dotted $pgs_colour_1_lighter;
       &:hover {
-        border-bottom: 1px dotted #FFF;
+        border-bottom: 1px dotted $pgs_colour_2;
       }
     }
   }
@@ -1271,6 +1298,7 @@ footer {
     font-size:20px;
     padding:4px 5px;
     width:30px;
+    color: $pgs_colour_1;
     background-color: #FFF;
     border-radius: 4px;
     border:none;
@@ -1281,7 +1309,8 @@ footer {
     }
     &:hover {
       color: #FFF;
-      background-color: $pgs_colour_1;
+      cursor:pointer !important;
+      background-color: $pgs_colour_1 !important;
     }
   }
 }
@@ -1322,7 +1351,7 @@ footer {
 }
 
 .tooltip {
-  font: 12px;
+  font-size: 12px;
 }
 .tooltip_area:hover {
   cursor:pointer;
@@ -1514,14 +1543,15 @@ footer {
     }
   }
   .container-extra {
-    padding-top: $header_height_with_margin_mobile;
+    top: $header_height_with_margin_mobile;
+    margin-bottom:$footer_height_mobile;
   }
   .container-fluid {
     padding-left: 1rem;
     padding-right:1rem;
   }
   .release_label {
-      top: $header_height_with_margin_mobile - 20px;
+    top: -25px;
   }
 
   .feedback {
@@ -1587,6 +1617,22 @@ footer {
     .badge-pgs {
       padding-left: 0.4em;
       padding-right: 0.4em;
+    }
+  }
+  .result_facet_type {
+    font-size:14px;
+    margin-right: 0.5rem;
+  }
+  .result_facet_type_1 {
+    padding: 4.5px 8px 4px;
+  }
+  .result_facet_type_2 {
+    //padding: 4px 8.5px;
+    padding: 4.5px 7.5px 4px;
+  }
+  .pgs_result_title {
+    h4 {
+      font-size: 16px;
     }
   }
   .pgs_result_subtitles {
