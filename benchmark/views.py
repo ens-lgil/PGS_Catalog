@@ -28,7 +28,7 @@ def benchmark_data(efotrait):
         'data': {}
     }
 
-    metric_to_exp = ['Hazard Ratio', 'Odds Ratio']
+    #metric_to_exp = ['Hazard Ratio', 'Odds Ratio']
 
     # Performances
     performances = BM_Performance.objects.using(bm_db).select_related('sample','cohort','efotrait').filter(efotrait=efotrait).prefetch_related('performance_metric')
@@ -56,7 +56,7 @@ def benchmark_data(efotrait):
         if not cohort_name in chart_data['data']:
             chart_data['data'][cohort_name] = {}
 
-        print(cohort_name+" - "+ancestry+" - "+sex+" - "+pgs_id)
+        #print(cohort_name+" - "+ancestry+" - "+sex+" - "+pgs_id)
 
         for metric in performance.performance_metric.all():
             metric_name = metric.name
@@ -74,11 +74,11 @@ def benchmark_data(efotrait):
             if not sex in chart_data['data'][cohort_name][metric_name]:
                 chart_data['data'][cohort_name][metric_name][sex] = []
 
-            if metric_name in metric_to_exp:
-                estimate = data2exp(estimate)
-                if lower_e and upper_e:
-                    lower_e = data2exp(lower_e)
-                    upper_e = data2exp(upper_e)
+            #if metric_name in metric_to_exp:
+            #    estimate = data2exp(estimate)
+            #    if lower_e and upper_e:
+            #        lower_e = data2exp(lower_e)
+            #        upper_e = data2exp(upper_e)
 
             entry = {
                 'pgs': pgs_id,
@@ -101,8 +101,8 @@ def add_global_data(data, cohort_name, entry_name, data_type):
 
     return data
 
-def data2exp(value):
-    return round(math.exp(float(value)), 4)
+#def data2exp(value):
+#    return round(math.exp(float(value)), 4)
 
 
 def bm_index(request):
@@ -141,24 +141,24 @@ def benchmark(request, trait_id):
     table_scores = BM_Browse_ScoreTable(Score.objects.only(*score_only_attributes).select_related('publication').filter(id__in=list(scores)).prefetch_related(pgs_prefetch['trait']), order_by="num")
 
 
-    bm_cohorts = BM_Cohort.objects.using('benchmark').filter(name_short__in=cohorts).prefetch_related('cohort_sample')
+    bm_cohorts = BM_Cohort.objects.using('benchmark').filter(name_short__in=cohorts).prefetch_related('cohort_sample').distinct()
 
     cohort_data = {}
     for bm_cohort in bm_cohorts:
-        table_samples = BM_SampleTable(bm_cohort.cohort_sample.all())
         cohort_name = bm_cohort.name_short
         if not cohort_name in cohort_data:
-            cohort_data[cohort_name] = {}
-        cohort_data[cohort_name]['table'] = table_samples
-        cohort_data[cohort_name]['name'] = bm_cohort.name_full
-    #print(pgs_data)
+            table_samples = BM_SampleTable(bm_cohort.cohort_sample.all())
+            cohort_data[cohort_name] = {
+                'table': table_samples,
+                'name': bm_cohort.name_full
+            }
     context = {
         'trait': efotrait,
-        #'pgs_data': pgs_data,
         'pgs_data': pgs_data,
         'table_scores': table_scores,
         'cohorts': cohort_data,
         'has_table': 1,
+        'has_chart': 1,
         'is_benchmark': 1
     }
-    return render(request, 'benchmark/test.html', context)
+    return render(request, 'benchmark/benchmark.html', context)

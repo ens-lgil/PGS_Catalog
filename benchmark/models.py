@@ -494,7 +494,7 @@ class BM_Metric(models.Model):
     )
 
     name = models.CharField(verbose_name='Performance Metric Name', max_length=100, null=False) # ex: "Odds Ratio"
-    name_short = models.CharField(verbose_name='Performance Metric Name (Short)', max_length=10, null=True) # ex: "OR"
+    name_short = models.CharField(verbose_name='Performance Metric Name (Short)', max_length=25, null=True) # ex: "OR"
 
     estimate = models.FloatField(verbose_name='Estimate', null=False)
     unit = models.TextField(verbose_name='Units of the effect size', max_length=100, blank = False)

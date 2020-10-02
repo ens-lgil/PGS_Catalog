@@ -58,6 +58,7 @@ class BM_SampleTable(tables.Table):
         attrs = {
             "data-show-columns" : "false",
             "data-export-options" : '{"fileName": "pgs_cohort_sample_data"}',
+            "data-sort-name" : "ancestry_broad",
             'data-search' : "false",
             'data-filter-control': "false",
             'data-show-export' : "false"

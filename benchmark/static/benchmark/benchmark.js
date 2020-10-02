@@ -8,7 +8,7 @@ var chart_colours = ["#367DB7", "#4CAE49", "#974DA2", "#FF7F00", '#E50000'];
 // Point symbols/shapes to differenciate the cohorts data
 var chart_shapes = [ d3.symbolCircle, d3.symbolTriangle, d3.symbolDiamond, d3.symbolSquare, d3.symbolCross];
 // Horizontal lines - threshold
-var threshold = { 'Hazard Ratio': 1, 'Odds Ratio': 1, 'C-index': 0.5, 'AUROC': 0.5, 'DeltaC': 0, 'deltaAUROC': 0};
+var threshold = { 'Hazard Ratio': 1, 'Odds Ratio': 1, 'C-index': 0.5, 'AUROC': 0.5, 'DeltaC': 0, 'DeltaAUROC': 0, 'Delta-C-index': 0};
 // Font family
 var font_family = '"Helvetica", "Helvetica Neue", "Arial", "sans-serif"';
 // Min width
@@ -144,6 +144,7 @@ class PGSBenchmark {
       .attr('transform', 'translate(0,' + this.chartHeight + ')')
       .call( d3.axisBottom(this.x0) );
     // X axis - label
+    this.svg.selectAll('.x_label').remove();
     this.svg.append("text")
       .attr("class", "x_label")
       .attr("font-family", font_family)
@@ -776,12 +777,18 @@ class PGSBenchmark {
     // Fetch the selected data ordering
     this.set_data_ordering();
 
+    // Reset X axis categories
+    this.set_category_names();
+
     // X axis groups (ancestries)
     this.set_cohortGroupNames();
 
     // The scale for spacing each group's bar:
-    this.set_x1_axis()
+    //this.set_x0_axis();
+    this.set_x1_axis();
 
+    // Redraw X axis
+    this.addXAxis();
     // Load updated set of data to the chart
     this.addData();
     // Load updated legend on the chart
@@ -886,6 +893,7 @@ class PGSBenchmark {
   // Add tooltip on the chart elements
   addTooltip(elem, data) {
     var title = '<div class="tooltip_title"><b>'+data.grpName + '</b> ('+data.cohortGrpName.split(sep)[0]+')</div>';
+    title += '<div class="tooltip_title">Score ID: <b>'+data.pgs+'</b></div>';
     if (data.et) {
       title += "<div>Upper 95: <b>" + data.et + "</b></div><div>Estimate: <b>" + data.y + "</b></div><div>Lower 95: <b>" + data.eb+"</b></div>";
     }
