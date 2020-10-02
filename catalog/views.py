@@ -5,8 +5,6 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.db.models import Prefetch
 from django.db.models.functions import Lower
-from django.views.decorators.cache import cache_page
-import re
 
 from .tables import *
 
@@ -18,7 +16,9 @@ pgs_defer = {
 }
 pgs_prefetch = {
     'trait': Prefetch('trait_efo', queryset=EFOTrait.objects.only('id','label').all()),
-    'perf' : ['score__publication', 'phenotyping_efo', 'sampleset__samples', 'sampleset__samples__sampleset', 'sampleset__samples__sample_age', 'sampleset__samples__followup_time', 'sampleset__samples__cohorts', 'performance_metric']
+    'perf' : ['score__publication', 'phenotyping_efo', 'sampleset__samples', 'sampleset__samples__sampleset', 'sampleset__samples__sample_age', 'sampleset__samples__followup_time', 'sampleset__samples__cohorts', 'performance_metric'],
+    'publication_score': Prefetch('publication_score', queryset=Score.objects.only('id', 'publication').all()),
+    'publication_performance': Prefetch('publication_performance', queryset=Performance.objects.only('id', 'publication', 'score').all().prefetch_related(Prefetch('score', queryset=Score.objects.only('id', 'publication').all()))),
 }
 
 def disclaimer_formatting(content):
@@ -86,13 +86,26 @@ def get_efo_traits_data():
 def index(request):
     current_release = Release.objects.values('date').order_by('-date').first()
 
+    traits_count = EFOTrait.objects.count()
     context = {
         'release' : current_release,
         'num_pgs' : Score.objects.count(),
-        'num_traits' : EFOTrait.objects.count(),
+        'num_traits' : traits_count,
         'num_pubs' : Publication.objects.count(),
         'has_ebi_icons' : 1
     }
+    if settings.PGS_ON_CURATION_SITE=='True':
+        released_traits = set()
+        for score in Score.objects.filter(date_released__isnull=False).prefetch_related('trait_efo'):
+            for efo in score.trait_efo.all():
+                released_traits.add(efo.id)
+        released_traits_count = len(list(released_traits))
+        trait_diff = traits_count - released_traits_count
+        if trait_diff != 0:
+            context['num_traits_not_released'] = trait_diff
+        context['num_pgs_not_released']  = Score.objects.filter(date_released__isnull=True).count()
+        context['num_pubs_not_released'] = Publication.objects.filter(date_released__isnull=True).count()
+
     return render(request, 'catalog/index.html', context)
 
 
@@ -111,7 +124,7 @@ def browseby(request, view_selection):
     elif view_selection == 'studies':
         context['view_name'] = 'Publications'
         publication_defer = ['authors','curation_status','curation_notes','date_released']
-        publication_prefetch_related = ['publication_score', 'publication_performance', 'publication_performance__score']
+        publication_prefetch_related = [pgs_prefetch['publication_score'], pgs_prefetch['publication_performance']]
         table = Browse_PublicationTable(Publication.objects.defer(*publication_defer).all().prefetch_related(*publication_prefetch_related), order_by="num")
         context['table'] = table
     elif view_selection == 'sample_set':
@@ -250,6 +263,7 @@ def efo(request, efo_id):
 
     context = {
         'trait': ontology_trait,
+        'trait_id_with_colon': ontology_trait.id.replace('_', ':'),
         'trait_scores_direct_count': len(related_direct_scores),
         'trait_scores_child_count': len(related_child_scores),
         'performance_disclaimer': performance_disclaimer(),
@@ -408,7 +422,7 @@ def releases(request):
         'max_publi': max_publi,
         'max_perf': max_perf,
         'has_table': 1,
-        'has_chart': 1
+        'has_chart_js': 1
     }
     return render(request, 'catalog/releases.html', context)
 
@@ -420,6 +434,9 @@ class DocsView(TemplateView):
 
 class DownloadView(TemplateView):
     template_name = "catalog/download.html"
+
+class ReportStudyView(TemplateView):
+    template_name = "catalog/report_study.html"
 
 class CurrentTemplateView(RedirectView):
     url = settings.USEFUL_URLS['TEMPLATEGoogleDoc_URL']

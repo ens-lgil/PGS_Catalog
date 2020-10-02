@@ -48,7 +48,7 @@ def search(request):
 def format_efo_traits_results(request, data):
     """ Convert the EFO Trait results into HTML. """
     results = []
-    icon = '<span class="result_facet_type result_facet_type_1 mr-3"></span>'
+    icon = '<span class="result_facet_type result_facet_type_1"></span>'
     for d in data:
         desc = d.description
         if desc:
@@ -90,7 +90,7 @@ def format_publications_results(request, data):
     results = []
     doi_url = 'https://doi.org/'
     pubmed_url = 'https://www.ncbi.nlm.nih.gov/pubmed/'
-    icon = '<span class="result_facet_type result_facet_type_2 mr-3"></span>'
+    icon = '<span class="result_facet_type result_facet_type_2"></span>'
     for idx, d in enumerate(data):
 
         score_html =  score_mini_table("pub_"+str(idx), d.publication_score)
@@ -123,6 +123,7 @@ def score_mini_table(id, scores):
             <tr><th>PGS ID</th><th>PGS Name</th><th>Reported Trait</th></tr>
           </thead>
           <tbody>"""
+        scores.sort(key=lambda x: x.trait_reported, reverse=False)
         for score in scores:
             score_html += '<tr><td><a href="/score/{}">{}</a></td><td>{}</td><td>{}</td></tr>'.format(score.id, score.id, score.name, score.trait_reported)
         score_html += '</tbody></table></div>'

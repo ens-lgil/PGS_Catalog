@@ -35,6 +35,9 @@ urlpatterns = [
     # ex: /downloads/
     path('downloads/', views.DownloadView.as_view(), name='Downloads'),
 
+    # ex: /report_study/
+    path('report_study/', views.ReportStudyView.as_view(), name='Report missing PGS study'),
+
     #ex: /template/current
     path('template/current', views.CurrentTemplateView.as_view(), name='Current Curation Template'),
 
@@ -45,5 +48,22 @@ urlpatterns = [
     path('_ah/warmup', views.warmup, name="Warmup"),
 
     # Setup robots.txt
-    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"))
+    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
+
+    # ex: /releases/
+    path('releases/', views.releases, name='Releases')
 ]
+
+# Debug SQL queries
+from django.conf import settings
+if settings.DEBUG:
+    from django.conf.urls import include, url  # For django versions before 2.0
+    from django.urls import include  # For django versions from 2.0 and
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+
+        # For django versions before 2.0:
+        # url(r'^__debug__/', include(debug_toolbar.urls)),
+
+    ] + urlpatterns

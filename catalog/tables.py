@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.html import format_html
 from .models import *
 from django.utils.crypto import get_random_string
+import re
 
 relative_path = '../..'
 publication_path = relative_path+'/publication'
@@ -224,7 +225,7 @@ class Browse_ScoreTable(tables.Table):
     def render_list_traits(self, value):
         l = []
         for x in value:
-            l.append('<a href=../../trait/{}>{}</a>'.format(x[0], x[1]))
+            l.append('<a href=/trait/{}>{}</a>'.format(x[0], x[1]))
         return format_html('<br>'.join(l))
 
     def render_ftp_link(self, value):
@@ -262,7 +263,7 @@ class Browse_SampleSetTable(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-         return format_html('<a href="../../sampleset/{}">{}</span>', value, value)
+         return format_html('<a href="/sampleset/{}">{}</span>', value, value)
 
     def render_phenotyping_free(self, value):
         return format_html('<span class="more">{}</span>', value)
@@ -281,6 +282,7 @@ class SampleTable_variants(tables.Table):
         model = Sample
         attrs = {
             "data-show-columns" : "false",
+            "data-sort-name" : "display_ancestry",
             "data-export-options" : '{"fileName": "pgs_sample_source_data"}'
         }
         fields = [
@@ -295,7 +297,17 @@ class SampleTable_variants(tables.Table):
         if 'GCST' in value:
             l.append('GWAS Catalog: <a href="https://www.ebi.ac.uk/gwas/studies/{}">{}</a>'.format(value['GCST'], value['GCST']))
         if 'PMID' in value and value['PMID']:
-            l.append('EuropePMC: <a href="https://europepmc.org/search?query={}">{}</a>'.format(value['PMID'], value['PMID']))
+            publication_id = value['PMID']
+            url = ""
+            # PubMed ID
+            if re.match(r'^\d+$', publication_id):
+                url = "https://europepmc.org/article/MED/{}".format(publication_id)
+            # DOI or other
+            else:
+                if re.match(r'^10\.',publication_id):
+                    publication_id = "DOI:"+publication_id
+                url = "https://europepmc.org/search?query={}".format(publication_id)
+            l.append('EuropePMC: <a href="{}">{}</a>'.format(url, value['PMID']))
         return format_html('<br>'.join(l))
 
 
@@ -380,7 +392,7 @@ class SampleTable_performance(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-         return format_html('<a id="{}" href="../../sampleset/{}">{}</span>', value, value, value)
+         return format_html('<a id="{}" href="/sampleset/{}">{}</span>', value, value, value)
 
     def render_phenotyping_free(self, value):
         return format_html('<span class="more">{}</span>', value)
@@ -420,7 +432,7 @@ class PerformanceTable(tables.Table):
         return format_html('<a href="#{}">{}</a>', value, value)
 
     def render_score(self, value):
-        return format_html('<a href="../../score/{}">{}</a> (<i>{}</i>)', value.id, value.id, value.name)
+        return format_html('<a href="/score/{}">{}</a> (<i>{}</i>)', value.id, value.id, value.name)
 
 
 class CohortTable(tables.Table):

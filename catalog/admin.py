@@ -39,6 +39,15 @@ class PerformanceAdmin(admin.ModelAdmin):
     list_display = ["id", "score", "publication", "sampleset", "phenotyping_reported"]
     ordering = ('-num',)
 
+    fieldsets = (
+        (None, {
+            'fields': ("id", "score", "publication", "sampleset", "phenotyping_reported", "phenotyping_efo", "covariates", "performance_comments")
+        }),
+        ('Curation', {
+            'fields': ('date_released', 'curation_notes')
+        }),
+    )
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return ["num","id","date_released"]
@@ -101,6 +110,19 @@ class SampleSetAdmin(admin.ModelAdmin):
 class ScoreAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "trait_reported", "method_name","variants_number", "publication"]
     ordering = ('-num',)
+
+    fieldsets = (
+        (None, {
+            'fields': ("id", "name", "flag_asis", "publication",
+                       "trait_reported", "trait_additional", "trait_efo",
+                       #"samples_variants", "samples_training",
+                       "method_name", "method_params",
+                       "variants_number", "variants_interactions", "variants_genomebuild")
+        }),
+        ('Curation', {
+            'fields': ('date_released', 'curation_notes')
+        }),
+    )
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

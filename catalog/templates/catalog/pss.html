@@ -129,7 +129,7 @@
             document.addEventListener("DOMContentLoaded", function(event) {
               var data_chart = {{ sample.display_sample_category_number|safe }};
               //draw_samples_piechart(data_chart,{{ forloop.counter }},'sample');
-              draw_samples_piechart_d3(data_chart,{{ forloop.counter }},'sample');
+              draw_samples_piechart(data_chart,{{ forloop.counter }},'sample');
             });
           </script>
           <div class="sample_piechart_container mr-5">
@@ -145,7 +145,7 @@
             document.addEventListener("DOMContentLoaded", function(event) {
               var data_chart = {{ sample.display_sample_gender_percentage|safe }};
               //draw_samples_piechart(data_chart,{{ forloop.counter }},'gender');
-              draw_samples_piechart_d3(data_chart,{{ forloop.counter }},'gender');
+              draw_samples_piechart(data_chart,{{ forloop.counter }},'gender');
             });
           </script>
           <div class="sample_piechart_container">

@@ -25,6 +25,6 @@ urlpatterns = [
     path('', include('benchmark.urls')),
     url(r'^search/', search_views.search, name="PGS Catalog Search")
 ]
-if not 'PGS_LIVE_SITE' in os.environ:
+if os.environ['PGS_LIVE_SITE'] == 'False':
     from django.contrib import admin
     urlpatterns.append(path('admin/', admin.site.urls))

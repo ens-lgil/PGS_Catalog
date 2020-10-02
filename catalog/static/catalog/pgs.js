@@ -593,7 +593,7 @@ function add_tooltip(elem, title) {
 
 
 // Build and draw the Trait category piechart
-function draw_trait_category_piechart_d3(data) {
+function draw_trait_category_piechart(data) {
 
   var height = 260;
   var width = 300;
@@ -664,7 +664,7 @@ function draw_trait_category_piechart_d3(data) {
 
 
 // Build and draw sample distribution piecharts
-function draw_samples_piechart_d3(data, id, type) {
+function draw_samples_piechart(data, id, type) {
 
   var pc_svg_id  = (type == 'sample') ? "sample_piechart_"+id : "sample_piechart_gender_"+id;
   var pc_colours = (type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];

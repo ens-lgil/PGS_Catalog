@@ -149,6 +149,8 @@ else:
 
 PGS_ON_LIVE_SITE = os.environ['PGS_LIVE_SITE']
 
+PGS_ON_CURATION_SITE = os.environ['PGS_CURATION_SITE']
+
 WSGI_APPLICATION = 'pgs_web.wsgi.application'
 
 # Database
