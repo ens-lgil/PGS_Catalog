@@ -67,7 +67,21 @@
       {% for cohort, cohort_data in cohorts.items %}
         <div>
           <div class="pgs_benchmark_cohort_title mt-2 mb-2">{{ cohort_data.name }} ({{ cohort }})</div>
-          {% render_table cohort_data.table %}
+          <table class="table table-bordered table-hover" data-toggle="table">
+            <thead>
+              <tr><th>Ancestry</th><th>Sample Numbers max</th></tr>
+            </thead>
+            <tbody>
+                {% for ancestry_data in cohort_data.ancestries %}
+                  <tr>
+                    <td>{{ ancestry_data.name }}</td>
+                    <td>{{ ancestry_data.display|safe }}</td>
+                  </tr>
+                {% endfor %}
+            </tbody>
+          </table>
+
+
         </div>
       {% endfor %}
       </div>
@@ -93,8 +107,7 @@
           <div id="benchmark_metric" class="filter_container mr-3">
             <div class="filter_header mb-2">Performance metric</div>
             <div>
-              <select id="benchmark_metric_select">
-              </select>
+              <select id="benchmark_metric_select"></select>
             </div>
           </div>
           <!-- Sex form -->
@@ -103,7 +116,7 @@
             <div id="benchmark_sex_list"></div>
           </div>
           <!-- Data ordering -->
-          <div id="benchmark_ordering" class="filter_container">
+          <div id="benchmark_ordering" class="filter_container mr-3">
             <div class="filter_header mb-1">Order by</div>
             <div id="benchmark_order_by_list">
               <div>
@@ -114,6 +127,13 @@
                 <input type="radio" name="benchmark_order_by" class="benchmark_order_by_rb" value="cohort" id="bm_order_by_1">
                 <label class="mb-0" for="bm_order_by_1">Cohort</label>
               </div>
+            </div>
+          </div>
+          <!-- Data sorting -->
+          <div id="benchmark_sorting" class="filter_container">
+            <div class="filter_header mb-2">Sort by</div>
+            <div>
+              <select id="benchmark_sorting_select"></select>
             </div>
           </div>
         </div>
@@ -148,7 +168,8 @@
         const pgs_data = {{ pgs_data|safe }};
         //var width = document.documentElement.clientWidth,
         //    height = document.documentElement.clientHeight;
-        var width = 1000,
+        var max_width = 1200;
+        var width = max_width,
             height = 500;
 
         $( document ).ready(function() {
@@ -166,8 +187,11 @@
           // Sex
           fill_sex_form(pgs_data,cohorts);
 
+          // Sorting by
+          fill_sorting_form(pgs_data,cohorts);
+
           var doc_width = $('.container-fluid').width();
-          if (doc_width < 1000) {
+          if (doc_width < 1200) {
             width = doc_width-20;
           }
           if (width < 500) {
@@ -209,6 +233,10 @@
 
           $('input[name="benchmark_order_by"]:radio').change(function() {
             benchmark.update_ordering();
+          });
+
+          $("#benchmark_sorting_select").change(function() {
+            benchmark.update_sorting();
           });
 
           window.addEventListener('resize', function(event){

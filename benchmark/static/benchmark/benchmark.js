@@ -4,7 +4,13 @@ var file_name = 'PGS_benchmark';
 // X axis label
 var chart_xaxis_label = 'PGS Catalog - Score ID';
 // Colours to differenciate the ancestries
-var chart_colours = ["#367DB7", "#4CAE49", "#974DA2", "#FF7F00", '#E50000'];
+//var chart_colours = ["#367DB7", "#4CAE49", "#974DA2", "#FF7F00", '#E50000'];
+var ancestry_colours = {
+  'European'    : "#367DB7",
+  'African'     : "#4CAE49",
+  'South Asian' : "#974DA2"
+};
+var chart_colours = ["#FF7C43", "#E50000", "#FFA600"];
 // Point symbols/shapes to differenciate the cohorts data
 var chart_shapes = [ d3.symbolCircle, d3.symbolTriangle, d3.symbolDiamond, d3.symbolSquare, d3.symbolCross];
 // Horizontal lines - threshold
@@ -14,7 +20,7 @@ var font_family = '"Helvetica", "Helvetica Neue", "Arial", "sans-serif"';
 // Min width
 var min_svg_width = 750;
 // Max width
-var max_svg_width = 1000;
+var max_svg_width = 1200;
 // Default height
 var default_svg_height = 500;
 
@@ -34,7 +40,7 @@ class PGSBenchmark {
       .attr('width', this.width)
       .attr('height', this.height);
 
-    this.margin = {top: 20, right: 130, bottom: 60, left: 60};
+    this.margin = {top: 20, right: 190, bottom: 60, left: 60};
     this.set_chartWidthHeight();
     this.g = this.svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
@@ -64,6 +70,9 @@ class PGSBenchmark {
 
     // X axis categories
     this.set_category_names();
+
+    // Fetch the selected data sorting
+    this.set_data_sorting();
 
     // X axis groups (ancestries)
     this.set_cohortGroupNames();
@@ -335,7 +344,7 @@ class PGSBenchmark {
     var legend = this.g.append("g")
       .attr("font-family", "sans-serif")
       .attr("font-size", 10)
-      .attr("text-anchor", "end")
+      .attr("text-anchor", "start")
       .attr("class", "chart_legend")
       .selectAll("g")
       .data(this.cohortGroupNames.slice())
@@ -508,9 +517,19 @@ class PGSBenchmark {
   // Set the group colours
   set_groupNames_colours() {
     var gp_colours = {};
-    for (var i=0; i<this.groupNames.length; i++) {
-      var gp_name = this.groupNames[i];
-      var colour = chart_colours[i];
+    //for (var i=0; i<this.groupNames.length; i++) {
+    //  var gp_name = this.groupNames[i];
+    var extra_colour = 0
+    for (var i=0; i<this.chart_data.ancestry_groups.length; i++) {
+      var gp_name = this.chart_data.ancestry_groups[i];
+      var colour = '';
+      if (ancestry_colours[gp_name]) {
+        colour = ancestry_colours[gp_name];
+      }
+      else {
+        colour = chart_colours[extra_colour];
+        extra_colour++;
+      }
       gp_colours[gp_name] = colour;
     }
     this.groupNames_colours = gp_colours;
@@ -519,10 +538,15 @@ class PGSBenchmark {
   set_cohortGroupNames_colours() {
     this.cohortGroupNames_colours = {};
     var gp_colours = {};
-    for (var i=0; i<this.cohortGroupNames.length; i++) {
-      var cohort_gp_name = this.cohortGroupNames[i];
-      var gp_name = cohort_gp_name.split(sep)[1];
-      this.cohortGroupNames_colours[cohort_gp_name] = this.groupNames_colours[gp_name];
+    for (var i=0; i<this.cohorts_list.length; i++) {
+      var cohort = this.cohorts_list[i];
+      var ancestry_list = this.chart_data.ancestries[cohort];
+      // Ancestries
+      for (var j=0; j<ancestry_list.length;j++) {
+        var ancestry = ancestry_list[j];
+        var cohort_gp_name = cohort+sep+ancestry;
+        this.cohortGroupNames_colours[cohort_gp_name] = this.groupNames_colours[ancestry];
+      }
     }
   }
   // Get the cohort group colours
@@ -639,6 +663,9 @@ class PGSBenchmark {
     else {
       $('.benchmark_ancestry_cb').attr('disabled', false);
     }
+
+    // Update the list of 'Cohort - Ancestry' for the sorting
+    fill_sorting_form(this.chart_data, this.cohorts);
   }
 
   // Define the categories for the X axis
@@ -676,6 +703,38 @@ class PGSBenchmark {
     this.data_ordering = $('input[name="benchmark_order_by"]:checked').val();
   }
 
+  // Fetch the selected data sorting
+  set_data_sorting() {
+    this.data_sorting = $("#benchmark_sorting_select option:selected").val();
+    //var sort_by = "UKB__European";
+    var sort_params = this.data_sorting.split('__');
+    if (sort_params.length > 1) {
+      var cohort = sort_params[0];
+      var ancestry = sort_params[1];
+      var scores = {};
+      for (var i=0;i<this.selected_data[cohort].length;i++) {
+        var entry = this.selected_data[cohort][i];
+        if (entry.grpName == ancestry) {
+          scores[entry.pgs] = entry.y;
+        }
+      }
+      var sorted_score_list = this.sort_category_list(scores);
+
+      // Update list of category names
+      for (var j=0;j<this.categoriesNames.length;j++) {
+        var category = this.categoriesNames[j];
+        if (!sorted_score_list.includes(category)) {
+          sorted_score_list.push(category);
+        }
+      }
+      this.categoriesNames = sorted_score_list;
+    }
+    else {
+      // Alphabetic sorting of the list of category names
+      this.categoriesNames.sort();
+    }
+  }
+
   // This function updates the chart when an different cohort is selected
   update_cohort() {
     // Fetch selection of cohorts
@@ -691,6 +750,7 @@ class PGSBenchmark {
     fill_ancestry_form(this.chart_data, this.cohorts);
     fill_metric_form(this.chart_data, this.cohorts);
     fill_sex_form(this.chart_data, this.cohorts);
+    fill_sorting_form(this.chart_data, this.cohorts);
 
     // Reset some of the variables
     this.set_metric();
@@ -717,6 +777,8 @@ class PGSBenchmark {
   update_ancestry() {
     // Reset the list of group names (Ancestry)
     this.groupNames = set_groupNames();
+
+    fill_sorting_form(this.chart_data, this.cohorts);
 
     // Generic update: reset the main variables and redraw the chart
     this.generic_update(1);
@@ -796,6 +858,28 @@ class PGSBenchmark {
   }
 
 
+  update_sorting() {
+    // Remove chart content + legend + X axis
+    this.remove_chart_main_components();
+
+    // Reset X axis categories
+    //this.set_category_names();
+
+    // Fetch the selected data ordering
+    this.set_data_sorting();
+
+    // Reorder the categories:
+    this.set_x0_axis();
+
+    // Redraw X axis
+    this.addXAxis();
+    // Load updated set of data to the chart
+    this.addData();
+    // Load updated legend on the chart
+    this.addLegend();
+  }
+
+
   // Generic method updating the chart
   generic_update(update_z) {
     // Reset X axis groups (ancestries)
@@ -806,6 +890,8 @@ class PGSBenchmark {
 
     // Reset X axis categories
     this.set_category_names();
+    // Reorder X axis categories
+    this.set_data_sorting();
 
     // Setup the min/max for the Y scale
     this.get_min_max_values();
@@ -889,16 +975,48 @@ class PGSBenchmark {
     this.max_value = max_value + interval_extra;
   }
 
+  // Sort category list by estimate value
+  sort_category_list(category_list) {
+    var sortedCategories = Object.entries(category_list).sort((a,b) => {
+      if(b[1] > a[1]) {
+        return 1;
+      }
+      else if(b[1] < a[1]) {
+        return -1;
+      }
+      else {
+        if(a[0] > b[0]) {
+          return 1;
+        }
+        else if(a[0] < b[0]) {
+          return -1;
+        }
+        else {
+          return 0;
+        }
+      }
+    });
+    return sortedCategories.map(el=>el[0]);
+  }
 
   // Add tooltip on the chart elements
   addTooltip(elem, data) {
     var title = '<div class="tooltip_title"><b>'+data.grpName + '</b> ('+data.cohortGrpName.split(sep)[0]+')</div>';
     title += '<div class="tooltip_title">Score ID: <b>'+data.pgs+'</b></div>';
+    title += '<div class="tooltip_title">';
     if (data.et) {
-      title += "<div>Upper 95: <b>" + data.et + "</b></div><div>Estimate: <b>" + data.y + "</b></div><div>Lower 95: <b>" + data.eb+"</b></div>";
+      title += '<div>Upper 95: <b>' + data.et + '</b></div><div>Estimate: <b>' + data.y + '</b></div><div>Lower 95: <b>' + data.eb + '</b></div>';
     }
     else {
-      title += "<div>Value: <b>" + data.y + "</b></div>";
+      title += '<div>Value: <b>' + data.y + '</b></div>';
+    }
+    title += '</div>';
+    title += '<div>Sample number: <b>' + data.s_num + '</b>';
+    if (data.s_cases) {
+      title += '<div>Sample cases: <b>' + data.s_cases + '</b>';
+    }
+    if (data.s_ctrls) {
+      title += '<div>Sample controls: <b>' + data.s_ctrls + '</b>';
     }
     elem.tooltip({
       'title': title,
@@ -1206,11 +1324,20 @@ function fill_ancestry_form(data, cohorts) {
       }
     }
   }
+
   // Generate HTML checkboxes
+  var extra_colour = 0;
   for (var k=0; k<ancestry_list.length;k++) {
     id = 'gpName_'+k;
     var ancestry = ancestry_list[k];
-    var colour = chart_colours[k];
+    var colour = '';
+    if (ancestry_colours[ancestry]) {
+      colour = ancestry_colours[ancestry];
+    }
+    else {
+      colour = chart_colours[extra_colour];
+      extra_colour++;
+    }
     var is_checked = ' checked';
     if (previous_unselected.includes(ancestry)) {
       is_checked = '';
@@ -1306,6 +1433,44 @@ function fill_sex_form(data, cohorts) {
 }
 
 
+// Build "Performance Metric" form
+function fill_sorting_form(data, cohorts) {
+
+  var previous_selection = $("#benchmark_sorting_select option:selected").val();
+
+  $("#benchmark_sorting_select").html('');
+  var sorting_list = ['Polygenic Score ID'];
+  // Cohorts - fetch metrics
+  for (var i=0; i<cohorts.length;i++) {
+    var cohort = cohorts[i];
+    var cohort_ancestry_list = data.ancestries[cohort];
+    if ($('.benchmark_cohort_cb[value="'+cohort+'"]').is(':visible') &&
+        $('.benchmark_cohort_cb[value="'+cohort+'"]').prop('checked')) {
+      // Ancestries
+      for (var j=0; j<cohort_ancestry_list.length;j++) {
+        var ancestry = cohort_ancestry_list[j];
+        if ($('.benchmark_ancestry_cb[value="'+ancestry+'"]').is(':visible') &&
+            $('.benchmark_ancestry_cb[value="'+ancestry+'"]').prop('checked')) {
+          sorting_list.push(cohort+sep+ancestry);
+        }
+      }
+      //console.log("COHORT: "+cohort+sep+ancestry);
+      //sorting_list.push(cohort+sep+ancestry);
+    }
+  }
+  // Fill the form
+  for (var k=0; k<sorting_list.length;k++) {
+    var sorting_entry = sorting_list[k];
+    var sorting_label = sorting_entry.replace(sep, ' - ');
+    var option = new Option(sorting_label,sorting_entry);
+    if (previous_selection && sorting_entry == previous_selection) {
+      option = new Option(sorting_label,sorting_entry, true, true);
+    }
+    $("#benchmark_sorting_select").append(option);
+  }
+}
+
+
 // Set the list of cohorts
 function set_cohorts_list() {
   var c_list = [];
@@ -1333,6 +1498,7 @@ function set_groupNames() {
     if ($(this).prop("checked"))  {
       gp_list.push($(this).val());
     }
+    console.log($(this).val());
   });
   return gp_list;
 }

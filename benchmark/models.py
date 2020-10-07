@@ -36,7 +36,11 @@ class BM_EFOTrait(models.Model):
 
     @property
     def display_label(self):
-        return '<a href="../../trait/%s">%s</a>'%(self.id, self.label)
+        return '<a href="../../benchmark/%s">%s</a>'%(self.id, self.label)
+
+    #@property
+    #def display_id_url(self):
+    #    return '<a href="%s">%s</a><span class="only_export">: %s</span>'%(self.url, self.id, self.url)
 
 
     @property
@@ -91,8 +95,6 @@ class BM_EFOTrait(models.Model):
         if not hasattr(self, 'bm_data'):
             self.get_bm_data()
         return len(self.bm_data['samples'])
-    #def display_id_url(self):
-    #    return '<a href="%s">%s</a><span class="only_export">: %s</span>'%(self.url, self.id, self.url)
 
     @property
     def cohorts_list(self):

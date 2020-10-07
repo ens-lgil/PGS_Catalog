@@ -230,7 +230,7 @@ class BM_EFOTraitTest(TestCase):
         #self.assertEqual(bm_efo_trait_1.mapped_terms_list, self.efo_mapped_terms_list)
         # Other methods
         self.assertEqual(bm_efo_trait_1.__str__(), efo_id+' | '+efo_name+' ')
-        label_url =  r'^\<a\s.*href=.+\/trait\/'+efo_id+r'.*\>'+efo_name+r'\<\/a\>$'
+        label_url =  r'^\<a\s.*href=.+\/benchmark\/'+efo_id+r'.*\>'+efo_name+r'\<\/a\>$'
         self.assertRegexpMatches(bm_efo_trait_1.display_label, label_url)
         #label_url =  r'^\<a\s.*href=.+\/trait\/'+self.efo_id+r'.*\>'+self.efo_name+r'\<\/a\>$'
         #self.assertRegexpMatches(bm_efo_trait_1.display_label, label_url)

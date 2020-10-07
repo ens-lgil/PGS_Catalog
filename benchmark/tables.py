@@ -8,6 +8,10 @@ from catalog.tables import Browse_ScoreTable
 relative_path = '../..'
 page_size = "50"
 
+class Column_format_html(tables.Column):
+    def render(self, value):
+        return format_html(value)
+
 class Column_sample_merged(tables.Column):
     def render(self, value):
         return format_html(value)
@@ -94,6 +98,7 @@ class BM_Browse_ScoreTable(Browse_ScoreTable):
 
 class BM_Browse_Benchmarking(tables.Table):
     '''Table on PGS page - displays information about the GWAS samples used'''
+    label_link = Column_format_html(accessor='display_label', verbose_name='Ontology Trait Label', orderable=True)
     id = tables.Column(accessor='id', verbose_name='Ontology Trait ID', orderable=False)
     scores = tables.Column(accessor='count_scores', verbose_name='Polygenic Score(s)', orderable=False)
     cohorts = Column_cohorts(accessor='cohorts_list', verbose_name='Cohort(s)', orderable=False)
@@ -105,16 +110,13 @@ class BM_Browse_Benchmarking(tables.Table):
         model = BM_EFOTrait
         attrs = {
             "data-show-columns" : "false",
-            "data-export-options" : '{"fileName": "pgs_cohort_sample_data"}',
+            "data-export-options" : '{"fileName": "pgs_benchmark_data"}',
             'data-search' : "true",
+            "data-sort-name" : "display_label",
             'data-filter-control': "true",
             'data-show-export' : "true"
         }
         fields = [
-            'id', 'label', 'scores', 'cohorts', 'ancestries'
+            'label_link', 'id', 'scores', 'cohorts', 'ancestries'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
-
-
-    def render_id(self, value):
-        return format_html('<a href="../benchmark/{}">{}</a>', value, value)

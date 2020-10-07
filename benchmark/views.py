@@ -22,11 +22,17 @@ def benchmark_data(efotrait):
 
     chart_data = {
         'cohorts' : [],
+        'ancestry_groups': [],
         'pgs_ids': {},
         'ancestries': {},
         'sexes': {},
         'data': {}
     }
+
+    cohort_max_sample = {}
+
+    # Number of decimals to round the estimate
+    decimals = 3
 
     #metric_to_exp = ['Hazard Ratio', 'Odds Ratio']
 
@@ -36,12 +42,32 @@ def benchmark_data(efotrait):
     for performance in performances:
         cohort_name = performance.cohort.name_short
         pgs_id = performance.score_id
-        ancestry = performance.sample.ancestry_broad
-        sex = performance.sample.sample_sex
+        # Sample data
+        sample = performance.sample
+        sample_number = sample.sample_number
+        sample_cases = sample.sample_cases
+        sample_controls = sample.sample_controls
+        ancestry = sample.ancestry_broad
+        sex = sample.sample_sex
 
         # Cohorts
         if not cohort_name in chart_data['cohorts']:
             chart_data['cohorts'].append(cohort_name)
+
+        # Ancestry groups
+        if not ancestry in chart_data['ancestry_groups']:
+            chart_data['ancestry_groups'].append(ancestry)
+
+        # Sample numbers
+        if not cohort_name in cohort_max_sample:
+            cohort_max_sample[cohort_name] = {}
+        if not ancestry in cohort_max_sample[cohort_name]:
+            cohort_max_sample[cohort_name][ancestry] = {}
+        if not 'num' in cohort_max_sample[cohort_name][ancestry]:
+            cohort_max_sample[cohort_name][ancestry]['num'] = sample_number
+        if cohort_max_sample[cohort_name][ancestry]['num'] <= sample_number:
+            cohort_max_sample[cohort_name][ancestry]['num'] = sample_number
+            cohort_max_sample[cohort_name][ancestry]['display'] = sample.display_samples_for_table
 
         # PGS IDs
         chart_data = add_global_data(chart_data, cohort_name, pgs_id, 'pgs_ids')
@@ -83,14 +109,54 @@ def benchmark_data(efotrait):
             entry = {
                 'pgs': pgs_id,
                 'grpName': ancestry,
-                'y': estimate
+                'y': round(estimate, decimals)
             }
+
             if lower_e and upper_e:
-                entry['eb'] = lower_e
-                entry['et'] = upper_e
+                entry['eb'] = round(lower_e, decimals)
+                entry['et'] = round(upper_e, decimals)
+
+            # Sample
+            entry['s_num'] = f'{sample_number:,}'
+            if sample_cases:
+                entry['s_cases'] = f'{sample_cases:,}'
+            if sample_controls:
+                entry['s_ctrls'] = f'{sample_controls:,}'
+
             chart_data['data'][cohort_name][metric_name][sex].append(entry)
 
-    return chart_data
+    # Sort ancestry_groups
+    chart_data['ancestry_groups'] = sort_ancestries(chart_data['ancestry_groups'])
+
+    # Sort each cohort ancestries
+    for cohort in chart_data['ancestries']:
+        chart_data['ancestries'][cohort] = sort_ancestries(chart_data['ancestries'][cohort])
+
+    # Prepare the data for the Cohort(s) display
+    cohort_ancestry_sample = {}
+    for cohort in cohort_max_sample:
+        if not cohort in cohort_ancestry_sample:
+            cohort_ancestry_sample[cohort] = []
+            #c_ancestries = sorted(cohort_max_sample[cohort].keys())
+            c_ancestries = sort_ancestries(cohort_max_sample[cohort].keys())
+            for ancestry in c_ancestries:
+                entry = {'name': ancestry, 'display': cohort_max_sample[cohort][ancestry]['display']}
+                cohort_ancestry_sample[cohort].append(entry)
+
+    return chart_data, cohort_ancestry_sample
+
+
+def sort_ancestries(ancestry_list):
+    ancestry_list = sorted(ancestry_list)
+    eu_ancestry = 'European'
+    aa_ancestry = 'African'
+    if eu_ancestry in ancestry_list:
+        ancestry_list.remove(eu_ancestry)
+        ancestry_list.insert(0,eu_ancestry)
+    if aa_ancestry in ancestry_list:
+        ancestry_list.remove(aa_ancestry)
+        ancestry_list.append(aa_ancestry)
+    return ancestry_list
 
 
 def add_global_data(data, cohort_name, entry_name, data_type):
@@ -119,7 +185,7 @@ def bm_index(request):
     context = {
         'table_bm': table_bms,
         'has_table': 1,
-        'is_benchmark': 1
+        #'is_benchmark': 1
     }
     return render(request, 'benchmark/index.html', context)
 
@@ -128,7 +194,7 @@ def benchmark(request, trait_id):
 
     efotrait = BM_EFOTrait.objects.using('benchmark').prefetch_related('phenotype_structured').get(id=trait_id)
 
-    pgs_data = benchmark_data(efotrait)
+    pgs_data, cohort_max_sample = benchmark_data(efotrait)
 
     scores = set()
 
@@ -147,11 +213,12 @@ def benchmark(request, trait_id):
     for bm_cohort in bm_cohorts:
         cohort_name = bm_cohort.name_short
         if not cohort_name in cohort_data:
-            table_samples = BM_SampleTable(bm_cohort.cohort_sample.all())
+            ancestry_max_sample = cohort_max_sample[cohort_name]
             cohort_data[cohort_name] = {
-                'table': table_samples,
-                'name': bm_cohort.name_full
+                'name': bm_cohort.name_full,
+                'ancestries': ancestry_max_sample
             }
+
     context = {
         'trait': efotrait,
         'pgs_data': pgs_data,
