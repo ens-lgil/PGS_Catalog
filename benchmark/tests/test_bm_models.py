@@ -483,15 +483,16 @@ class BM_SampleTest(TestCase):
         self.assertEqual(bm_sample_2.sample_cases, self.cases)
         self.assertEqual(bm_sample_2.sample_controls, self.controls)
         self.assertEqual(bm_sample_2.sample_sex, self.sample_sex)
+        self.assertEqual(bm_sample_2.sample_cases_percent, round((self.cases/self.number)*100))
         # Other methods
-        self.assertIsNotNone(bm_sample_2.display_samples)
-        self.assertIsNotNone(bm_sample_2.display_samples_for_table)
-        self.assertIsNotNone(bm_sample_2.display_sample_number_detail)
-        self.assertIsNotNone(bm_sample_2.display_sample_category_number)
-        self.assertEqual(bm_sample_2.display_sample_number_total, str(self.number)+' individuals')
+        self.assertIsNotNone(bm_sample_2.sample_cases_percent)
+        self.assertIsNotNone(bm_sample_2.display_samples_for_table())
+        self.assertIsNotNone(bm_sample_2.display_samples_for_table(True))
 
         ## Sample object with ancestry
         bm_sample_3 = self.create_bm_sample_ancestry(bm_cohort)
+        bm_sample_3.sample_cases = None
+        bm_sample_3.sample_controls = None
         # Instance
         self.assertTrue(isinstance(bm_sample_3, BM_Sample))
         # Variables
@@ -505,3 +506,7 @@ class BM_SampleTest(TestCase):
         bm_sample_3.ancestry_free = 'Cambridgeshire'
         self.assertEqual(bm_sample_3.display_ancestry, '{}<br/>({})'.format(self.a_broad, self.a_free_2))
         self.assertEqual(bm_sample_3.display_ancestry_inline, '{} ({})'.format(self.a_broad, self.a_free_2))
+        self.assertIsNone(bm_sample_3.sample_cases)
+        self.assertIsNone(bm_sample_3.sample_cases_percent)
+        self.assertIsNone(bm_sample_3.sample_controls)
+        self.assertEqual(bm_sample_3.display_samples_for_table(), str(self.number)+' individuals') 

@@ -88,6 +88,7 @@ class BM_Browse_ScoreTable(Browse_ScoreTable):
             "id": "scores_table",
             "data-show-columns" : "false",
             "data-sort-name" : "id",
+            "data-page-size" : page_size,
             "data-export-options" : '{"fileName": "pgs_scores_data"}',
             'data-search' : "false",
             'data-filter-control': "false"
@@ -112,6 +113,7 @@ class BM_Browse_Benchmarking(tables.Table):
             "data-show-columns" : "false",
             "data-export-options" : '{"fileName": "pgs_benchmark_data"}',
             'data-search' : "true",
+            "data-page-size" : page_size,
             "data-sort-name" : "display_label",
             'data-filter-control': "true",
             'data-show-export' : "true"

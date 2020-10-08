@@ -333,26 +333,24 @@ class BM_Sample(models.Model):
         return 'Sample: {}'.format(str(self.pk))
 
     @property
-    def display_samples(self):
-        sinfo = ['{:,} individuals'.format(self.sample_number)]
+    def sample_cases_percent(self):
         if self.sample_cases != None:
-            sstring = '[ {:,} cases'.format(self.sample_cases)
-            if self.sample_controls != None:
-                sstring += ', {:,} controls ]'.format(self.sample_controls)
-            else:
-                sstring += ' ]'
-            sinfo.append(sstring)
-        return sinfo
+            percent = (self.sample_cases / self.sample_number) * 100
+            return round(percent,2)
+        else:
+            return None
 
-    @property
-    def display_samples_for_table(self):
+    def display_samples_for_table(self, show_percent_cases=False):
         div_id = "sample_"+str(self.pk)
         sstring = ''
         if self.sample_cases != None:
+            percent_cases = ''
+            if show_percent_cases:
+                percent_cases = f' ({self.sample_cases_percent}%)'
             sstring += '<div><a class="toggle_table_btn pgs_helptip" id="'+div_id+'" title="Click to show/hide the details">{:,} individuals <i class="fa fa-plus-circle"></i></a></div>'.format(self.sample_number)
             sstring += '<div class="toggle_list" id="list_'+div_id+'">'
             sstring += '<span class="only_export">[</span>'
-            sstring += '<ul>\n<li>{:,} cases</li>\n'.format(self.sample_cases)
+            sstring += '<ul>\n<li>{:,} cases{}</li>\n'.format(self.sample_cases, percent_cases)
             if self.sample_controls != None:
                 sstring += '<li><span class="only_export">, </span>'
                 sstring += '{:,} controls</li>'.format(self.sample_controls)
@@ -362,34 +360,6 @@ class BM_Sample(models.Model):
         else:
             sstring += '{:,} individuals'.format(self.sample_number)
         return sstring
-
-    @property
-    def display_sample_number_total(self):
-        ssinfo = '{:,} individuals'.format(self.sample_number)
-        return ssinfo
-
-    @property
-    def display_sample_number_detail(self):
-        sinfo = []
-        if self.sample_cases != None:
-            sinfo.append('{:,} cases'.format(self.sample_cases))
-            if self.sample_controls != None:
-                sinfo.append('{:,} controls'.format(self.sample_controls))
-        return sinfo
-
-    @property
-    def display_sample_category_number(self):
-        categories = []
-        numbers = []
-        if self.sample_cases != None:
-            #sinfo['Cases'] = self.sample_cases
-            categories.append("Cases")
-            numbers.append(self.sample_cases)
-            if self.sample_controls != None:
-                #sinfo['Controls'] = self.sample_controls
-                categories.append('Controls')
-                numbers.append(self.sample_controls)
-        return [categories,numbers]
 
     @property
     def display_ancestry(self):

@@ -46,6 +46,7 @@ def benchmark_data(efotrait):
         sample = performance.sample
         sample_number = sample.sample_number
         sample_cases = sample.sample_cases
+        sample_cases_percent =  sample.sample_cases_percent
         sample_controls = sample.sample_controls
         ancestry = sample.ancestry_broad
         sex = sample.sample_sex
@@ -67,7 +68,7 @@ def benchmark_data(efotrait):
             cohort_max_sample[cohort_name][ancestry]['num'] = sample_number
         if cohort_max_sample[cohort_name][ancestry]['num'] <= sample_number:
             cohort_max_sample[cohort_name][ancestry]['num'] = sample_number
-            cohort_max_sample[cohort_name][ancestry]['display'] = sample.display_samples_for_table
+            cohort_max_sample[cohort_name][ancestry]['display'] = sample.display_samples_for_table(True)
 
         # PGS IDs
         chart_data = add_global_data(chart_data, cohort_name, pgs_id, 'pgs_ids')
@@ -108,7 +109,7 @@ def benchmark_data(efotrait):
 
             entry = {
                 'pgs': pgs_id,
-                'grpName': ancestry,
+                'anc': ancestry,
                 'y': round(estimate, decimals)
             }
 
@@ -120,6 +121,8 @@ def benchmark_data(efotrait):
             entry['s_num'] = f'{sample_number:,}'
             if sample_cases:
                 entry['s_cases'] = f'{sample_cases:,}'
+            if sample_cases_percent:
+                entry['s_cases_p'] = sample_cases_percent
             if sample_controls:
                 entry['s_ctrls'] = f'{sample_controls:,}'
 
