@@ -110,6 +110,8 @@
               <select id="benchmark_metric_select"></select>
             </div>
           </div>
+        </div>
+        <div style="display:flex">
           <!-- Sex form -->
           <div id="benchmark_sex_type" class="filter_container mr-3">
             <div class="filter_header mb-1">Sex</div>
@@ -129,6 +131,8 @@
               </div>
             </div>
           </div>
+        </div>
+        <div style="display:flex">
           <!-- Data sorting -->
           <div id="benchmark_sorting" class="filter_container">
             <div class="filter_header mb-2">Sort by</div>
@@ -168,9 +172,10 @@
         const pgs_data = {{ pgs_data|safe }};
         //var width = document.documentElement.clientWidth,
         //    height = document.documentElement.clientHeight;
-        var max_width = 1200;
-        var width = max_width,
-            height = 500;
+        //var max_width = 1200;
+      //  var width = max_width,
+
+        //height = 500;
 
         $( document ).ready(function() {
 
@@ -190,18 +195,7 @@
           // Sorting by
           fill_sorting_form(pgs_data,cohorts);
 
-          var doc_width = $('.container-fluid').width();
-          if (doc_width < 1200) {
-            width = doc_width-20;
-          }
-          if (width < 500) {
-            width = 500;
-          }
-          console.log('width: '+width);
-          console.log('doc_width: '+doc_width);
-
-
-          var benchmark = new PGSBenchmark(pgs_data,width,height);
+          var benchmark = new PGSBenchmark(pgs_data);
 
           $("#benchmark_cohort_list").on("change", ".benchmark_cohort_cb", function() {
             // Prevent having only unchecked checkboxes

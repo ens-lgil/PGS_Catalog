@@ -21,8 +21,10 @@ var font_family = '"Helvetica", "Helvetica Neue", "Arial", "sans-serif"';
 var min_svg_width = 750;
 // Max width
 var max_svg_width = 1200;
-// Default height
-var default_svg_height = 500;
+// Max height
+var max_svg_height = 500;
+// Min height
+var min_svg_height = 450;
 // Threshold of Categories (Polygenic Score IDs) to rotate the horizontal X axis labels
 var max_x_horizontal_labels = 14
 
@@ -125,23 +127,27 @@ class PGSBenchmark {
   // Redraw chart when the browser window is resized
   redraw_chart() {
 
-    // Remove "old" chart
-    d3.select('svg').remove();
-
+    var current_width = this.width;
     /* Set the new SVG width */
     this.set_svg_width();
-    this.set_svg_height();
-    this.set_chartWidthHeight();
 
-    /* Reset chart container */
-    this.svg =  d3.select('#'+svg_id+'_container').append('svg')
-                  .attr('id', svg_id)
-                  .attr('height', this.height)
-                  .attr('width', this.width);
-    this.g = this.svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+    if (current_width!=this.width) {
+      this.set_svg_height();
+      this.set_chartWidthHeight();
 
-    /* Redraw chart */
-    this.draw_chart()
+      /* Reset chart container */
+      // Remove "old" chart
+      d3.select('svg').remove();
+
+      this.svg =  d3.select('#'+svg_id+'_container').append('svg')
+                    .attr('id', svg_id)
+                    .attr('height', this.height)
+                    .attr('width', this.width);
+      this.g = this.svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+
+      /* Redraw chart */
+      this.draw_chart()
+    }
   }
 
 
@@ -156,7 +162,7 @@ class PGSBenchmark {
 
     var x_label_margin = 25;
 
-    if (this.pgsList.length > max_x_horizontal_labels) {
+    if (this.pgsList.length > max_x_horizontal_labels || this.width==min_svg_width) {
       x_axis.selectAll("text")
         .style("text-anchor", "end")
         .attr("dx", "-.7em")
@@ -378,9 +384,9 @@ class PGSBenchmark {
   // Set SVG width
   set_svg_width(width) {
     if (!width) {
-      width = ($('body').width()) - 20;
+      width = ($('body').width()) - 40;
       if (!width || width < min_svg_width) {
-        width < min_svg_width;
+        width = min_svg_width;
       }
       if (width > max_svg_width) {
         width = max_svg_width;
@@ -391,7 +397,13 @@ class PGSBenchmark {
   // Set SVG height
   set_svg_height(height) {
     if (!height) {
-      height = default_svg_height;
+      var tmp_width = ($('body').width()) - 40;
+      if (tmp_width < min_svg_width) {
+        height = min_svg_height;
+      }
+      else {
+        height = max_svg_height;
+      }
     }
     this.height = height;
   }
