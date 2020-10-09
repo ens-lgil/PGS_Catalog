@@ -16,7 +16,7 @@ var chart_shapes = [ d3.symbolCircle, d3.symbolTriangle, d3.symbolDiamond, d3.sy
 // Horizontal lines - threshold
 var threshold = { 'Hazard Ratio': 1, 'Odds Ratio': 1, 'C-index': 0.5, 'AUROC': 0.5, 'DeltaC': 0, 'DeltaAUROC': 0, 'Delta-C-index': 0};
 // Font family
-var font_family = '"Helvetica", "Helvetica Neue", "Arial", "sans-serif"';
+var font_family = '"Verdana", "Arial", "sans-serif"';
 // Min width
 var min_svg_width = 750;
 // Max width
@@ -43,7 +43,7 @@ class PGSBenchmark {
       .attr('width', this.width)
       .attr('height', this.height);
 
-    this.margin = {top: 20, right: 190, bottom: 70, left: 60};
+    this.margin = {top: 20, right: 200, bottom: 70, left: 60};
     this.set_chartWidthHeight();
     this.g = this.svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
@@ -158,13 +158,15 @@ class PGSBenchmark {
     var x_axis = this.g.append('g')
       .attr("class", "xaxis")
       .attr('transform', 'translate(0,' + this.chartHeight + ')')
-      .call( d3.axisBottom(this.x0) );
+      .call( d3.axisBottom(this.x0))
+      .attr("font-family", font_family);
 
     var x_label_margin = 25;
 
     if (this.pgsList.length > max_x_horizontal_labels || this.width==min_svg_width) {
       x_axis.selectAll("text")
         .style("text-anchor", "end")
+        .attr("font-family", font_family)
         .attr("dx", "-.7em")
         .attr("dy", ".15em")
         .attr("transform", "rotate(-40)");
@@ -186,7 +188,8 @@ class PGSBenchmark {
     // Y axis - bar
     this.g.append('g')
       .attr("class", "yaxis")
-      .call( d3.axisLeft(this.y) );
+      .call( d3.axisLeft(this.y) )
+      .attr("font-family", font_family);
     // Y axis - label
     this.svg.append("text")
       .attr("class", "y_label")
@@ -340,12 +343,12 @@ class PGSBenchmark {
     var obj = this;
 
     var text_x = 30;
-    if (this.has_lines == true) {
+    /*if (this.has_lines == true) {
       text_x = 40;
-    }
+    }*/
 
     var legend = this.g.append("g")
-      .attr("font-family", "sans-serif")
+      .attr("font-family", font_family)
       .attr("font-size", 10)
       .attr("text-anchor", "start")
       .attr("class", "chart_legend")
@@ -355,7 +358,7 @@ class PGSBenchmark {
       .attr("class", function(d) { return d; } )
       .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
     // Legend with line
-    if (this.has_lines == true) {
+    /*if (this.has_lines == true) {
       legend.append("line")
         .attr("x1", this.chartWidth + 10)
         .attr("x2", this.chartWidth + 30)
@@ -363,7 +366,7 @@ class PGSBenchmark {
         .attr("y2", 9.5)
         .attr("stroke", this.z)
         .attr("stroke-width", 2);
-    }
+    }*/
     // Legend point with its corresponding shape
     legend.append('path')
       .attr("transform", function(d, i) { return "translate(" + (obj.chartWidth + 20) +",9.5)"; })
@@ -824,6 +827,8 @@ class PGSBenchmark {
 
     // Generic update: reset the main variables and redraw the chart
     this.generic_update();
+
+    resize_select('benchmark_metric_select');
   }
 
 
@@ -886,6 +891,8 @@ class PGSBenchmark {
     this.addData();
     // Load updated legend on the chart
     this.addLegend();
+
+    resize_select('benchmark_sorting_select');
   }
 
 
@@ -1010,9 +1017,9 @@ class PGSBenchmark {
 
   // Add tooltip on the chart elements
   addTooltip(elem, data) {
-    var title = '<div class="tooltip_title"><b>'+data.anc + '</b> ('+data.cohortAncestry.split(sep)[0]+')</div>';
-    title += '<div class="tooltip_title">Score ID: <b>'+data.pgs+'</b></div>';
-    title += '<div class="tooltip_title">';
+    var title = '<div class="tooltip_content"><div class="tooltip_section"><b>'+data.anc + '</b> ('+data.cohortAncestry.split(sep)[0]+')</div>';
+    title += '<div class="tooltip_section">Score ID: <b>'+data.pgs+'</b></div>';
+    title += '<div class="tooltip_section">';
     if (data.et) {
       title += '<div>Upper 95: <b>' + data.et + '</b></div><div>Estimate: <b>' + data.y + '</b></div><div>Lower 95: <b>' + data.eb + '</b></div>';
     }
@@ -1020,6 +1027,7 @@ class PGSBenchmark {
       title += '<div>Value: <b>' + data.y + '</b></div>';
     }
     title += '</div>';
+    title += '<div class="tooltip_section">';
     title += '<div>Sample number: <b>' + data.s_num + '</b>';
     if (data.s_cases) {
       var percent = '';
@@ -1031,6 +1039,8 @@ class PGSBenchmark {
     if (data.s_ctrls) {
       title += '<div>Sample controls: <b>' + data.s_ctrls + '</b>';
     }
+    title += '</div>';
+    title += '</div>';
     elem.tooltip({
       'title': title,
       'placement': 'right',
@@ -1323,26 +1333,35 @@ function fill_ancestry_form(data, cohorts) {
   });
 
   $("#benchmark_ancestry_list").html('');
-  var ancestry_list = [];
+  var tmp_ancestry_list = [];
+  var ancestry_ordered_list = [];
   var html_cb = '';
   // Cohorts
   for (var i=0; i<cohorts.length;i++) {
     var cohort = cohorts[i];
     var cohort_ancestry_list = data.ancestries[cohort];
-    // Ancestries
+    // Get distinct ancestries
     for (var j=0; j<cohort_ancestry_list.length;j++) {
       var ancestry = cohort_ancestry_list[j];
-      if (!ancestry_list.includes(ancestry)) {
-        ancestry_list.push(ancestry);
+      if (!tmp_ancestry_list.includes(ancestry)) {
+        tmp_ancestry_list.push(ancestry);
+        var anc_order = data.ancestry_groups.indexOf(ancestry);
+        ancestry_ordered_list.push( {'order': anc_order, 'value': ancestry} );
       }
     }
+  }
+  // Order the ancestries, matching the order in 'ancestry_groups'
+  var ancestry_list = [];
+  ancestry_ordered_list = ancestry_ordered_list.sort(function(a, b){ return a.order - b.order; });
+  for (var k=0; k<ancestry_ordered_list.length;k++) {
+    ancestry_list.push(ancestry_ordered_list[k].value);
   }
 
   // Generate HTML checkboxes
   var extra_colour = 0;
-  for (var k=0; k<ancestry_list.length;k++) {
-    id = 'gpName_'+k;
-    var ancestry = ancestry_list[k];
+  for (var l=0; l<ancestry_list.length;l++) {
+    id = 'gpName_'+l;
+    var ancestry = ancestry_list[l];
     var colour = '';
     if (ancestry_colours[ancestry]) {
       colour = ancestry_colours[ancestry];
@@ -1395,6 +1414,11 @@ function fill_metric_form(data, cohorts) {
     }
     $("#benchmark_metric_select").append(option);
   }
+
+  resize_select('benchmark_metric_select');
+  //$('body').append('<select id="width_tmp_select" style="display:none"><option id="width_tmp_option"></option></select>');
+  //$("#width_tmp_option").html($('#benchmark_metric_select option:selected').text());
+  //$('#benchmark_metric_select').width($("#width_tmp_select").width());
 }
 
 
@@ -1479,6 +1503,7 @@ function fill_sorting_form(data, cohorts) {
     }
     $("#benchmark_sorting_select").append(option);
   }
+  resize_select('benchmark_sorting_select');
 }
 
 
@@ -1511,4 +1536,12 @@ function set_ancestryNames() {
     }
   });
   return gp_list;
+}
+
+// Resize the select dropdown field to match the current selection
+function resize_select(id){
+  select_id = '#'+id;
+  $('body').append('<select id="width_tmp_select" style="display:none"><option id="width_tmp_option"></option></select>');
+  $("#width_tmp_option").html($(select_id+' option:selected').text());
+  $(select_id).width($("#width_tmp_select").width());
 }

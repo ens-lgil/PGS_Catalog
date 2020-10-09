@@ -68,7 +68,7 @@
         <div>
           <div class="pgs_benchmark_cohort_title mt-2 mb-2">{{ cohort_data.name }} ({{ cohort }})</div>
           <table class="table table-bordered table-hover" data-toggle="table">
-            <thead>
+            <thead class="thead-light">
               <tr><th>Ancestry</th><th>Sample Numbers max</th></tr>
             </thead>
             <tbody>
@@ -194,6 +194,7 @@
 
           // Sorting by
           fill_sorting_form(pgs_data,cohorts);
+
 
           var benchmark = new PGSBenchmark(pgs_data);
 

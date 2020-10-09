@@ -27,6 +27,8 @@ $header_height_with_margin_mobile: $header_height_with_margin + 58px;
 $footer_height: 97px;
 $footer_height_mobile:150px;
 
+$chart_font_family:"Verdana", "Arial", "sans-serif";
+
 /* CSS mixin */
 
 @mixin transform($property) {
@@ -1356,10 +1358,14 @@ footer {
 .tooltip_area:hover {
   cursor:pointer;
 }
-.tooltip_title {
-  border-bottom: 1px solid #FFF;
-  padding-bottom: 4px;
-  margin-bottom: 4px;
+
+.tooltip_content {
+  font-family: $chart_font_family;
+  .tooltip_section:not(:last-child) {
+    border-bottom: 1px solid #FFF;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
 }
 
 #pgs_chart_super_container {
@@ -1600,6 +1606,12 @@ footer {
     margin-bottom: 0.5rem;
     > div:not(:last-child) {
       margin-bottom:0.5rem;
+    }
+  }
+
+  .filter_container {
+    label, select {
+      font-size: 12px;
     }
   }
 
@@ -1857,6 +1869,9 @@ footer {
   }
 }
 @media screen and (min-width: 992px) and (max-width: 1060px) {
+  .navbar-brand, .navbar-nav {
+    margin-right: 1rem !important;
+  }
   .extra_example {
     display: none;
   }
