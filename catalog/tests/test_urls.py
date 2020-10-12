@@ -1,13 +1,17 @@
 from django.test import TestCase, Client
 
+databases_list = ['default', 'benchmark']
+
 class BrowseUrlTest(TestCase):
     """ Test the main URLs of the website """
+    databases = databases_list
 
     def test_urls(self):
         client = Client()
         urls = [
             '/',
             '/about/',
+            '/benchmark/',
             '/browse/all/',
             '/browse/traits/',
             '/browse/studies/',

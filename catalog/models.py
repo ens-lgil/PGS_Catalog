@@ -459,6 +459,14 @@ class Sample(models.Model):
         return [x.name_short for x in self.cohorts.all()]
 
     @property
+    def sample_cases_percent(self):
+        if self.sample_cases != None:
+            percent = (self.sample_cases / self.sample_number) * 100
+            return round(percent,2)
+        else:
+            return None
+
+    @property
     def display_sampleset(self):
         samplesets = self.sampleset.all()
         if samplesets:
