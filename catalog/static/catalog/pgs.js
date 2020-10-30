@@ -207,11 +207,13 @@ $(document).ready(function() {
       if (fileExt != 'xlsx') {
         $('#error_file_extension').show();
         $('#upload_btn').hide();
+        $('#upload_arrow').hide();
         $('#upload_btn').removeAttr('type');
       }
       else {
         $('#error_file_extension').hide();
         $('#upload_btn').attr('type', 'submit');
+        $('#upload_arrow').show();
         $('#upload_btn').show();
       }
 
