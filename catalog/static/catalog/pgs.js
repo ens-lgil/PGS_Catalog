@@ -195,6 +195,29 @@ $(document).ready(function() {
     });
 
 
+    // Add the following code if you want the name of the file appear on select
+    $(".custom-file-input").on("change", function() {
+      console.log("YES");
+      var fileName = $(this).val().split("\\").pop();
+      console.log(fileName);
+      $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+
+      fileExt = fileName.split("\.").pop();
+      console.log(fileExt);
+      if (fileExt != 'xlsx') {
+        $('#error_file_extension').show();
+        $('#upload_btn').hide();
+        $('#upload_btn').removeAttr('type');
+      }
+      else {
+        $('#error_file_extension').hide();
+        $('#upload_btn').attr('type', 'submit');
+        $('#upload_btn').show();
+      }
+
+    });
+
+
     /*$('.trait_item').mouseover(function(d) {
       var id = $(this).attr('id');
       var id_path = id.replace("_id", "");
@@ -212,6 +235,9 @@ $(document).ready(function() {
         .attr("fill", d3.hsl(current_color).brighter(0.5));
     });*/
 });
+
+
+
 
 function search_validator(){
    if($('#q').val()){

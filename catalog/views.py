@@ -1,3 +1,4 @@
+import os
 from django.http import Http404
 from django.shortcuts import render,redirect
 from django.views.generic import TemplateView
@@ -6,6 +7,7 @@ from django.conf import settings
 from django.db.models import Prefetch
 from django.db.models.functions import Lower
 
+from benchmark.models import BM_EFOTrait
 from .tables import *
 
 
@@ -87,11 +89,13 @@ def index(request):
     current_release = Release.objects.values('date').order_by('-date').first()
 
     traits_count = EFOTrait.objects.count()
+
     context = {
         'release' : current_release,
         'num_pgs' : Score.objects.count(),
         'num_traits' : traits_count,
         'num_pubs' : Publication.objects.count(),
+        'num_benchmarks': BM_EFOTrait.objects.using('benchmark').count(),
         'has_ebi_icons' : 1
     }
     if settings.PGS_ON_CURATION_SITE=='True':
@@ -122,11 +126,15 @@ def browseby(request, view_selection):
             'has_chart': 1
         }
     elif view_selection == 'studies':
-        context['view_name'] = 'Publications'
         publication_defer = ['authors','curation_status','curation_notes','date_released']
         publication_prefetch_related = [pgs_prefetch['publication_score'], pgs_prefetch['publication_performance']]
-        table = Browse_PublicationTable(Publication.objects.defer(*publication_defer).all().prefetch_related(*publication_prefetch_related), order_by="num")
-        context['table'] = table
+        publications = Publication.objects.defer(*publication_defer).all().prefetch_related(*publication_prefetch_related)
+        table = Browse_PublicationTable(publications, order_by="num")
+        context = {
+            'view_name': 'Publications',
+            'table': table,
+            'has_chart': 1
+        }
     elif view_selection == 'sample_set':
         context['view_name'] = 'Sample Sets'
         table = Browse_SampleSetTable(Sample.objects.filter(sampleset__isnull=False).prefetch_related('sampleset', 'cohorts'))
@@ -143,6 +151,12 @@ def browseby(request, view_selection):
 
 
 def pgs(request, pgs_id):
+    # If ID in lower case, redirect with the ID in upper case
+    if not pgs_id.isupper():
+        return redirect_with_upper_case_id(request, '/score/', pgs_id)
+
+    template_html_file = 'pgs.html'
+
     try:
         score = Score.objects.defer(*pgs_defer['generic']).select_related('publication').prefetch_related('trait_efo','samples_variants','samples_training').get(id__exact=pgs_id)
     except Score.DoesNotExist:
@@ -185,15 +199,26 @@ def pgs(request, pgs_id):
     table = SampleTable_performance(pquery_samples)
     context['table_performance_samples'] = table
 
-    return render(request, 'catalog/pgs.html', context)
+    return render(request, 'catalog/'+template_html_file, context)
+
+
+def redirect_with_upper_case_id(request, dir, id):
+    id = id.upper()
+    response = redirect(dir+str(id), permanent=True)
+    return response
 
 
 def redirect_pgs_to_score(request, pgs_id):
-    response = redirect('/score/'+str(pgs_id), permanent=True)
+    response = redirect_with_upper_case_id(request, '/score/', pgs_id)
     return response
 
 
 def pgp(request, pub_id):
+    # If ID in lower case, redirect with the ID in upper case
+    if not pub_id.isupper():
+        return redirect_with_upper_case_id(request, '/publication/', pub_id)
+
+    template_html_file = 'pgp.html'
     try:
         pub = Publication.objects.prefetch_related('publication_score', 'publication_performance').get(id__exact=pub_id)
     except Publication.DoesNotExist:
@@ -236,10 +261,15 @@ def pgp(request, pub_id):
     context['table_performance_samples'] = table
 
     context['has_table'] = 1
-    return render(request, 'catalog/pgp.html', context)
+    return render(request, 'catalog/'+template_html_file, context)
 
 
 def efo(request, efo_id):
+    # If ID in lower case, redirect with the ID in upper case
+    # If ID with ':', redirect using the ID with '_'
+    if not efo_id.isupper() or ':' in efo_id:
+        efo_id = efo_id.replace(':','_')
+        return redirect_with_upper_case_id(request, '/trait/', efo_id)
 
     exclude_children = False
     include_children = request.GET.get('include_children');
@@ -299,6 +329,10 @@ def efo(request, efo_id):
 
 
 def gwas_gcst(request, gcst_id):
+    # If ID in lower case, redirect with the ID in upper case
+    if not gcst_id.isupper():
+        return redirect_with_upper_case_id(request, '/gwas/', gcst_id)
+
     samples = Sample.objects.filter(source_GWAS_catalog__exact=gcst_id).distinct()
     if len(samples) == 0:
         raise Http404("No PGS Samples are associated with the NHGRI-GWAS Catalog Study: \"{}\"".format(gcst_id))
@@ -330,6 +364,10 @@ def gwas_gcst(request, gcst_id):
 
 
 def pss(request, pss_id):
+    # If ID in lower case, redirect with the ID in upper case
+    if not pss_id.isupper():
+        return redirect_with_upper_case_id(request, '/sampleset/', pss_id)
+
     try:
         sample_set = SampleSet.objects.prefetch_related('samples', 'samples__cohorts', 'samples__sample_age', 'samples__followup_time').get(id__exact=pss_id)
     except SampleSet.DoesNotExist:
@@ -371,6 +409,7 @@ def pss(request, pss_id):
 def releases(request):
 
     release_data = []
+    pub_per_year_data = { 'all': [] }
 
     total_score = 0
     total_perf = 0
@@ -380,9 +419,53 @@ def releases(request):
     max_perf = 0
     max_width = 100
 
-    releases_list = Release.objects.order_by('date')
+    ## Publications distribution
+    # All publications
+    pub_per_year = {}
+    publications = Publication.objects.all()
+    for publication in publications:
+        year = publication.pub_year
+        if year in pub_per_year:
+            pub_per_year[year] += 1
+        else:
+            pub_per_year[year] = 1
+
+    for p_year in sorted(pub_per_year.keys()):
+        pub_per_year_item = { 'year': p_year, 'count': pub_per_year[p_year] }
+        pub_per_year_data['all'].append(pub_per_year_item)
+
+    # Sepatate the "Released" and "Not released" Publications
+    nr_publications = Publication.objects.filter(date_released__isnull=True)
+    if len(nr_publications) > 0:
+        nr_pub_per_year = {}
+        for nr_publication in nr_publications:
+            year = nr_publication.pub_year
+            if year in nr_pub_per_year:
+                nr_pub_per_year[year] += 1
+            else:
+                nr_pub_per_year[year] = 1
+        pub_per_year_data['nr'] = []
+        for p_year in sorted(nr_pub_per_year.keys()):
+            pub_per_year_item = { 'year': p_year, 'count': nr_pub_per_year[p_year] }
+            pub_per_year_data['nr'].append(pub_per_year_item)
+
+        r_publications = Publication.objects.exclude(date_released__isnull=True)
+        if len(r_publications) > 0:
+            r_pub_per_year = {}
+            for r_publication in r_publications:
+                year = r_publication.pub_year
+
+                if year in r_pub_per_year:
+                    r_pub_per_year[year] += 1
+                else:
+                    r_pub_per_year[year] = 1
+            pub_per_year_data['r'] = []
+            for p_year in sorted(r_pub_per_year.keys()):
+                pub_per_year_item = { 'year': p_year, 'count': r_pub_per_year[p_year] }
+                pub_per_year_data['r'].append(pub_per_year_item)
 
     # Get max data
+    releases_list = Release.objects.order_by('date')
     for release in releases_list:
         score = release.score_count
         perf  = release.performance_count
@@ -418,6 +501,7 @@ def releases(request):
     context = {
         'releases_list': releases_list.order_by('-date'),
         'releases_data': release_data,
+        'pub_per_year_data': pub_per_year_data,
         'max_score': max_score,
         'max_publi': max_publi,
         'max_perf': max_perf,
@@ -425,6 +509,22 @@ def releases(request):
         'has_chart_js': 1
     }
     return render(request, 'catalog/releases.html', context)
+
+
+def upload_metadata(request):
+    context = {}
+    from django.core.files.storage import default_storage
+    if request.method == 'POST' and request.FILES['myfile']:
+        file_name = request.FILES['myfile'].name
+        file_content = request.FILES['myfile'].read()
+        file = default_storage.open(file_name, 'w')
+        file.write(file_content)
+        file.close()
+        context['uploaded_file'] = True
+        context['filename'] = file_name
+
+    return render(request, 'catalog/upload.html', context)
+
 
 class AboutView(TemplateView):
     template_name = "catalog/about.html"

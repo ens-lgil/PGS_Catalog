@@ -27,7 +27,8 @@ class Publication(models.Model):
         ('C',  'Curated'),
         ('ID', 'Curated - insufficient data'),
         ('IP', 'Curation in Progress'),
-        ('AW', 'Awaiting Curation')
+        ('AW', 'Awaiting Curation'),
+        ('E',  'Embargoed')
     ]
     curation_status = models.CharField(max_length=2,
                             choices=CURATION_STATUS_CHOICES,
@@ -290,7 +291,7 @@ class Demographic(models.Model):
     range_type = models.CharField(verbose_name='Range (type)', max_length=100, default='range') # e.g. Confidence interval (ci), range, interquartile range (iqr), open range
 
     variability = models.FloatField(verbose_name='Variability (value)', null=True)
-    variability_type = models.CharField(verbose_name='Range (type)', max_length=100, default='se') # e.g. standard deviation (sd), standard error (se)
+    variability_type = models.CharField(verbose_name='Variablility (type)', max_length=100, default='se') # e.g. standard deviation (sd), standard error (se)
 
     def format_estimate(self):
         if self.estimate != None:
@@ -519,7 +520,7 @@ class Sample(models.Model):
     def display_sample_number_detail(self):
         sinfo = []
         if self.sample_cases != None:
-            sinfo.append('{:,} cases'.format(self.sample_cases))
+            sinfo.append('{:,} cases ({}%)'.format(self.sample_cases, self.sample_cases_percent))
             if self.sample_controls != None:
                 sinfo.append('{:,} controls'.format(self.sample_controls))
         if self.sample_percent_male != None:
@@ -838,10 +839,16 @@ class Metric(models.Model):
             return '%s: %s'%(self.name, s)
 
     def display_value(self):
-        if self.ci != None:
-            s = '{} {}'.format(self.estimate, self.ci)
+        # Use the scientific notation
+        if (self.estimate < 0.00001 and self.estimate > 0) or (self.estimate > -0.00001 and self.estimate < 0):
+            estimate_value = '{:.2e}'.format(self.estimate)
+        # Round numbers to 5 numbers max
         else:
-            s = '{}'.format(self.estimate)
+            estimate_value = round(self.estimate, 5)
+        if self.ci != None:
+            s = '{} {}'.format(estimate_value, self.ci)
+        else:
+            s = '{}'.format(estimate_value)
         return s
 
     def name_tuple(self):

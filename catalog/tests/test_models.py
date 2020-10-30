@@ -240,6 +240,15 @@ class MetricTest(TestCase):
         e_name = 'Beta'
         e_name_short = 'β'
         e_estimate = -0.7
+        e_estimate_2 = 0.0123456789
+        e_estimate_2_rounded = 0.01235
+        e_estimate_3 = 0.00000231
+        e_estimate_3_rounded = 2.31e-6
+        e_estimate_4 = -0.0000003423
+        e_estimate_4_rounded = -3.42e-7
+        e_estimate_5 = 1.24674178
+        e_estimate_5_rounded = 1.24674
+
         metric_effect = self.create_metric(performance.num,e_type,e_name,e_name_short,e_estimate,'years',0.15,None)
         # Instance
         self.assertTrue(isinstance(metric_effect, Metric))
@@ -247,6 +256,18 @@ class MetricTest(TestCase):
         self.assertEqual(metric_effect.display_value(),str(e_estimate))
         self.assertEqual(metric_effect.name_tuple(), (e_name,e_name_short))
         self.assertEqual(metric_effect.__str__(), '{} ({}): {}'.format(e_name,e_name_short,e_estimate))
+
+        metric_effect.estimate = e_estimate_2
+        self.assertEqual(metric_effect.display_value(),str(e_estimate_2_rounded))
+
+        metric_effect.estimate = e_estimate_3
+        self.assertEqual(metric_effect.display_value(),str(e_estimate_3_rounded))
+
+        metric_effect.estimate = e_estimate_4
+        self.assertEqual(metric_effect.display_value(),str(e_estimate_4_rounded))
+
+        metric_effect.estimate = e_estimate_5
+        self.assertEqual(metric_effect.display_value(),str(e_estimate_5_rounded))
 
         # Type "Classification Metric"
         c_type = 'Classification Metric'

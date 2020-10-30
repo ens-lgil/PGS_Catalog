@@ -172,10 +172,10 @@ if os.getenv('GAE_APPLICATION', None):
         'benchmark': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['DATABASE_NAME_2'],
-            'USER': os.environ['DATABASE_USER'],
-            'PASSWORD': os.environ['DATABASE_PASSWORD'],
-            'HOST': os.environ['DATABASE_HOST'],
-            'PORT': os.environ['DATABASE_PORT']
+            'USER': os.environ['DATABASE_USER_2'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD_2'],
+            'HOST': os.environ['DATABASE_HOST_2'],
+            'PORT': os.environ['DATABASE_PORT_2']
         }
     }
 else:
@@ -195,10 +195,10 @@ else:
         'benchmark': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['DATABASE_NAME_2'],
-            'USER': os.environ['DATABASE_USER'],
-            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'USER': os.environ['DATABASE_USER_2'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD_2'],
             'HOST': 'localhost',
-            'PORT': os.environ['DATABASE_PORT']
+            'PORT': os.environ['DATABASE_PORT_2']
         }
     }
 # [END db_setup]
@@ -236,6 +236,11 @@ USE_L10N = True
 USE_TZ = True
 
 
+FILE_UPLOAD_HANDLERS = [
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler"
+]
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
@@ -245,11 +250,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 STATICFILES_FINDERS = [
 	'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder'
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder'
 ]
-if not os.getenv('GAE_APPLICATION', None):
-    STATICFILES_FINDERS.append('compressor.finders.CompressorFinder')
-
+#if not os.getenv('GAE_APPLICATION', None):
+#    STATICFILES_FINDERS.append('compressor.finders.CompressorFinder')
 
 COMPRESS_PRECOMPILERS = ''
 COMPRESS_ROOT = os.path.join(BASE_DIR, "static/")
@@ -257,6 +262,26 @@ COMPRESS_ROOT = os.path.join(BASE_DIR, "static/")
 COMPRESS_PRECOMPILERS = (
     ('text/x-scss', 'django_libsass.SassCompiler'),
 )
+
+
+
+#---------------------------------#
+#  Google Cloud Storage Settings  #
+#---------------------------------#
+#if os.getenv('GAE_APPLICATION'):
+if True:
+    from google.oauth2 import service_account
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+        os.path.join(BASE_DIR, os.environ['GS_SERVICE_ACCOUNT_SETTINGS'])
+    )
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    GS_BUCKET_NAME = os.environ['GS_BUCKET_NAME']
+    #GS_DEFAULT_ACL = 'publicRead'
+    MEDIA_URL = 'https://storage.googleapis.com/'+os.environ['GS_BUCKET_NAME']+'/'
+#else:
+#    MEDIA_URL = '/media/'
+#    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 
 #---------------------#
@@ -269,6 +294,8 @@ COMPRESS_PRECOMPILERS = (
 REST_BLACKLIST_IPS = [
     #'127.0.0.1'
 ]
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -283,6 +310,11 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FileUploadParser'
+
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 50,
     'EXCEPTION_HANDLER': 'rest_api.views.custom_exception_handler',
@@ -295,6 +327,12 @@ REST_FRAMEWORK = {
         'user': '100/min'
     }
 }
+
+
+
+#--------------------------#
+#  Elasticsearch Settings  #
+#--------------------------#
 
 # Elasticsearch configuration
 ELASTICSEARCH_DSL = {
