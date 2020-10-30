@@ -268,8 +268,8 @@ COMPRESS_PRECOMPILERS = (
 #---------------------------------#
 #  Google Cloud Storage Settings  #
 #---------------------------------#
-#if os.getenv('GAE_APPLICATION'):
-if True:
+
+if os.getenv('GAE_APPLICATION'):
     from google.oauth2 import service_account
     GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
         os.path.join(BASE_DIR, os.environ['GS_SERVICE_ACCOUNT_SETTINGS'])
@@ -278,9 +278,9 @@ if True:
     GS_BUCKET_NAME = os.environ['GS_BUCKET_NAME']
     #GS_DEFAULT_ACL = 'publicRead'
     MEDIA_URL = 'https://storage.googleapis.com/'+os.environ['GS_BUCKET_NAME']+'/'
-#else:
-#    MEDIA_URL = '/media/'
-#    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
