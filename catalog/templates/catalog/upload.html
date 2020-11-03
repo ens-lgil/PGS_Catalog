@@ -35,12 +35,12 @@
         class="dropzone d-flex"
         id="dropzone">
         {% csrf_token %}
-        <div class="custom-file" style="max-width:275px">
+        <div class="custom-file" style="max-width:275px;z-index:1">
           <input type="file" class="custom-file-input" id="myfile" name="myfile">
-          <label class="custom-file-label" for="myfile">Select Template file</label>
+          <label class="custom-file-label text-truncate" for="myfile" style="z-index:1">Select Template file</label>
         </div>
-        <span class="pl-3 pr-3" id="upload_arrow" style="display:none;line-height:36px"><i class="fa fa-arrow-circle-right" style="font-size:18px;vertical-align:middle;line-height:36px;color:#00adb5"></i></span>
-        <button class="btn btn-pgs" style="display:none" id="upload_btn"><i class="fa fa-upload"></i> Upload</button>
+        <span class="pl-3 pr-3" id="upload_arrow" style="display:none;line-height:36px;z-index:2"><i class="fa fa-arrow-circle-right" style="font-size:18px;vertical-align:middle;line-height:36px;color:#00adb5"></i></span>
+        <button class="btn btn-pgs" style="display:none;z-index:2" id="upload_btn"><i class="fa fa-upload"></i> Upload</button>
       </form>
       <div class="mt-1" style="margin-left:1px;font-size:12px"><i class="fa fa-info-circle" style="color:#007C82"></i> More information about the Template file <a href="/submit/">here</a>.</div>
     </div>
