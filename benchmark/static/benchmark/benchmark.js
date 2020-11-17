@@ -4,7 +4,6 @@ var file_name = 'PGS_benchmark';
 // X axis label
 var chart_xaxis_label = 'PGS Catalog - Score ID';
 // Colours to differenciate the ancestries
-//var chart_colours = ["#367DB7", "#4CAE49", "#974DA2", "#FF7F00", '#E50000'];
 var ancestry_colours = {
   'European'    : "#367DB7",
   'African'     : "#4CAE49",
@@ -13,6 +12,8 @@ var ancestry_colours = {
 var chart_colours = ["#FF7C43", "#E50000", "#FFA600"];
 // Point symbols/shapes to differenciate the cohorts data
 var chart_shapes = [ d3.symbolCircle, d3.symbolTriangle, d3.symbolDiamond, d3.symbolSquare, d3.symbolCross];
+var chart_shapes_html = [ '<span style="font-size:16px">&#x25CF;</span>', '<span style="font-size:12px">&#x25B2;</span>', '<span style="font-size:16px">&#x2666;</span>', "&#x25A0;", "&#x271A;" ];
+
 // Horizontal lines - threshold
 var threshold = { 'Hazard Ratio': 1, 'Odds Ratio': 1, 'C-index': 0.5, 'AUROC': 0.5, 'DeltaC': 0, 'DeltaAUROC': 0, 'Delta-C-index': 0};
 // Font family
@@ -27,6 +28,8 @@ var max_svg_height = 500;
 var min_svg_height = 450;
 // Threshold of Categories (Polygenic Score IDs) to rotate the horizontal X axis labels
 var max_x_horizontal_labels = 14
+// Y axis title - horizontal position
+var y_label_y = 5;
 
 /*
  * Main class to build the 'PGS Benchmark' chart
@@ -43,7 +46,7 @@ class PGSBenchmark {
       .attr('width', this.width)
       .attr('height', this.height);
 
-    this.margin = {top: 20, right: 200, bottom: 70, left: 60};
+    this.margin = {top: 20, right: 200, bottom: 70, left: 70};
     this.set_chartWidthHeight();
     this.g = this.svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
@@ -195,7 +198,7 @@ class PGSBenchmark {
       .attr("class", "y_label")
       .attr("font-family", font_family)
       .attr("transform", "rotate(-90)")
-      .attr("y", 10)
+      .attr("y", y_label_y)
       .attr("x", 0 - (this.height / 2))
       .attr("dy", "1em")
       .style("text-anchor", "middle")
@@ -251,6 +254,7 @@ class PGSBenchmark {
         }
       }
     }
+
 
     /* Lines */
     var lines = chart_content.selectAll('line.error')
@@ -509,8 +513,10 @@ class PGSBenchmark {
   // Define a data point shape for each cohort
   set_cohort_data_shapes() {
     this.cohort_data_shapes = {};
+    this.cohort_data_shapes_html = {};
     for (var i=0; i<this.cohorts.length; i++) {
       this.cohort_data_shapes[this.cohorts[i]] = chart_shapes[i];
+      this.cohort_data_shapes_html[this.cohorts[i]] = chart_shapes_html[i];
     }
   }
   // Define a data point shape for each cohort-ancestry (ancestry)
@@ -819,7 +825,7 @@ class PGSBenchmark {
         .attr("class", "y_label")
         .attr("font-family", font_family)
         .attr("transform", "rotate(-90)")
-        .attr("y", 10)
+        .attr("y", y_label_y)
         .attr("x", 0 - (this.height / 2))
         .attr("dy", "1em")
         .style("text-anchor", "middle")
@@ -960,7 +966,7 @@ class PGSBenchmark {
           }
         }
       });
-      if (min_value == '' || min_value > cohort_min_value) {
+      if (min_value == '' || min_value == undefined || min_value > cohort_min_value) {
         min_value = cohort_min_value;
       }
 
@@ -975,7 +981,7 @@ class PGSBenchmark {
           }
         }
       });
-      if (max_value == '' || max_value < cohort_max_value) {
+      if (max_value == '' ||  max_value == undefined || max_value < cohort_max_value) {
         max_value = cohort_max_value;
       }
     }
@@ -1310,13 +1316,14 @@ function fill_cohort_form(data) {
   for (var i=0; i<cohort_length;i++) {
     id = 'cohort_'+i;
     var cohort = data.cohorts[i];
+    var cohort_shape = chart_shapes_html[i];
     var is_disabled = '';
     if (cohort_length == 1) {
       is_disabled = ' disabled';
     }
     html_cb += '<div>'+
                '  <input type="checkbox" class="benchmark_cohort_cb" checked'+is_disabled+' value="'+cohort+'" id="'+id+'">'+
-               '  <label class="mb-0" for="'+id+'"> '+cohort+'</label>'+
+               '  <label class="mb-0" for="'+id+'"> '+cohort+' ('+cohort_shape+')</label>'+
                '</div>';
   }
   $("#benchmark_cohort_list").append(html_cb);
@@ -1416,9 +1423,6 @@ function fill_metric_form(data, cohorts) {
   }
 
   resize_select('benchmark_metric_select');
-  //$('body').append('<select id="width_tmp_select" style="display:none"><option id="width_tmp_option"></option></select>');
-  //$("#width_tmp_option").html($('#benchmark_metric_select option:selected').text());
-  //$('#benchmark_metric_select').width($("#width_tmp_select").width());
 }
 
 
@@ -1476,33 +1480,52 @@ function fill_sorting_form(data, cohorts) {
   var previous_selection = $("#benchmark_sorting_select option:selected").val();
 
   $("#benchmark_sorting_select").html('');
-  var sorting_list = ['Polygenic Score ID'];
+  var sorting_list = {};
   // Cohorts - fetch metrics
   for (var i=0; i<cohorts.length;i++) {
     var cohort = cohorts[i];
     var cohort_ancestry_list = data.ancestries[cohort];
     if ($('.benchmark_cohort_cb[value="'+cohort+'"]').is(':visible') &&
         $('.benchmark_cohort_cb[value="'+cohort+'"]').prop('checked')) {
+      var cohort_shape = chart_shapes_html[i];
       // Ancestries
+      extra_colour = 0;
       for (var j=0; j<cohort_ancestry_list.length;j++) {
         var ancestry = cohort_ancestry_list[j];
+        if (ancestry_colours[ancestry]) {
+          colour = ancestry_colours[ancestry];
+        }
+        else {
+          colour = chart_colours[extra_colour];
+          extra_colour++;
+        }
         if ($('.benchmark_ancestry_cb[value="'+ancestry+'"]').is(':visible') &&
             $('.benchmark_ancestry_cb[value="'+ancestry+'"]').prop('checked')) {
-          sorting_list.push(cohort+sep+ancestry);
+          if (!sorting_list[cohort]) {
+            sorting_list[cohort] = [];
+          }
+          sorting_list[cohort].push(ancestry);
         }
       }
     }
   }
   // Fill the form
-  for (var k=0; k<sorting_list.length;k++) {
-    var sorting_entry = sorting_list[k];
-    var sorting_label = sorting_entry.replace(sep, ' - ');
-    var option = new Option(sorting_label,sorting_entry);
-    if (previous_selection && sorting_entry == previous_selection) {
-      option = new Option(sorting_label,sorting_entry, true, true);
+  var option = new Option('Polygenic Score ID','Polygenic Score ID');
+  $("#benchmark_sorting_select").append(option);
+  $.each( sorting_list, function( cohort, ancestries ) {
+    var grp_option = $('<optgroup/>').attr('label', cohort);
+    for (var k=0; k<ancestries.length;k++) {
+      var ancestry = ancestries[k];
+      var value = cohort+sep+ancestry;
+      var label = ancestry+' ('+cohort+')';
+      var option = new Option(label,value);
+      if (previous_selection && value == previous_selection) {
+        option = new Option(label,value, true, true);
+      }
+      grp_option.append(option);
     }
-    $("#benchmark_sorting_select").append(option);
-  }
+    $("#benchmark_sorting_select").append(grp_option);
+  });
   resize_select('benchmark_sorting_select');
 }
 
