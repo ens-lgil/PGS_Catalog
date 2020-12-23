@@ -47,7 +47,7 @@ $(document).ready(function() {
     // Tooltip | Popover
     function pgs_tooltip() {
       $('.pgs_helptip').attr('data-toggle','tooltip').attr('data-placement','bottom').attr('data-delay','800');
-      $('.pgs_helpover').attr('data-toggle','popover').attr('data-placement','bottom');
+      $('.pgs_helpover').attr('data-toggle','popover').attr('data-placement','right');
 
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="popover"]').popover();
@@ -197,13 +197,11 @@ $(document).ready(function() {
 
     // Add the following code if you want the name of the file appear on select
     $(".custom-file-input").on("change", function() {
-      console.log("YES");
       var fileName = $(this).val().split("\\").pop();
-      console.log(fileName);
+      // Display file label
       $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-
+      // Check file extension
       fileExt = fileName.split("\.").pop();
-      console.log(fileExt);
       if (fileExt != 'xlsx') {
         $('#error_file_extension').show();
         $('#upload_btn').hide();
@@ -216,7 +214,6 @@ $(document).ready(function() {
         $('#upload_arrow').show();
         $('#upload_btn').show();
       }
-
     });
 
 
@@ -642,6 +639,8 @@ function draw_trait_category_piechart(data) {
     .sort(null) // Do not sort group by size
     .value(d => d.size_g)
 
+  var angleInterpolation = d3.interpolate(pie.startAngle()(), pie.endAngle()());
+
   var arcs = pie(data);
 
   var svg = d3.select("#trait_cat_piechart")
@@ -651,7 +650,7 @@ function draw_trait_category_piechart(data) {
   var g = svg.append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-  g.selectAll("path")
+  var arcs_path = g.selectAll("path")
     .data(arcs)
     .join("path")
       .attr("fill", d => color(d.data.name))
@@ -668,26 +667,10 @@ function draw_trait_category_piechart(data) {
           var label = $(this).attr('data-label');
           var id = $(this).attr('data-id');
           showhide_trait(id+"_list", label);
-      })
-      .on("mouseover", function(d) {
-        current_color = d3.select(this).style("fill");
-        d3.select(this)
-          .attr("d", arcOver)
-          .attr("fill", d3.hsl(current_color).darker(0.5));
-        var id = $(this).attr('data-id');
-        $('#'+id+"_id").addClass('trait_item_selected');
-        $('#'+id+"_id").removeClass('trait_item');
-
-      })
-      .on("mouseout", function(d) {
-        current_color = d3.select(this).style("fill");
-        d3.select(this)
-          .attr("d", arc)
-          .attr("fill", d3.hsl(current_color).brighter(0.5));
-          var id = $(this).attr('data-id');
-          $('#'+id+"_id").addClass('trait_item');
-          $('#'+id+"_id").removeClass('trait_item_selected');
       });
+
+      pie_chart_hover(arcs_path, arc, arcOver, 1)
+      pie_chart_transition(pie, arc, arcs_path, 1500);
 }
 
 
@@ -716,6 +699,8 @@ function draw_samples_piechart(data, id, type) {
     .sort(null) // Do not sort group by size
     .value(d => d.value)
 
+  var angleInterpolation = d3.interpolate(pie.startAngle()(), pie.endAngle()());
+
   var arcs = pie(data);
 
   var svg = d3.select("#"+pc_svg_id)
@@ -725,35 +710,17 @@ function draw_samples_piechart(data, id, type) {
   var g = svg.append("g")
     .attr("transform", "translate(" + width / 2 + "," + ((height - (margin - 20)) / 2) + ")");
 
-  g.selectAll("path")
+  var arcs_path = g.selectAll("path")
     .data(arcs)
     .join("path")
       .attr("fill", d => color(d.data.name))
       .each(function(d,i){
         var title = '<b>'+d.data.name +"</b>: "+d.data.value;
         add_tooltip($(this), title);
-      })
-      .on("mouseover", function(d) {
-        current_color = d3.select(this).style("fill");
-        d3.select(this)
-          .attr("d", arcOver)
-          .attr("fill", d3.hsl(current_color).darker(0.5));
-      })
-      .on("mouseout", function(d) {
-        current_color = d3.select(this).style("fill");
-        d3.select(this)
-          .attr("d", arc)
-          .attr("fill", d3.hsl(current_color).brighter(0.5));
-      })
-      .transition()
-        .duration(500)
-        .attrTween('d', function(d) {
-          var i = d3.interpolate(d.startAngle+0.1, d.endAngle);
-          return function(t) {
-            d.endAngle = i(t);
-            return arc(d);
-          }
-        });
+      });
+
+      pie_chart_hover(arcs_path, arc, arcOver)
+      pie_chart_transition(pie, arc, arcs_path, 1000);
 
   // Legend
   var rect_width = 20;
@@ -807,4 +774,132 @@ function draw_samples_piechart(data, id, type) {
   legend.attr('transform', function() {
     return `translate(${(width - nodeWidth(this)) / 2},${0})`
   });
+}
+
+
+// Add interaction when move the mouse on and out of a slice/arc
+function pie_chart_hover(path, arc, arcOver, use_external_interaction) {
+  path.on("mouseover", function(d) {
+    current_color = d3.select(this).style("fill");
+    d3.select(this)
+      .attr("d", arcOver)
+      .attr("fill", d3.hsl(current_color).darker(0.5));
+      if (use_external_interaction) {
+        var id = $(this).attr('data-id');
+        $('#'+id+"_id").addClass('trait_item_selected');
+        $('#'+id+"_id").removeClass('trait_item');
+      }
+  })
+  .on("mouseout", function(d) {
+    current_color = d3.select(this).style("fill");
+    d3.select(this)
+      .attr("d", arc)
+      .attr("fill", d3.hsl(current_color).brighter(0.5));
+      if (use_external_interaction) {
+        var id = $(this).attr('data-id');
+        $('#'+id+"_id").addClass('trait_item');
+        $('#'+id+"_id").removeClass('trait_item_selected');
+      }
+  });
+}
+
+
+// Adds a transition for the donut chart
+function pie_chart_transition(pie, arc, path, trans_duration) {
+  var angleInterpolation = d3.interpolate(pie.startAngle()(), pie.endAngle()());
+
+  path.transition()
+    .duration(trans_duration)
+    .attrTween('d', d => {
+      var originalEnd = d.endAngle;
+      return t => {
+        var currentAngle = angleInterpolation(t);
+        if (currentAngle < d.startAngle) {
+          return '';
+        }
+        d.endAngle = Math.min(currentAngle, originalEnd);
+        return arc(d);
+      };
+    });
+}
+
+
+function draw_barchart(data) {
+
+  var margin = {top: 20, right: 20, bottom: 40, left: 40},
+      width = 600,// - margin.left - margin.right,
+      height = 250;// - margin.top - margin.bottom;
+
+  var colour_1 = "#007C82";
+  var colour_2 = "#00ADB5";
+
+  var chartWidth = width - margin.left - margin.right,
+      chartHeight = height - margin.top - margin.bottom;
+
+  // Parse the date / time
+
+  var x = d3.scaleBand()
+    .domain(data.map(d => d.name))
+    .range([margin.left, chartWidth])
+    .padding(0.1)
+
+  var y = d3.scaleLinear()
+     .domain([0, d3.max(data, d => d.value)])
+     .rangeRound([chartHeight,0]);
+
+  var svg = d3.select("#pub_year_chart")
+    .attr("width", width)
+    .attr("height", height);
+
+  var g = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  // add the x Axis
+  g.append("g")
+    .attr("transform", "translate(-"+margin.left+"," + chartHeight + ")")
+    .call(d3.axisBottom(x));
+
+  // add the y Axis
+  g.append("g")
+    .call(d3.axisLeft(y));
+
+  // Add vertical bars
+  g.selectAll("rect")
+    .data(data)
+    .join("rect")
+      .attr("fill", colour_1)
+      .attr("x", (d, i) => x(d.name))
+      .attr("y", d => y(d.value))
+      .each(function(d,i){
+        var plural = 's';
+        if (d.value < 2) {
+          plural = '';
+        }
+        var title = '<b>'+d.name +"</b>: "+d.value+" publication"+plural;
+        add_tooltip($(this), title);
+      })
+      .attr("height", d => y(0) - y(d.value))
+      .attr("width", x.bandwidth())
+      .on("mouseover", function(d) {
+        d3.select(this).attr("fill", colour_2);
+      })
+      .on("mouseout", function(d) {
+        d3.select(this).attr("fill", colour_1);
+      })
+      .attr("transform", "translate(-"+margin.left+"," + 0 + ")");
+
+
+  // Add the text labels (values) at the top of each bar
+  g.selectAll(".text")
+    .data(data)
+    .enter()
+      .append("text")
+        .attr("class","label")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12")
+        .attr("x", (function(d) { return x(d.name) + x.bandwidth()/2; }  ))
+        .attr("y", function(d) { return y(d.value) - 15; })
+        .attr("dy", ".75em")
+        .text(function(d) { return d.value; })
+        .attr("transform", "translate(-"+margin.left+"," + 0 + ")");
 }
