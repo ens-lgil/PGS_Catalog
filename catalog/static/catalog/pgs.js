@@ -1,3 +1,11 @@
+// Trait Category pie chart settings
+// var tc_height = 260;
+// var tc_width = 300;
+// var tc_margin = 10;
+// var tc_radius = Math.min(tc_width, tc_height - tc_margin) / 2;
+// var tc_arc = get_d3_arc(tc_radius, 0.55);
+// var tc_arcOver = get_d3_arc(tc_radius, 0.53, 1.02);
+
 $(document).ready(function() {
 
 
@@ -215,24 +223,6 @@ $(document).ready(function() {
         $('#upload_btn').show();
       }
     });
-
-
-    /*$('.trait_item').mouseover(function(d) {
-      var id = $(this).attr('id');
-      var id_path = id.replace("_id", "");
-      current_color = d3.select("path[data-id='"+id_path+"']").style("fill");
-      d3.select("path[data-id='"+id_path+"']")
-        .attr("d", arcOver)
-        .attr("fill", d3.hsl(current_color).darker(0.5));
-    });
-    $('.trait_item').mouseout(function(d) {
-      var id = $(this).attr('id');
-      var id_path = id.replace("_id", "");
-      current_color = d3.select("path[data-id='"+id_path+"']").style("fill");
-      d3.select("path[data-id='"+id_path+"']")
-        .attr("d", arc)
-        .attr("fill", d3.hsl(current_color).brighter(0.5));
-    });*/
 });
 
 
@@ -563,264 +553,290 @@ function display_category_list(data_json) {
 }
 
 
-// Build and draw sample distribution piecharts
-/*function draw_samples_piechart(data_chart, id, type) {
 
-  var pc_class   = (type == 'sample') ? "sample_piechart_" : "sample_piechart_gender_";
-  var pc_colours = (type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
-  var pc_title   = (type == 'sample') ? 'Sample distribution' : 'Sample gender distribution';
 
-  new Chart(document.getElementById(pc_class+id), {
-    type: 'doughnut',
-    data: {
-      labels: data_chart[0],
-      datasets: [{
-        backgroundColor: pc_colours,
-        data: data_chart[1]
-      }]
-    },
-    options: {
-      title: {
-        display: true,
-        text: pc_title
-      },
-      legend: {
-        position: 'bottom',
-        reverse: true,
-        labels: {
-          boxWidth: 20
-        }
-      }
-    }
-  });
-}*/
+//--------------------------------//
+//  D3 chart classes & functions  //
+//--------------------------------//
 
-//----------------------//
-//  D3 chart functions  //
-//----------------------//
+// Build and draw the Trait category piechart
+class PGSPieChart {
 
-// Return a D3 arc object
-function get_d3_arc(radius,inner_coef, outer_coef) {
+  constructor(svg_id,data,width,height,margin) {
+    this.svg_id = '#'+svg_id;
+    this.data = data;
+
+    this.width = width;
+    this.height = height;
+    this.margin = margin;
+
+    this.set_radius();
+    this.arc_val = 0.55;
+    this.arcOver_min_val = 0.53;
+    this.arcOver_max_val = 1.02;
+    this.arc = this.get_d3_arc(this.arc_val);
+    this.arcOver = this.get_d3_arc(this.arcOver_min_val, this.arcOver_max_val);
+
+    this.use_external_interaction = 1;
+    this.transition_time = 1500;
+  }
+
+  set_radius() {
+    this.radius = Math.min(this.width, this.height - this.margin) / 2;
+  }
+
+  // Return a D3 arc object
+  get_d3_arc(inner_coef, outer_coef) {
     if (!outer_coef) {
       outer_coef = 1;
     }
-   return d3.arc().innerRadius(radius * inner_coef).outerRadius(radius * outer_coef);
-}
+   return d3.arc().innerRadius(this.radius * inner_coef).outerRadius(this.radius * outer_coef);
+  }
 
-// Add a Bootstrap tooltip to the D3 chart
-function add_tooltip(elem, title) {
-  elem.tooltip({
-    'title': title,
-    'placement': 'right',
-    'html': true
-  });
-}
+  set_piechart() {
+    this.pie = d3.pie()
+      .padAngle(0.01)
+      .sort(null) // Do not sort group by size
+      .value(d => d.size_g);
+  }
 
+  set_colours() {
+    this.colours = d3.scaleOrdinal()
+      .domain(this.data.map(d => d.name))
+      .range(this.data.map(d => d.colour));
+  }
 
-// Build and draw the Trait category piechart
-function draw_trait_category_piechart(data) {
+  set_svg() {
+    this.svg = d3.select(this.svg_id)
+      .attr("width", this.width)
+      .attr("height", this.height);
+  }
 
-  var height = 260;
-  var width = 300;
+  set_g() {
+    this.g = this.svg.append("g")
+      .attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")");
+  }
 
-  var color = d3.scaleOrdinal()
-    .domain(data.map(d => d.name))
-    .range(data.map(d => d.colour))
-
-  var margin = 10;
-  var radius = Math.min(width, height - margin) / 2;
-
-  var arc = get_d3_arc(radius, 0.55);
-
-  var arcOver = get_d3_arc(radius, 0.53, 1.02);
-
-  var pie = d3.pie()
-    .padAngle(0.01)
-    .sort(null) // Do not sort group by size
-    .value(d => d.size_g)
-
-  var angleInterpolation = d3.interpolate(pie.startAngle()(), pie.endAngle()());
-
-  var arcs = pie(data);
-
-  var svg = d3.select("#trait_cat_piechart")
-    .attr("width", width)
-    .attr("height", height);
-
-  var g = svg.append("g")
-    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-  var arcs_path = g.selectAll("path")
-    .data(arcs)
-    .join("path")
-      .attr("fill", d => color(d.data.name))
-      .attr("d", arc)
-      .attr("cursor", "pointer")
-      .attr("data-label", d => d.data.name)
-      .attr("data-id", d => d.data.id)
-      // Tooltip
-      .each(function(d,i){
-        var title = '<b>'+d.data.name +"</b>: "+d.data.size_g+" PGS";
-        add_tooltip($(this), title);
-      })
-      .on("click", function(d,i){
+  set_arcs_path(arcs) {
+    var obj = this;
+    obj.arcs_path = obj.g.selectAll("path")
+      .data(arcs)
+      .join("path")
+        .attr("fill", d => obj.colours(d.data.name))
+        .attr("d", obj.arc)
+        .attr("cursor", "pointer")
+        .attr("data-label", d => d.data.name)
+        .attr("data-id", d => d.data.id)
+        // Tooltip
+        .each(function(d,i){
+          var title = '<b>'+d.data.name +"</b>: "+d.data.size_g+" PGS";
+          obj.add_tooltip($(this), title);
+        })
+        .on("click", function(d,i){
           var label = $(this).attr('data-label');
           var id = $(this).attr('data-id');
           showhide_trait(id+"_list", label);
-      });
+        });
+  }
 
-      pie_chart_hover(arcs_path, arc, arcOver, 1)
-      pie_chart_transition(pie, arc, arcs_path, 1500);
+  draw_piechart() {
+    var obj = this;
+
+    obj.set_svg();
+    obj.set_g();
+
+    obj.set_piechart();
+    var arcs = obj.pie(obj.data);
+    obj.set_colours();
+    obj.set_arcs_path(arcs);
+
+    obj.pie_chart_hover()
+    obj.pie_chart_transition();
+  }
+
+  // Add a Bootstrap tooltip to the D3 chart
+  add_tooltip(elem, title) {
+    elem.tooltip({
+      'title': title,
+      'placement': 'right',
+      'html': true
+    });
+  }
+
+  // Add interaction when move the mouse on and out of a slice/arc
+  pie_chart_hover() {
+    var obj = this;
+    this.arcs_path.on("mouseover", function(d) {
+      var current_color = d3.select(this).style("fill");
+      d3.select(this)
+        .attr("d", obj.arcOver)
+        .attr("fill", d3.hsl(current_color).darker(0.5));
+        if (obj.use_external_interaction) {
+          var id = $(this).attr('data-id');
+          $('#'+id+"_id").addClass('trait_item_selected');
+          $('#'+id+"_id").removeClass('trait_item');
+        }
+    })
+    .on("mouseout", function(d) {
+      var current_color = d3.select(this).style("fill");
+      d3.select(this)
+        .attr("d", obj.arc)
+        .attr("fill", d3.hsl(current_color).brighter(0.5));
+        if (obj.use_external_interaction) {
+          var id = $(this).attr('data-id');
+          $('#'+id+"_id").addClass('trait_item');
+          $('#'+id+"_id").removeClass('trait_item_selected');
+        }
+    });
+  }
+
+  // Trait category list hover
+  trait_item_hover(trait_item, type) {
+    var obj = this;
+    var id = $(trait_item).attr('id');
+    var id_path = id.replace("_id", "");
+    var current_color = d3.select("path[data-id='"+id_path+"']").style("fill");
+
+    if (type == 'in') {
+      d3.select("path[data-id='"+id_path+"']")
+        .attr("d", obj.arcOver)
+        .attr("fill", d3.hsl(current_color).darker(0.5));
+    }
+    else {
+      d3.select("path[data-id='"+id_path+"']")
+        .attr("d", obj.arc)
+        .attr("fill", d3.hsl(current_color).brighter(0.5));
+    }
+  }
+
+  // Adds a transition for the donut chart
+  pie_chart_transition(trans_duration) {
+    var obj = this;
+    var angleInterpolation = d3.interpolate(obj.pie.startAngle()(), obj.pie.endAngle()());
+
+    obj.arcs_path.transition()
+      .duration(obj.transition_time)
+      .attrTween('d', d => {
+        var originalEnd = d.endAngle;
+        return t => {
+          var currentAngle = angleInterpolation(t);
+          if (currentAngle < d.startAngle) {
+            return '';
+          }
+          d.endAngle = Math.min(currentAngle, originalEnd);
+          return obj.arc(d);
+        };
+      });
+  }
+
 }
 
 
 // Build and draw sample distribution piecharts
-function draw_samples_piechart(data, id, type) {
+class PGSPieChartSmall extends PGSPieChart {
 
-  var pc_svg_id  = (type == 'sample') ? "sample_piechart_"+id : "sample_piechart_gender_"+id;
-  var pc_colours = (type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
+  constructor(svg_id,data,width,height,margin,type) {
+    super(svg_id,data,width,height,margin);
+    this.type = type;
 
-  var height = 160;
-  var width = 200;
-  var margin = 60;
+    this.set_radius();
+    this.arc_val = 0.58;
+    this.arcOver_min_val = 0.56;
+    this.arcOver_max_val = 1.02;
+    this.arc = this.get_d3_arc(this.arc_val);
+    this.arcOver = this.get_d3_arc(this.arcOver_min_val, this.arcOver_max_val);
 
-  var color = d3.scaleOrdinal()
-    .domain(data.map(d => d.name))
-    .range(pc_colours)
+    this.use_external_interaction = 0;
+    this.transition_time = 1000;
+  }
 
-  var radius = Math.min(width, height - margin) / 2;
+  set_piechart() {
+    this.pie = d3.pie()
+      .padAngle(0.025)
+      .sort(null) // Do not sort group by size
+      .value(d => d.value);
+  }
 
-  var arc = get_d3_arc(radius, 0.58);
+  set_colours() {
+    this.colours_list = (this.type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
+    this.colours = d3.scaleOrdinal()
+      .domain(this.data.map(d => d.name))
+      .range(this.colours_list);
+  }
 
-  var arcOver = get_d3_arc(radius, 0.56, 1.02);
+  set_g() {
+    this.g = this.svg.append("g")
+      .attr("transform", "translate(" + this.width / 2 + "," + ((this.height - (this.margin - 20)) / 2) + ")");
+  }
 
-  var pie = d3.pie()
-    .padAngle(0.025)
-    .sort(null) // Do not sort group by size
-    .value(d => d.value)
+  set_arcs_path(arcs) {
+    var obj = this;
+    obj.arcs_path = obj.g.selectAll("path")
+      .data(arcs)
+      .join("path")
+        .attr("fill", d => obj.colours(d.data.name))
+        .each(function(d,i){
+          var title = '<b>'+d.data.name +"</b>: "+d.data.value;
+          obj.add_tooltip($(this), title);
+        });
+  }
 
-  var angleInterpolation = d3.interpolate(pie.startAngle()(), pie.endAngle()());
+  draw_legend() {
+    var obj = this;
 
-  var arcs = pie(data);
+    // Legend
+    var rect_width = 20;
+    var rect_height = 14;
 
-  var svg = d3.select("#"+pc_svg_id)
-    .attr("width", width)
-    .attr("height", height);
+    // Reverse orders to match the piechart display
+    var data_legend = obj.data;
+    data_legend.reverse();
 
-  var g = svg.append("g")
-    .attr("transform", "translate(" + width / 2 + "," + ((height - (margin - 20)) / 2) + ")");
+    var pc_colours_legend = obj.colours_list;
+    pc_colours_legend.reverse();
 
-  var arcs_path = g.selectAll("path")
-    .data(arcs)
-    .join("path")
-      .attr("fill", d => color(d.data.name))
-      .each(function(d,i){
-        var title = '<b>'+d.data.name +"</b>: "+d.data.value;
-        add_tooltip($(this), title);
-      });
+    var legend_colours = d3.scaleOrdinal()
+      .domain(data_legend.map(d => d.name))
+      .range(pc_colours_legend)
 
-      pie_chart_hover(arcs_path, arc, arcOver)
-      pie_chart_transition(pie, arc, arcs_path, 1000);
+    var nodeWidth = (d) => d.getBBox().width;
 
-  // Legend
-  var rect_width = 20;
-  var rect_height = 14;
+    // Create D3 legend
+    const legend = obj.svg.append('g')
+      .attr('class', 'legend')
+      .attr('transform', 'translate(0,0)');
 
-  // Reverse orders to match the piechart display
-  data_legend = data;
-  data_legend.reverse()
+    const lg = legend.selectAll('g')
+      .data(data_legend)
+      .enter()
+      .append('g')
+        .attr('transform', (d,i) => `translate(${i * 100},${obj.height/2 + 15})`);
 
-  var pc_colours_legend = pc_colours;
-  pc_colours_legend.reverse()
+    lg.append('rect')
+      .style('fill', d => legend_colours(d.value))
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', rect_width)
+      .attr('height', rect_height);
 
-  var color_legend = d3.scaleOrdinal()
-    .domain(data_legend.map(d => d.name))
-    .range(pc_colours_legend)
+    lg.append('text')
+      .style('font-size', rect_height - 2)
+      .style('fill', '#555')
+      .attr('x', rect_width + 5)
+      .attr('y', rect_height - 3)
+      .text(d => d.name);
 
-  var nodeWidth = (d) => d.getBBox().width;
-
-  // Create D3 legend
-  const legend = svg.append('g')
-    .attr('class', 'legend')
-    .attr('transform', 'translate(0,0)');
-
-  const lg = legend.selectAll('g')
-    .data(data_legend)
-    .enter()
-    .append('g')
-      .attr('transform', (d,i) => `translate(${i * 100},${height/2 + 15})`);
-
-  lg.append('rect')
-    .style('fill', d => color_legend(d.value))
-    .attr('x', 0)
-    .attr('y', 0)
-    .attr('width', rect_width)
-    .attr('height', rect_height);
-
-  lg.append('text')
-    .style('font-size', rect_height - 2)
-    .style('fill', '#555')
-    .attr('x', rect_width + 5)
-    .attr('y', rect_height - 3)
-    .text(d => d.name);
-
-  var offset = 0;
-  lg.attr('transform', function(d, i) {
-    var x = offset;
-    offset += nodeWidth(this) + 10;
-    return `translate(${x},${height - margin/2 - 4})`;
-  });
-
-  legend.attr('transform', function() {
-    return `translate(${(width - nodeWidth(this)) / 2},${0})`
-  });
-}
-
-
-// Add interaction when move the mouse on and out of a slice/arc
-function pie_chart_hover(path, arc, arcOver, use_external_interaction) {
-  path.on("mouseover", function(d) {
-    current_color = d3.select(this).style("fill");
-    d3.select(this)
-      .attr("d", arcOver)
-      .attr("fill", d3.hsl(current_color).darker(0.5));
-      if (use_external_interaction) {
-        var id = $(this).attr('data-id');
-        $('#'+id+"_id").addClass('trait_item_selected');
-        $('#'+id+"_id").removeClass('trait_item');
-      }
-  })
-  .on("mouseout", function(d) {
-    current_color = d3.select(this).style("fill");
-    d3.select(this)
-      .attr("d", arc)
-      .attr("fill", d3.hsl(current_color).brighter(0.5));
-      if (use_external_interaction) {
-        var id = $(this).attr('data-id');
-        $('#'+id+"_id").addClass('trait_item');
-        $('#'+id+"_id").removeClass('trait_item_selected');
-      }
-  });
-}
-
-
-// Adds a transition for the donut chart
-function pie_chart_transition(pie, arc, path, trans_duration) {
-  var angleInterpolation = d3.interpolate(pie.startAngle()(), pie.endAngle()());
-
-  path.transition()
-    .duration(trans_duration)
-    .attrTween('d', d => {
-      var originalEnd = d.endAngle;
-      return t => {
-        var currentAngle = angleInterpolation(t);
-        if (currentAngle < d.startAngle) {
-          return '';
-        }
-        d.endAngle = Math.min(currentAngle, originalEnd);
-        return arc(d);
-      };
+    var offset = 0;
+    lg.attr('transform', function(d, i) {
+      var x = offset;
+      offset += nodeWidth(this) + 10;
+      return `translate(${x},${obj.height - obj.margin/2 - 4})`;
     });
+
+    legend.attr('transform', function() {
+      return `translate(${(obj.width - nodeWidth(this)) / 2},${0})`
+    });
+  }
 }
 
 
