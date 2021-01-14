@@ -1,15 +1,19 @@
 from rest_framework import generics, status
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import Throttled
+from rest_framework.serializers import ValidationError
 from django.db.models import Prefetch, Q
 from catalog.models import *
 from .serializers import *
 
 generic_defer = ['curation_notes','date_released']
 related_dict = {
-    'score_prefetch' : [Prefetch('trait_efo', queryset=EFOTrait.objects.defer('synonyms','mapped_terms').all()), 'samples_variants', 'samples_variants__cohorts', 'samples_variants__sample_age', 'samples_variants__followup_time', 'samples_training', 'samples_training__cohorts', 'samples_training__sample_age', 'samples_training__followup_time'],
+    'score_prefetch' : [
+        Prefetch('trait_efo', queryset=EFOTrait.objects.defer('synonyms','mapped_terms').all()),
+        Prefetch('samples_variants', queryset=Sample.objects.select_related('sample_age','followup_time').all().order_by('id').prefetch_related('cohorts')),
+        Prefetch('samples_training', queryset=Sample.objects.select_related('sample_age','followup_time').all().order_by('id').prefetch_related('cohorts')),
+    ],
     'perf_select': ['score', 'publication', 'sampleset'],
     'publication_score_prefetch': [Prefetch('publication_score', queryset=Score.objects.only('id','publication__id').all())],
     'associated_scores_prefetch': [Prefetch('associated_scores', queryset=Score.objects.only('id','trait_efo__id').all())],
@@ -31,10 +35,22 @@ def custom_exception_handler(exc, context):
     # to get the standard error response.
     response = exception_handler(exc, context)
 
+    # Over the fixed rate limit
     if isinstance(exc, Throttled): # check that a Throttled exception is raised
         response.data = { # custom response data
             'message': 'request limit exceeded',
             'availableIn': '%d seconds'%exc.wait
+        }
+    # Over the maximum number of results per page (limit parameter)
+    elif isinstance(exc, ValidationError):
+        formatted_exc = ''
+        for type in exc.detail.keys():
+            if formatted_exc != '':
+                formatted_exc += '; '
+            formatted_exc += exc.detail[type]
+        response.data = { # custom response data
+            'status_code': response.status_code,
+            'message': formatted_exc
         }
     elif response.status_code == status.HTTP_404_NOT_FOUND:
         response.data = { # custom response data
@@ -64,7 +80,7 @@ class RestListPublications(generics.ListAPIView):
     serializer_class = PublicationExtendedSerializer
 
 
-class RestPublication(APIView):
+class RestPublication(generics.RetrieveAPIView):
     """
     Retrieve one PGS Publication
     """
@@ -126,10 +142,40 @@ class RestListScores(generics.ListAPIView):
     Retrieve all the PGS Scores
     """
     queryset = Score.objects.defer(*related_dict['score_defer']).select_related('publication').all().prefetch_related(*related_dict['score_prefetch']).order_by('num')
+    # cohorts = Cohort.objects.all()
+    # # prefetch_cohorts = [
+    # #     Prefetch('samples_variants__cohorts', queryset=cohorts),
+    # #     Prefetch('samples_training__cohorts', queryset=cohorts)
+    # # ]
+    # #demographics = Demographic.objects.all().order_by('id')
+    # # prefetch_demographics = [
+    # #     Prefetch('samples_variants__sample_age', queryset=demographics),
+    # #     Prefetch('samples_variants__followup_time', queryset=demographics),
+    # #     Prefetch('samples_training__sample_age', queryset=demographics),
+    # #     Prefetch('samples_training__followup_time', queryset=demographics)
+    # # ]
+    # sample_prefetch = Sample.objects.select_related('sample_age','followup_time').all().order_by('id').prefetch_related('cohorts')
+    # efo = EFOTrait.objects.defer('synonyms','mapped_terms').all()
+    # prefetch_data = [
+    #     Prefetch('trait_efo', queryset=efo),
+    #     Prefetch('samples_variants', sample_prefetch),
+    #     #Prefetch('samples_variants__cohorts', queryset=cohorts),
+    #     #Prefetch('samples_variants__sample_age', queryset=demographics),
+    #     #Prefetch('samples_variants__followup_time', queryset=demographics),
+    #     Prefetch('samples_training', sample_prefetch),
+    #     #Prefetch('samples_training__cohorts', queryset=cohorts),
+    #     #Prefetch('samples_training__sample_age', queryset=demographics),
+    #     #Prefetch('samples_training__followup_time', queryset=demographics)
+    # ]
+    # queryset = Score.objects.defer(*related_dict['score_defer']).select_related('publication').all().order_by('num').prefetch_related(*prefetch_data)
+    # #queryset = Score.objects.defer(*related_dict['score_defer']).select_related('publication').all().order_by('num').prefetch_related(*related_dict['score_prefetch'])
+    # #queryset = Score.objects.defer(*related_dict['score_defer']).select_related('publication').all().order_by('num').prefetch_related(*related_dict['score_prefetch'],*prefetch_cohorts)
+
+
     serializer_class = ScoreSerializer
 
 
-class RestScore(APIView):
+class RestScore(generics.RetrieveAPIView):
     """
     Retrieve one PGS Score
     """
@@ -187,6 +233,14 @@ class RestScoreSearch(generics.ListAPIView):
 
 ## Performance metrics ##
 
+class RestListPerformances(generics.ListAPIView):
+    """
+    Retrieve all the PGS Performance Metrics
+    """
+    queryset = Performance.objects.defer(*related_dict['perf_defer']).select_related(*related_dict['perf_select']).all().prefetch_related('sampleset__samples','sampleset__samples__cohorts','performance_metric').order_by('num')
+    serializer_class = PerformanceSerializer
+
+
 class RestPerformanceSearch(generics.ListAPIView):
     """
     Retrieve the Performance metric(s) using query
@@ -211,7 +265,7 @@ class RestPerformanceSearch(generics.ListAPIView):
         return queryset
 
 
-class RestPerformance(APIView):
+class RestPerformance(generics.RetrieveAPIView):
     """
     Retrieve one Performance metric
     """
@@ -236,7 +290,7 @@ class RestListEFOTraits(generics.ListAPIView):
     serializer_class = EFOTraitExtendedSerializer
 
 
-class RestEFOTrait(APIView):
+class RestEFOTrait(generics.RetrieveAPIView):
     """
     Retrieve one EFO Trait
     """
@@ -330,7 +384,7 @@ class RestListTraitCategories(generics.ListAPIView):
 
 ## Samples / Sample Sets ##
 
-class RestSampleSet(APIView):
+class RestSampleSet(generics.RetrieveAPIView):
     """
     Retrieve one Sample Set
     """
@@ -399,7 +453,7 @@ class RestListReleases(generics.ListAPIView):
     serializer_class = ReleaseSerializer
 
 
-class RestRelease(APIView):
+class RestRelease(generics.RetrieveAPIView):
     """
     Retrieve one Release information
     """
@@ -413,7 +467,7 @@ class RestRelease(APIView):
         return Response(serializer.data)
 
 
-class RestCurrentRelease(APIView):
+class RestCurrentRelease(generics.RetrieveAPIView):
     """
     Retrieve the current Release information
     """
@@ -425,7 +479,7 @@ class RestCurrentRelease(APIView):
 
 ##### Extra endpoints #####
 
-class RestGCST(APIView):
+class RestGCST(generics.RetrieveAPIView):
     """
     Retrieve all the PGS Score IDs using a given GWAS study (GCST)
     """

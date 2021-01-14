@@ -1,6 +1,7 @@
 from django.test import TestCase
-from catalog.models import *
 from datetime import datetime
+from psycopg2.extras import NumericRange
+from catalog.models import *
 
 test_sample_number = 5
 test_sample_count  = 7
@@ -23,6 +24,8 @@ cohort_name = "ABC"
 cohort_desc = "Cohort description"
 cohort_name_2 = "DEF"
 cohort_desc_2 = "Cohort description"
+
+firstauthor = "Inouye M"
 
 
 class CohortTest(TestCase):
@@ -71,7 +74,10 @@ class DemographicTest(TestCase):
         a_type = 'median'
         a_estimate = 10
         a_unit = 'years'
-        a_range = '[0.0,20.0]'
+        a_range_lower = 0.0
+        a_range_upper = 20.0
+        a_range_string = f'[{a_range_lower}, {a_range_upper}]'
+        a_range = NumericRange(lower=a_range_lower, upper=a_range_upper, bounds='[]')
         a_range_type = 'range'
         a_variability = None
         a_variability_type = 'se'
@@ -92,13 +98,16 @@ class DemographicTest(TestCase):
         self.assertIsNone(demographic_a.format_variability())
         self.assertEqual(demographic_a.format_unit(),'unit:'+a_unit)
         self.assertEqual(demographic_a.variability_type_desc(), 'Standard Error')
-        regex_range_a = a_range.replace('[','\[').replace(']','\]')
+        regex_range_a = a_range_string.replace('[','\[').replace(']','\]')
         demo_value_a =  r'^<ul><li>'+a_type.title()+r' : '+str(a_estimate)+r' '+a_unit
         demo_value_a += r'</li><li>'+a_range_type.title()+r' : '+regex_range_a+r' '+a_unit+r'.+$'
         self.assertRegexpMatches(demographic_a.display_value(), demo_value_a)
         values_dict_a = demographic_a.display_values_dict()
-        self.assertEqual(values_dict_a[a_type], str(a_estimate))
-        self.assertEqual(values_dict_a[a_range_type], a_range)
+        self.assertEqual(values_dict_a['estimate_type'], a_type)
+        self.assertEqual(values_dict_a['estimate'], a_estimate)
+        self.assertEqual(values_dict_a['interval']['type'], a_range_type)
+        self.assertEqual(values_dict_a['interval']['lower'], a_range_lower)
+        self.assertEqual(values_dict_a['interval']['upper'], a_range_upper)
         self.assertEqual(values_dict_a['unit'], a_unit)
 
         # Type "mean" - no range
@@ -119,13 +128,17 @@ class DemographicTest(TestCase):
         demo_value_b += r'</li><li><span.+>'+b_variability_type.title()+r'</span> : '+str(b_variability)+r' '+b_unit+r'.+$'
         self.assertRegexpMatches(demographic_b.display_value(), demo_value_b)
         values_dict_b = demographic_b.display_values_dict()
-        self.assertEqual(values_dict_b[b_variability_type], b_variability)
+        self.assertEqual(values_dict_b['variability_type'], b_variability_type)
+        self.assertEqual(values_dict_b['variability'], b_variability)
 
         # Type "mean" - no variability
         c_type = 'mean'
         c_estimate = 11.1
         c_unit = 'years'
-        c_range = '[10.0,12.0]'
+        c_range_lower = 10.0
+        c_range_upper = 12.0
+        c_range_string = f'[{c_range_lower}, {c_range_upper}]'
+        c_range = NumericRange(lower=c_range_lower, upper=c_range_upper, bounds='[]')
         c_range_type = 'iqr'
         c_variability = None
         c_variability_type = 'se'
@@ -136,7 +149,7 @@ class DemographicTest(TestCase):
         self.assertEqual(demographic_c.estimate_type,c_type)
         # Other methods
         self.assertEqual(demographic_c.range_type_desc(), 'Interquartile range')
-        regex_range_c = c_range.replace('[','\[').replace(']','\]')
+        regex_range_c = c_range_string.replace('[','\[').replace(']','\]')
         demo_value_c =  r'^<ul><li>'+c_type.title()+r' : '+str(c_estimate)+r' '+c_unit
         demo_value_c += r'</li><li><span.+>'+c_range_type.title()+r'</span> : '+regex_range_c+r' '+c_unit+r'.+$'
         self.assertRegexpMatches(demographic_c.display_value(), demo_value_c)
@@ -158,6 +171,28 @@ class DemographicTest(TestCase):
         regex_range_d = d_range.replace('[','\[').replace(']','\]')
         demo_value_d =  r'^'+d_range_type.title()+r' : '+regex_range_d+r' '+d_unit+r'$'
         self.assertRegexpMatches(demographic_d.display_value(), demo_value_d)
+
+        # Type "median" - ci range, no unit
+        e_type = 'median'
+        e_estimate = 15
+        e_unit =  'years'
+        e_range_lower = 12
+        e_range_upper = 17
+        e_range_string = f'[{e_range_lower}, {e_range_upper}]'
+        e_range = NumericRange(lower=e_range_lower, upper=e_range_upper, bounds='[]')
+        e_range_type = 'ci'
+        e_variability = 1.2
+        e_variability_type = 'Test'
+        demographic_e = self.create_demographic(e_estimate,e_type,e_unit,e_range,e_range_type,e_variability,e_variability_type)
+        # Instance
+        self.assertTrue(isinstance(demographic_e, Demographic))
+        # Other methods
+        regex_range_e = e_range_string.replace('[','\[').replace(']','\]')
+        demo_value_e =  r'^<ul><li>'+e_type.title()+r' : '+str(e_estimate)+r' '+regex_range_e+r' '+e_unit
+        demo_value_e += r'</li><li>'+e_variability_type.title()+r' : '+str(e_variability)+r' '+e_unit+r'</li></ul>$'
+        self.assertRegexpMatches(demographic_e.display_value(), demo_value_e)
+        values_dict_e = demographic_e.display_values_dict()
+        self.assertEqual(values_dict_e['estimate'], f'{e_estimate} {e_range_string}')
 
 
 class EFOTraitTest(TestCase):
@@ -199,6 +234,7 @@ class EFOTraitTest(TestCase):
         self.assertEqual(efo_trait_1.label, efo_name)
         self.assertEqual(efo_trait_1.description, efo_desc)
         self.assertIsNotNone(efo_trait_1.url)
+        self.assertEqual(efo_trait_1.category_labels_list, [])
 
         # Test empty synonyms & mapped_terms
         efo_trait_2 = self.create_efo_trait(efo_id='EFO_0000306', syn=None, terms=None)
@@ -207,6 +243,34 @@ class EFOTraitTest(TestCase):
         # Other methods
         self.assertEqual(efo_trait_2.synonyms_list, [])
         self.assertEqual(efo_trait_2.mapped_terms_list, [])
+
+
+class EmbargoedPublicationTest(TestCase):
+    def create_embargoed_publication(self, publication_id, author_name):
+        return EmbargoedPublication.objects.create(id=publication_id, firstauthor=author_name)
+
+    def test_embargoed_publication(self):
+        publication_id = 'PGP000007'
+        e_publication = self.create_embargoed_publication(publication_id=publication_id, author_name=firstauthor)
+        # Instance
+        self.assertTrue(isinstance(e_publication, EmbargoedPublication))
+        # Variables
+        self.assertEqual(e_publication.id, publication_id)
+        self.assertEqual(e_publication.firstauthor, firstauthor)
+
+
+class EmbargoedScoreTest(TestCase):
+    def create_embargoed_score(self, score_id, author_name):
+        return EmbargoedScore.objects.create(id=score_id, firstauthor=author_name)
+
+    def test_embargoed_score(self):
+        score_id = 'PGS000018'
+        e_score = self.create_embargoed_score(score_id=score_id, author_name=firstauthor)
+        # Instance
+        self.assertTrue(isinstance(e_score, EmbargoedScore))
+        # Variables
+        self.assertEqual(e_score.id, score_id)
+        self.assertEqual(e_score.firstauthor, firstauthor)
 
 
 class MetricTest(TestCase):
@@ -249,13 +313,13 @@ class MetricTest(TestCase):
         e_estimate_5 = 1.24674178
         e_estimate_5_rounded = 1.24674
 
-        metric_effect = self.create_metric(performance.num,e_type,e_name,e_name_short,e_estimate,'years',0.15,None)
+        metric_effect = self.create_metric(performance.num,e_type,e_name,e_name_short,e_estimate,'years',None,None)
         # Instance
         self.assertTrue(isinstance(metric_effect, Metric))
         # Other methods
         self.assertEqual(metric_effect.display_value(),str(e_estimate))
         self.assertEqual(metric_effect.name_tuple(), (e_name,e_name_short))
-        self.assertEqual(metric_effect.__str__(), '{} ({}): {}'.format(e_name,e_name_short,e_estimate))
+        self.assertEqual(metric_effect.__str__(), f'{e_name} ({e_name_short}): {e_estimate}')
 
         metric_effect.estimate = e_estimate_2
         self.assertEqual(metric_effect.display_value(),str(e_estimate_2_rounded))
@@ -269,19 +333,39 @@ class MetricTest(TestCase):
         metric_effect.estimate = e_estimate_5
         self.assertEqual(metric_effect.display_value(),str(e_estimate_5_rounded))
 
+        # Test Standard error
+        s_estimate = 0.123
+        s_standard_error = 0.021
+        metric_effect.estimate = s_estimate
+        metric_effect.se = s_standard_error
+        metric_effect.save()
+        self.assertEqual(metric_effect.__str__(), f'{e_name} ({e_name_short}): {s_estimate} ({s_standard_error})')
+        self.assertEqual(metric_effect.display_value(),f'{s_estimate} ({s_standard_error})')
+        s_metrics_dict = metric_effect.display_values_dict()
+        self.assertEqual(s_metrics_dict['estimate'], s_estimate)
+        self.assertEqual(s_metrics_dict['se'], s_standard_error)
+
+
         # Type "Classification Metric"
         c_type = 'Classification Metric'
         c_name = 'Concordance Statistic'
         c_name_short = 'C-index'
         c_estimate = 0.655
-        c_ci = '[0.605,0.667]'
+        c_ci_lower = 0.605
+        c_ci_upper = 0.667
+        c_ci_string = f'[{c_ci_lower}, {c_ci_upper}]'
+        c_ci = NumericRange(lower=c_ci_lower, upper=c_ci_upper, bounds='[]')
         metric_class = self.create_metric(performance.num,c_type,c_name,c_name_short,c_estimate,'',None,c_ci)
         # Instance
         self.assertTrue(isinstance(metric_class, Metric))
         # Other methods
-        self.assertEqual(metric_class.display_value(), str(c_estimate)+' '+c_ci)
+        self.assertEqual(metric_class.display_value(), f'{c_estimate} {c_ci_string}')
         self.assertEqual(metric_class.name_tuple(), (c_name,c_name_short))
-        self.assertEqual(metric_class.__str__(), '{} ({}): {} {}'.format(c_name,c_name_short,c_estimate,c_ci))
+        self.assertEqual(metric_class.__str__(), f'{c_name} ({c_name_short}): {c_estimate} {c_ci_string}')
+        c_metrics_dict = metric_class.display_values_dict()
+        self.assertEqual(c_metrics_dict['estimate'], c_estimate)
+        self.assertEqual(c_metrics_dict['ci_lower'], c_ci_lower)
+        self.assertEqual(c_metrics_dict['ci_upper'], c_ci_upper)
 
 
         # Type "Other Metric"
@@ -289,15 +373,21 @@ class MetricTest(TestCase):
         o_name = 'correlation (r)'
         o_name_short = None
         o_estimate = 0.29
-        o_ci = '[0.231,0.349]'
+        o_ci_lower = 0.231
+        o_ci_upper = 0.349
+        o_ci_string = f'[{o_ci_lower}, {o_ci_upper}]'
+        o_ci = NumericRange(lower=o_ci_lower, upper=o_ci_upper, bounds='[]')
         metric_other = self.create_metric(performance.num,o_type,o_name,o_name_short,o_estimate,'',None,o_ci)
         # Instance
         self.assertTrue(isinstance(metric_other, Metric))
         # Other methods
-        self.assertEqual(metric_other.display_value(), str(o_estimate)+' '+o_ci)
+        self.assertEqual(metric_other.display_value(), str(o_estimate)+' '+o_ci_string)
         self.assertEqual(metric_other.name_tuple(), (o_name,o_name))
-        self.assertEqual(metric_other.__str__(), '{}: {} {}'.format(o_name,o_estimate,o_ci))
-
+        self.assertEqual(metric_other.__str__(), f'{o_name}: {o_estimate} {o_ci_string}')
+        o_metrics_dict = metric_other.display_values_dict()
+        self.assertEqual(o_metrics_dict['estimate'], o_estimate)
+        self.assertEqual(o_metrics_dict['ci_lower'], o_ci_lower)
+        self.assertEqual(o_metrics_dict['ci_upper'], o_ci_upper)
 
         # Performance tests
         perf_effect = performance.effect_sizes_list
@@ -313,11 +403,12 @@ class MetricTest(TestCase):
         self.assertEqual(perf_other[0][0][0], o_name)
 
         perf_dict = performance.performance_metrics
-        self.assertEqual(perf_dict['effect_sizes'], [{ 'labels': (e_name,e_name_short), 'value': str(e_estimate) }])
+        self.assertEqual(perf_dict['effect_sizes'], [{ 'name_long': e_name, 'name_short': e_name_short, **s_metrics_dict }])
         c_value = metric_class.display_value().replace(',', ', ')
-        self.assertEqual(perf_dict['class_acc'], [{ 'labels': (c_name,c_name_short), 'value': c_value }])
+        self.assertEqual(perf_dict['class_acc'], [{ 'name_long': c_name, 'name_short': c_name_short, **c_metrics_dict }])
         o_value = metric_other.display_value().replace(',', ', ')
-        self.assertEqual(perf_dict['othermetrics'], [{ 'labels': (o_name,o_name), 'value': o_value }])
+        self.assertEqual(perf_dict['othermetrics'], [{ 'name_long': o_name, 'name_short': o_name, **o_metrics_dict }])
+
 
 class PerformanceTest(TestCase):
     """ Test the Performance model """
@@ -578,6 +669,7 @@ class SampleTest(TestCase):
         # Other methods
         self.assertRegexpMatches(sample_1.__str__(), r'^Sample\s\d+')
         self.assertIsNone(sample_1.sample_cases_percent)
+        self.assertIsNone(sample_1.display_sampleset)
 
         ## Sample object with numbers
         sample_2 = self.create_sample_numbers()
@@ -657,6 +749,7 @@ class SampleSetTest(TestCase):
         # Create samples objects
         for i in range(1,len(self.test_ancestry)+1):
             sample = sampletest.create_sample_ancestry(sample_number=i,broad=self.test_ancestry[i-1])
+            self.assertRegexpMatches(sample.__str__(), r'\s\-\s'+self.test_ancestry[i-1])
             samples.append(sample)
         # Create SampleSet object and add list of Samples
         sampleset = SampleSet.objects.create(num=num)
@@ -755,6 +848,12 @@ class ScoreTest(TestCase):
         self.assertEqual(score.method_params, self.m_params)
         self.assertEqual(score.variants_genomebuild, self.v_build)
         self.assertTrue(score.flag_asis)
+        self.assertIsNotNone(score.license)
+        self.assertTrue(score.has_default_license)
+
+        score.license = "Not the default one"
+        self.assertFalse(score.has_default_license)
+
         # Other methods
         self.assertEqual(score.__str__(),  score.id+" | "+score.name+" | ("+score.publication.__str__()+")")
         self.assertRegexpMatches(score.link_filename, r'^PGS\d+\.txt\.gz$')
@@ -812,12 +911,13 @@ class TraitCategoryTest(TestCase):
         efotraittest = EFOTraitTest()
         trait = efotraittest.get_efo_trait(efo_id, efo_name, efo_desc)
         trait_category.efotraits.add(trait)
+        trait.save()
         self.assertEqual(trait.category_labels, trait_category.label)
         self.assertNotEqual(trait.display_category_labels, '')
         category_label =  r'^<div>.*'+trait_category.label+r'.*</div>$'
         self.assertRegexpMatches(trait.display_category_labels, category_label)
-        self.assertEqual(list(trait.category_list), [trait_category])
-        self.assertEqual(list(trait.category_labels_list), [trait_category.label])
+        self.assertEqual(trait.category_list, [trait_category])
+        self.assertEqual(trait.category_labels_list, [trait_category.label])
         self.assertNotEqual(trait.display_category_labels,'')
 
         # Test to count scores per trait category
