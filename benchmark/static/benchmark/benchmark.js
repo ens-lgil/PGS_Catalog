@@ -454,18 +454,14 @@ class PGSBenchmark {
 
   // Show hide table rows depending on the selections
   show_hide_table_rows() {
-    var obj = this;
-    var index = 0;
-    $("#scores_table > tbody > tr").each(function() {
-      var pgs_id = $(this).find("td:eq(0) > a").html();
-      if (obj.pgsList.includes(pgs_id)) {
-        $(this).show();
-      }
-      else {
-        $(this).hide();
-      }
-      index ++;
+    // Transform the list of IDs in a list of ID links (for the column filtering)
+    var pgs_ids_list = this.pgsList.map(this.generate_pgs_id_link);
+    $('#scores_table').bootstrapTable('filterBy', {
+      id: pgs_ids_list
     });
+  }
+  generate_pgs_id_link(pgs_id) {
+    return '<a href="/score/'+pgs_id+'">'+pgs_id+'</a>';
   }
 
   // Get the cohort-ancestrys
@@ -535,8 +531,6 @@ class PGSBenchmark {
   // Set the group colours
   set_ancestryNames_colours() {
     var gp_colours = {};
-    //for (var i=0; i<this.ancestryNames.length; i++) {
-    //  var gp_name = this.ancestryNames[i];
     var extra_colour = 0
     for (var i=0; i<this.chartData.ancestry_groups.length; i++) {
       var gp_name = this.chartData.ancestry_groups[i];
@@ -616,7 +610,10 @@ class PGSBenchmark {
       var cohort = this.cohortsList[i];
       // Cohort with data for the selected metric
       if (available_cohorts.includes(cohort) || this.selected_data[cohort]) {
-        $('.benchmark_cohort_cb[value="'+cohort+'"]').parent().show();
+        $('.benchmark_cohort_cb[value="'+cohort+'"]').prop('disabled', false);
+        if ($('.benchmark_cohort_cb[value="'+cohort+'"]').parent().attr('title')) {
+          $('.benchmark_cohort_cb[value="'+cohort+'"]').parent().removeAttr('title');
+        }
 
         if (this.selected_data[cohort]) {
           // Get list of available groups (Ancestry) for the Cohorts/Metric/Sex selection
@@ -630,7 +627,9 @@ class PGSBenchmark {
       }
       // Cohort hasn't data for the selected metric
       else {
-        $('.benchmark_cohort_cb[value="'+cohort+'"]').parent().hide();
+        $('.benchmark_cohort_cb[value="'+cohort+'"]').prop('disabled', true);
+        var title_text = 'No data available for the cohort '+cohort+' with this performance metric';
+        $('.benchmark_cohort_cb[value="'+cohort+'"]').parent().attr('title', title_text);
       }
     }
 
@@ -656,18 +655,22 @@ class PGSBenchmark {
       $('.benchmark_order_by_rb[value="cohort"]').parent().show();
     }
 
+    // Automaticaly check the unique "Cohort" if only 1 option available
+    if ($('.benchmark_cohort_cb').not(':disabled').length < 2) {
+      $('.benchmark_cohort_cb').not(':disabled').prop('checked', true);
+    }
     // Disable "Cohort(s)" form if only 1 option available
-    if ($('.benchmark_cohort_cb').parent(':visible').length < 2) {
+    /*if ($('.benchmark_cohort_cb').parent(':visible').length < 2) {
       $('.benchmark_cohort_cb').each(function() {
         if ($(this).parent().is(':visible')) {
           $(this).prop('checked', true);
-          $(this).attr('disabled', true);
+          $(this).prop('disabled', true);
         }
       });
     }
     else {
-      $('.benchmark_cohort_cb').attr('disabled', false);
-    }
+      $('.benchmark_cohort_cb').prop('disabled', false);
+    }*/
 
     // Disable "Ancestry(ies)" form if only 1 option available
     if ($('.benchmark_ancestry_cb').parent(':visible').length < 2) {
@@ -1317,12 +1320,9 @@ function fill_cohort_form(data) {
     id = 'cohort_'+i;
     var cohort = data.cohorts[i];
     var cohort_shape = chart_shapes_html[i];
-    var is_disabled = '';
-    if (cohort_length == 1) {
-      is_disabled = ' disabled';
-    }
+
     html_cb += '<div>'+
-               '  <input type="checkbox" class="benchmark_cohort_cb" checked'+is_disabled+' value="'+cohort+'" id="'+id+'">'+
+               '  <input type="checkbox" class="benchmark_cohort_cb" checked value="'+cohort+'" id="'+id+'">'+
                '  <label class="mb-0" for="'+id+'"> '+cohort+' ('+cohort_shape+')</label>'+
                '</div>';
   }
@@ -1485,7 +1485,7 @@ function fill_sorting_form(data, cohorts) {
   for (var i=0; i<cohorts.length;i++) {
     var cohort = cohorts[i];
     var cohort_ancestry_list = data.ancestries[cohort];
-    if ($('.benchmark_cohort_cb[value="'+cohort+'"]').is(':visible') &&
+    if (!$('.benchmark_cohort_cb[value="'+cohort+'"]').prop('disabled') &&
         $('.benchmark_cohort_cb[value="'+cohort+'"]').prop('checked')) {
       var cohort_shape = chart_shapes_html[i];
       // Ancestries
@@ -1542,8 +1542,8 @@ function set_cohortsList() {
 // Set the list of selected cohorts
 function set_cohorts_selection() {
   var c_list = [];
-  $(".benchmark_cohort_cb").each(function () {
-    if ($(this).prop("checked"))  {
+  $(".benchmark_cohort_cb").not(":disabled").each(function () {
+    if ($(this).prop("checked")) {
       c_list.push($(this).val());
     }
   });

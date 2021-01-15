@@ -200,7 +200,7 @@
 
           $("#benchmark_cohort_list").on("change", ".benchmark_cohort_cb", function() {
             // Prevent having only unchecked checkboxes
-            if ($(".benchmark_cohort_cb:checked").parent(':visible').length == 0 && !$(this).prop('checked')) {
+            if ($(".benchmark_cohort_cb:checked").not(":disabled").length == 0 && !$(this).prop('checked')) {
               $(this).prop("checked", true);
             }
             else {
@@ -244,6 +244,9 @@
     <section>
       {% if table_scores %}
         <h3>Polygenic Score(s)</h3>
+        <a class="mb-3" id="filter_by_trait">Filter by trait</a> |
+        <a class="mb-3" id="filter_by_pgs_id">Filter by PGS IDs</a>
+        <br />
         {% render_table table_scores %}
       {% endif %}
     </section>
