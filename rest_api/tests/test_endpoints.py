@@ -46,6 +46,7 @@ class BrowseEndpointTest(TestCase):
         ('Scores Search', 'score/search', 1, {'query': ['pmid=25855707','trait_id=EFO_1000649']}),
         ('Scores IDs from a GWAS/ID', 'gwas/get_score_ids', 2, {'path': ['GCST001937','GCST004988']}),
         ('Trait Category', 'trait_category/all', 1),
+        ('Info', 'info', 1)
     ]
 
     client = Client()

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import Throttled
 from rest_framework.serializers import ValidationError
+from django.conf import settings
 from django.db.models import Prefetch, Q
 from catalog.models import *
 from .serializers import *
@@ -269,7 +270,10 @@ class RestListEFOTraits(generics.ListAPIView):
     def get_serializer_class(self):
         ''' Overwrite default method: use different serializer depending on the URL parameter '''
         if self.get_include_parents_param():
-            return EFOTraitOntologySerializer
+            if self.get_include_children_param():
+                return EFOTraitOntologyChildSerializer
+            else:
+                return EFOTraitOntologySerializer
         else:
             return EFOTraitExtendedSerializer
 
@@ -278,6 +282,14 @@ class RestListEFOTraits(generics.ListAPIView):
         param_include_parents = self.request.query_params.get('include_parents')
         if param_include_parents != None:
             if  param_include_parents == '1' or param_include_parents == 1:
+                return True
+        return False
+
+    def get_include_children_param(self):
+        ''' Fetch the "include_children" parameter and return True if it is set to 1 '''
+        param_include_children = self.request.query_params.get('include_children')
+        if param_include_children != None:
+            if  param_include_children == '1' or param_include_children == 1:
                 return True
         return False
 
@@ -302,10 +314,11 @@ class RestEFOTrait(generics.RetrieveAPIView):
             if  param_include_children == '0' or param_include_children == 0:
                 include_children = False
 
-        if include_children:
-            serializer = EFOTraitOntologyChildSerializer(queryset,many=False)
-        else:
-            serializer = EFOTraitOntologySerializer(queryset,many=False)
+        #if include_children:
+        #    serializer = EFOTraitOntologyChildSerializer(queryset,many=False)
+        #else:
+        #    serializer = EFOTraitOntologySerializer(queryset,many=False)
+        serializer = EFOTraitOntologySerializer(queryset,many=False)
         return Response(serializer.data)
 
 
@@ -376,6 +389,14 @@ class RestListTraitCategories(generics.ListAPIView):
 
 ## Samples / Sample Sets ##
 
+class RestListSampleSets(generics.ListAPIView):
+    """
+    Retrieve all the Cohorts
+    """
+    queryset = SampleSet.objects.all().prefetch_related('samples', 'samples__cohorts').order_by('id')
+    serializer_class = SampleSetSerializer
+
+
 class RestSampleSet(generics.RetrieveAPIView):
     """
     Retrieve one Sample Set
@@ -420,6 +441,16 @@ class RestSampleSetSearch(generics.ListAPIView):
         return queryset
 
 
+## Cohorts ##
+
+class RestListCohorts(generics.ListAPIView):
+    """
+    Retrieve all the Cohorts
+    """
+    queryset = Cohort.objects.all().prefetch_related('sample_set', 'sample_set__sampleset', 'sample_set__score_variants', 'sample_set__score_training').order_by('name_short')
+    serializer_class = CohortExtendedSerializer
+
+
 class RestCohorts(generics.ListAPIView):
     """
     Retrieve Cohort(s)
@@ -430,8 +461,7 @@ class RestCohorts(generics.ListAPIView):
         # Fetch Cohort model(s)
         try:
             cohort_symbol = self.kwargs['cohort_symbol']
-            cohort_symbol = cohort_symbol.upper()
-            queryset = Cohort.objects.filter(name_short=cohort_symbol).prefetch_related('sample_set', 'sample_set__sampleset', 'sample_set__score_variants', 'sample_set__score_training')
+            queryset = Cohort.objects.filter(name_short__iexact=cohort_symbol).prefetch_related('sample_set', 'sample_set__sampleset', 'sample_set__score_variants', 'sample_set__score_training')
         except Cohort.DoesNotExist:
             queryset = []
         return queryset
@@ -488,3 +518,27 @@ class RestGCST(generics.RetrieveAPIView):
         pgs_scores = [score.id for score in scores]
 
         return Response(pgs_scores)
+
+
+class RestInfo(generics.RetrieveAPIView):
+    """
+    Return diverse information related to the REST API and the PGS Catalog
+    """
+
+    def get(self, request):
+
+        latest_release = {
+            'date': Release.objects.only('date').order_by('-date').first().date,
+            'scores': Score.objects.count(),
+            'publications': Publication.objects.count(),
+            'traits': EFOTrait.objects.count()
+        }
+
+        data = {
+            'rest_api': settings.PGS_REST_API,
+            'latest_release': latest_release,
+            'citation': settings.PGS_CITATION,
+            'terms_of_use': settings.USEFUL_URLS['TERMS_OF_USE']
+        }
+
+        return Response(data)

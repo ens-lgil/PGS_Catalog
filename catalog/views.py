@@ -148,11 +148,17 @@ def browseby(request, view_selection):
         table = Browse_SampleSetTable(Sample.objects.filter(sampleset__isnull=False).prefetch_related('sampleset', 'cohorts').order_by('sampleset__num'))
         context['table'] = table
     else:
-        context['view_name'] = 'Polygenic Scores (PGS)'
-        score_only_attributes = ['id','name','publication','trait_efo','trait_reported','variants_number','license']
+        #context['view_name'] = 'Polygenic Scores (PGS)'
+        score_only_attributes = ['id','name','publication','trait_efo','trait_reported','variants_number','ancestries','license']
         # Query seems faster calling 'publication' as 'prefetch_related' than as 'select_related'
         table = Browse_ScoreTable(Score.objects.only(*score_only_attributes).all().order_by('num').prefetch_related(pgs_prefetch['publication'],pgs_prefetch['trait']), order_by="num")
-        context['table'] = table
+        #context['table'] = table
+        context = {
+            'view_name': 'Polygenic Scores (PGS)',
+            'table': table,
+            'has_form': 1,
+            'has_chart': 1
+        }
 
     context['has_table'] = 1
 
@@ -185,7 +191,8 @@ def pgs(request, pgs_id):
             'performance_disclaimer': performance_disclaimer(),
             'efos' : score.trait_efo.all(),
             'num_variants_pretty' : '{:,}'.format(score.variants_number),
-            'has_table': 1
+            'has_table': 1,
+            'has_chart': 1
         }
         if not score.flag_asis:
             context['score_disclaimer'] = score_disclaimer(score.publication.doi)
@@ -317,7 +324,8 @@ def efo(request, efo_id):
         'performance_disclaimer': performance_disclaimer(),
         'table_scores': Browse_ScoreTable(related_scores),
         'include_children': False if exclude_children else True,
-        'has_table': 1
+        'has_table': 1,
+        'has_chart': 1
     }
 
     # Check if there are multiple descriptions
