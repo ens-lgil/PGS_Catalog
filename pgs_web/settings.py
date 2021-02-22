@@ -60,8 +60,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_elasticsearch_dsl'
 ]
-if os.environ['PGS_LIVE_SITE'] == 'False':
-    INSTALLED_APPS.append('release.apps.ReleaseConfig')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -130,6 +128,7 @@ USEFUL_URLS = {
     'PGS_FTP_HTTP_ROOT' : 'http://ftp.ebi.ac.uk/pub/databases/spot/pgs',
     'PGS_TWITTER_URL'   : 'https://www.twitter.com/pgscatalog',
     'UOC_URL'           : 'https://www.phpc.cam.ac.uk/',
+    'TERMS_OF_USE'      : 'https://www.ebi.ac.uk/about/terms-of-use',
     'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing',
     'CurationGoogleDoc_URL' : 'https://drive.google.com/file/d/1iYoa0R3um7PtyfVO37itlGbK1emoZmD-/view',
     'CATALOG_PUBLICATION_URL' : 'https://doi.org/10.1101/2020.05.20.20108217'
@@ -148,6 +147,23 @@ if 'PGS_CURATION_SITE' in os.environ:
     PGS_ON_CURATION_SITE = os.environ['PGS_CURATION_SITE']
 else:
     PGS_ON_CURATION_SITE = False
+
+PGS_REST_API = {
+    'version': 1.6,
+    'changelog': [
+        'New endpoint "/rest/info" with data such as the REST API version, latest release date and counts, PGS citation, ...',
+        'New endpoint "/rest/cohort/all" returning all the Cohorts and their associated PGS.',
+        'New endpoint "/rest/sample_set/all" returning all the Sample Set data.'
+    ]
+}
+
+PGS_CITATION = {
+    'title': 'The Polygenic Score Catalog: an open database for reproducibility and systematic evaluation',
+    'doi': '10.1101/2020.05.20.20108217',
+    'authors': 'Samuel A. Lambert, Laurent Gil, Simon Jupp, Scott C. Ritchie, Yu Xu, Annalisa Buniello, Gad Abraham, Michael Chapman, Helen Parkinson, John Danesh, Jacqueline A.L. MacArthur, and Michael Inouye.',
+    'journal': 'medRxiv',
+    'year': 2020
+}
 
 WSGI_APPLICATION = 'pgs_web.wsgi.application'
 
