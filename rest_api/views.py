@@ -527,8 +527,15 @@ class RestInfo(generics.RetrieveAPIView):
 
     def get(self, request):
 
+        release = Release.objects.only('date').order_by('-date').first()
+        # Mainly to pass the tests as there is no data (and no release) in them
+        if release:
+            release_date = release.date
+        else:
+            release_date = "NA"
+
         latest_release = {
-            'date': Release.objects.only('date').order_by('-date').first().date,
+            'date': release_date,
             'scores': Score.objects.count(),
             'publications': Publication.objects.count(),
             'traits': EFOTrait.objects.count()

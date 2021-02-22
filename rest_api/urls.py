@@ -18,8 +18,8 @@ rest_urls = {
     'release':        'rest/release/',
     'sample_set':     'rest/sample_set/',
     'score':          'rest/score/',
-    'gwas':           'rest/gwas/get_score_ids/',
-    'info':           'rest/info/'
+    'info':           'rest/info', # No slash (added later)
+    'gwas':           'rest/gwas/get_score_ids/'
 }
 
 urlpatterns = [
