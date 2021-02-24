@@ -122,9 +122,8 @@ $(document).ready(function() {
 
         if (data_chart.length == 1){
           var key = data_chart[0][0]+'_'+type;
-          //console.log(id+": "+single_anc_svgs[key]);
-          $('#'+id).attr("width",anc_width);
-          $('#'+id).attr("height",anc_height);
+          // $('#'+id).attr("width",anc_width);
+          // $('#'+id).attr("height",anc_height);
           $('#'+id).html(single_anc_svgs[key]);
         }
         else {
@@ -264,13 +263,11 @@ $(document).ready(function() {
 
     // Control on search form(s)
     $('#search_btn').click(function() {
-      console.log("Clicked");
       if ($('#q').val() && $('#q').val() != ''){
         $('#search_form').submit();
       }
     })
     $('#search_btn_2').click(function() {
-      console.log("Clicked");
       if ($('#q2').val() && $('#q2').val() != ''){
         $('#search_form_2').submit();
       }
@@ -412,6 +409,7 @@ $(document).ready(function() {
       var entry_per_col = Math.round(Object.keys(anc_labels).length / 2);
 
       var div = $('<div>');
+      div.addClass('filter_legend');
       div.css('float','left');
 
       var opt = $('<option>');
@@ -423,13 +421,14 @@ $(document).ready(function() {
           div.css('margin-right','1rem');
           $('#ancestry_legend_content').append(div);
           div = $('<div>');
+          div.addClass('filter_legend');
           div.css('float','left');
           html = ''
           count = 0;
         }
         var label = anc_labels[key];
         var colour = anc_colours[key];
-        html += '<div style="font-size:80%"><span style="padding:0px 7px;margin-right:5px;line-height:10px;background-color:'+colour+'"></span> '+label+'</div>';
+        html += '<div><span class="filter_ancestry_box" style="background-color:'+colour+'"></span> '+label+'</div>';
 
         if (key != 'MA' && key != 'MAE') {
           var opt = $('<option>');
@@ -460,8 +459,12 @@ $(document).ready(function() {
 
 
     // Ancestry Filters
+    $("#ancestry_type_list").change(function() {
+      filter_score_table_with_ancestry();
+    });
     $("#ancestry_filter_list").on("change", ".ancestry_filter_cb",function() {
       filter_score_table_with_ancestry();
+      console.log("Change!");
     });
     $("#ancestry_filter_ind").change(function() {
       filter_score_table_with_ancestry();
@@ -487,20 +490,21 @@ $(document).ready(function() {
       $('#performances_table').bootstrapTable('filterBy', {});
       $('#samples_table').bootstrapTable('filterBy', {});
 
+      console.log("Selection: "+anc_filter);
+
       // Filter by value
-      if (anc_filter.length !== 0) {
-        console.log("Selection: "+anc_filter);
+      if (anc_filter.length != 0 && stage != '-') {
 
         // Scores
         var pgs_ids_list = [];
         var pgs_ids_list_link = [];
         var scores_table_id = '#scores_table';
-        var ancestry_col = 'display_ancestry';
+        var ancestry_col = 'ancestries';
         var data = $(scores_table_id).bootstrapTable('getData');
 
         $.each(data,function(i, row) {
           var ancestry_html = $(row[ancestry_col]);
-          var anc_list = ancestry_html.find("div.ancestry_chart_filter").attr('data-anc-'+stage);
+          var anc_list = ancestry_html.attr('data-anc-'+stage);
           if (!anc_list) {
             return;
           }
@@ -522,6 +526,7 @@ $(document).ready(function() {
         $(scores_table_id).bootstrapTable('filterBy', {
           id: pgs_ids_list_link
         });
+        pgs_tooltip();
       }
       setTimeout(function(){
         pgs_tooltip();
@@ -903,7 +908,9 @@ class PGSPieChart {
     obj.set_colours();
     obj.set_arcs_path(arcs);
 
-    obj.pie_chart_hover()
+    if (obj.arcOver) {
+      obj.pie_chart_hover();
+    }
     obj.pie_chart_transition();
   }
 
@@ -1100,10 +1107,11 @@ class PGSPieChartTinyV2 extends PGSPieChart {
 
     this.set_radius();
     this.arc_val = 0.55;
-    this.arcOver_min_val = 0.52;
-    this.arcOver_max_val = 1.02;
+    // this.arcOver_min_val = 0.52;
+    // this.arcOver_max_val = 1.02;
     this.arc = this.get_d3_arc(this.arc_val);
-    this.arcOver = this.get_d3_arc(this.arcOver_min_val, this.arcOver_max_val);
+    // this.arcOver = this.get_d3_arc(this.arcOver_min_val, this.arcOver_max_val);
+    this.arcOver = undefined;
 
     this.use_external_interaction = 0;
     this.transition_time = 0;

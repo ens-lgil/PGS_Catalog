@@ -791,168 +791,168 @@ class Score(models.Model):
     #         return None
 
 
-    @property
-    def display_ancestry(self):
-        if self.ancestries:
-            anc_labels = {
-              'AFR': 'African',
-              'AMR': 'American',
-              'EAS': 'East Asian',
-              'EUR': 'European',
-              'SAS': 'South Asian',
-              'MA' : 'Multi-ancestry (exc. European)',
-              'MAE': 'Multi-ancestry (inc. European)',
-              'OTH': 'Other',
-              'NR' : 'Not Reported'
-            }
-            pgs_id = self.id.lower()
-            bar_id = f'ac_{pgs_id}'
-            data = {}
-            data_gwas = []
-            data_dev = []
-            data_eval = []
-            data_gwas_title = []
-            data_dev_title = []
-            data_eval_title = []
-            anc_gwas = []
-            anc_dev = []
-            anc_eval = []
-            anc_all_dev = set()
-            anc_all = set()
-            if 'gwas' in self.ancestries:
-                for key,val in self.ancestries['gwas'].items():
-                    data_gwas.append(f'"{key}",{val}')
-                    label = anc_labels[key]
-                    data_gwas_title.append(f'<div class=\'anc_box\'><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
-                    # anc_gwas.append(f'"{key}"')
-                    # anc_all_dev.add(f'"{key}"')
-                    anc_gwas.append(key)
-                    anc_all_dev.add(key)
-
-            if 'dev' in self.ancestries:
-                for key,val in self.ancestries['dev'].items():
-                    data_dev.append(f'"{key}",{val}')
-                    label = anc_labels[key]
-                    #data_dev_title.append('<div>'+key+'</div>')
-                    data_dev_title.append(f'<div class=\'anc_box\'><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
-                    # anc_dev.append(f'"{key}"')
-                    # anc_all_dev.add(f'"{key}"')
-                    anc_dev.append(key)
-                    anc_all_dev.add(key)
-
-            anc_all = anc_all_dev.copy()
-            for key,val in self.ancestries['eval'].items():
-                data_eval.append(f'"{key}",{val}')
-                label = anc_labels[key]
-                data_eval_title.append(f'<div class=\'anc_box\'><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
-                # anc_eval.append(f'"{key}"')
-                # anc_all.add(f'"{key}"')
-                anc_eval.append(key)
-                anc_all.add(key)
-
-            if data_gwas or data_dev or data_eval:
-                html_list = []
-                html_filter = []
-
-                if data_gwas:
-                    id = bar_id+'_gwas'
-                    #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_gwas)+']]\'><svg id="'+id+'"></svg></div>'
-                    html_chart = '<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+''.join(data_gwas_title)+'" data-placement="right" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_gwas)+']]\'><svg id="'+id+'"></svg></div>'
-                    #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_gwas)+']]\'></div>'
-
-                    html_list.append(html_chart)
-                    if 'EUR' not in anc_gwas and 'MAE' not in anc_gwas:
-                        anc_gwas.append('non-EUR')
-                    if 'MA' not in anc_gwas and 'MAE' in anc_gwas:
-                        anc_gwas.append('MA')
-                    anc_gwas = [f'"{x}"' for x in anc_gwas]
-                    html_filter.append("data-anc-gwas='["+','.join(anc_gwas)+"]'")
-                else:
-                    html_list.append('<div class="ancestry_chart_empty">-</div>')
-
-                if data_dev:
-                    id = bar_id+'_dev'
-                    html_chart  = '<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+''.join(data_dev_title)+'" data-placement="right" data-id="'+id+'" data-type="dev" data-chart=\'[['+'],['.join(data_dev)+']]\'><svg id="'+id+'"></svg></div>'
-                    #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="dev" data-chart=\'[['+'],['.join(data_dev)+']]\'></div>'
-
-                    html_list.append(html_chart)
-                    if 'EUR' not in anc_dev and 'MAE' not in anc_dev:
-                        anc_dev.append('non-EUR')
-                    if 'MA' not in anc_dev and 'MAE' in anc_dev:
-                        anc_dev.append('MA')
-                    anc_dev = [f'"{x}"' for x in anc_dev]
-                    html_filter.append("data-anc-dev='["+','.join(anc_dev)+"]'")
-                else:
-                    html_list.append('<div class="ancestry_chart_empty">-</div>')
-
-                if data_eval:
-                    id = bar_id+'_eval'
-                    html_chart = '<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+''.join(data_eval_title)+'" data-placement="right" data-id="'+id+'" data-type="eval" data-chart=\'[['+'],['.join(data_eval)+']]\'><svg id="'+id+'"></svg></div>'
-                    #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="eval" data-chart=\'[['+'],['.join(data_eval)+']]\'></div>'
-                    html_list.append(html_chart)
-
-                    if 'EUR' not in anc_eval and 'MAE' not in anc_eval:
-                        anc_eval.append('non-EUR')
-                    if 'MA' not in anc_eval and 'MAE' in anc_eval:
-                        anc_eval.append('MA')
-                    anc_eval = [f'"{x}"' for x in anc_eval]
-                    html_filter.append("data-anc-eval='["+','.join(anc_eval)+"]'")
-                else:
-                    html_list.append('<div class="ancestry_chart_empty">-</div>')
-
-                if html_list:
-                    # Dev all
-                    if anc_all_dev:
-                        anc_all_dev = list(anc_all_dev)
-                        if 'EUR' not in anc_all_dev and 'MAE' not in anc_all_dev:
-                            anc_all_dev.append('non-EUR')
-                        if 'MA' not in anc_all_dev and 'MAE' in anc_all_dev:
-                            anc_all_dev.append('MA')
-                        anc_all_dev = [f'"{x}"' for x in anc_all_dev]
-                        html_filter.append("data-anc-dev_all='["+','.join(anc_all_dev)+"]'")
-                        # anc_all_dev = list(anc_all_dev)
-                        # if len(anc_all_dev) > 1:
-                        #     if '"MA"' not in anc_all_dev and '"MAE"' not in anc_all_dev:
-                        #         if '"EUR"' in anc_all_dev:
-                        #             anc_all_dev.append('"MAE"')
-                        #         else:
-                        #             anc_all_dev.append('"MA"')
-                        #     elif '"EUR"' in anc_all_dev and '"MA"' in anc_all_dev:
-                        #         anc_all_dev.remove('"MA"')
-                        #         if '"MAE"' not in anc_all_dev:
-                        #             anc_all_dev.append('"MAE"')
-                        # html_filter.append("data-anc-dev_all='["+','.join(anc_all_dev)+"]'")
-                    # All
-                    if anc_all:
-                        anc_all = list(anc_all)
-                        if 'EUR' not in anc_all and 'MAE' not in anc_all:
-                            anc_all.append('non-EUR')
-                        if 'MA' not in anc_all and 'MAE' in anc_all:
-                            anc_all.append('MA')
-                        anc_all = [f'"{x}"' for x in anc_all]
-                        html_filter.append("data-anc-all='["+','.join(anc_all)+"]'")
-                        # anc_all = list(anc_all)
-                        # if len(anc_all) > 1:
-                        #     if '"MA"' not in anc_all and '"MAE"' not in anc_all:
-                        #         if '"EUR"' in anc_all:
-                        #             anc_all.append('"MAE"')
-                        #         else:
-                        #             anc_all.append('"MA"')
-                        #     elif '"EUR"' in anc_all and '"MA"' in anc_all:
-                        #         anc_all.remove('"MA"')
-                        #         if '"MAE"' not in anc_all:
-                        #             anc_all.append('"MAE"')
-                        # html_filter.append("data-anc-all='["+','.join(anc_all)+"]'")
-                    html = '<div class="ancestry_chart_container">'
-                    if len(html_filter) != 0:
-                        html += '<div class="ancestry_chart_filter" data-id="'+bar_id+'_filter" '+' '.join(html_filter)+'></div>'
-                    html += '<div style="display:flex;flex-wrap:wrap">'+''.join(html_list)+'</div>'
-                    html += '</div>'
-                    return html
-                else:
-                    return None
-        else:
-            return None
+    # @property
+    # def display_ancestry(self):
+    #     if self.ancestries:
+    #         anc_labels = {
+    #           'AFR': 'African',
+    #           'AMR': 'American',
+    #           'EAS': 'East Asian',
+    #           'EUR': 'European',
+    #           'SAS': 'South Asian',
+    #           'MA' : 'Multi-ancestry (exc. European)',
+    #           'MAE': 'Multi-ancestry (inc. European)',
+    #           'OTH': 'Other',
+    #           'NR' : 'Not Reported'
+    #         }
+    #         pgs_id = self.id.lower()
+    #         chart_id = f'ac_{pgs_id}'
+    #         data = {}
+    #         data_gwas = []
+    #         data_dev = []
+    #         data_eval = []
+    #         data_gwas_title = []
+    #         data_dev_title = []
+    #         data_eval_title = []
+    #         anc_gwas = []
+    #         anc_dev = []
+    #         anc_eval = []
+    #         anc_all_dev = set()
+    #         anc_all = set()
+    #         if 'gwas' in self.ancestries:
+    #             for key,val in self.ancestries['gwas'].items():
+    #                 data_gwas.append(f'"{key}",{val}')
+    #                 label = anc_labels[key]
+    #                 data_gwas_title.append(f'<div class=\'anc_box\'><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
+    #                 # anc_gwas.append(f'"{key}"')
+    #                 # anc_all_dev.add(f'"{key}"')
+    #                 anc_gwas.append(key)
+    #                 anc_all_dev.add(key)
+    #
+    #         if 'dev' in self.ancestries:
+    #             for key,val in self.ancestries['dev'].items():
+    #                 data_dev.append(f'"{key}",{val}')
+    #                 label = anc_labels[key]
+    #                 #data_dev_title.append('<div>'+key+'</div>')
+    #                 data_dev_title.append(f'<div class=\'anc_box\'><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
+    #                 # anc_dev.append(f'"{key}"')
+    #                 # anc_all_dev.add(f'"{key}"')
+    #                 anc_dev.append(key)
+    #                 anc_all_dev.add(key)
+    #
+    #         anc_all = anc_all_dev.copy()
+    #         for key,val in self.ancestries['eval'].items():
+    #             data_eval.append(f'"{key}",{val}')
+    #             label = anc_labels[key]
+    #             data_eval_title.append(f'<div class=\'anc_box\'><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
+    #             # anc_eval.append(f'"{key}"')
+    #             # anc_all.add(f'"{key}"')
+    #             anc_eval.append(key)
+    #             anc_all.add(key)
+    #
+    #         if data_gwas or data_dev or data_eval:
+    #             html_list = []
+    #             html_filter = []
+    #
+    #             if data_gwas:
+    #                 id = chart_id+'_gwas'
+    #                 #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_gwas)+']]\'><svg id="'+id+'"></svg></div>'
+    #                 html_chart = '<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+''.join(data_gwas_title)+'" data-placement="right" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_gwas)+']]\'><svg id="'+id+'"></svg></div>'
+    #                 #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_gwas)+']]\'></div>'
+    #
+    #                 html_list.append(html_chart)
+    #                 if 'EUR' not in anc_gwas and 'MAE' not in anc_gwas:
+    #                     anc_gwas.append('non-EUR')
+    #                 if 'MA' not in anc_gwas and 'MAE' in anc_gwas:
+    #                     anc_gwas.append('MA')
+    #                 anc_gwas = [f'"{x}"' for x in anc_gwas]
+    #                 html_filter.append("data-anc-gwas='["+','.join(anc_gwas)+"]'")
+    #             else:
+    #                 html_list.append('<div class="ancestry_chart_empty">-</div>')
+    #
+    #             if data_dev:
+    #                 id = chart_id+'_dev'
+    #                 html_chart  = '<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+''.join(data_dev_title)+'" data-placement="right" data-id="'+id+'" data-type="dev" data-chart=\'[['+'],['.join(data_dev)+']]\'><svg id="'+id+'"></svg></div>'
+    #                 #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="dev" data-chart=\'[['+'],['.join(data_dev)+']]\'></div>'
+    #
+    #                 html_list.append(html_chart)
+    #                 if 'EUR' not in anc_dev and 'MAE' not in anc_dev:
+    #                     anc_dev.append('non-EUR')
+    #                 if 'MA' not in anc_dev and 'MAE' in anc_dev:
+    #                     anc_dev.append('MA')
+    #                 anc_dev = [f'"{x}"' for x in anc_dev]
+    #                 html_filter.append("data-anc-dev='["+','.join(anc_dev)+"]'")
+    #             else:
+    #                 html_list.append('<div class="ancestry_chart_empty">-</div>')
+    #
+    #             if data_eval:
+    #                 id = chart_id+'_eval'
+    #                 html_chart = '<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+''.join(data_eval_title)+'" data-placement="right" data-id="'+id+'" data-type="eval" data-chart=\'[['+'],['.join(data_eval)+']]\'><svg id="'+id+'"></svg></div>'
+    #                 #html_chart = '<div class="ancestry_chart" data-id="'+id+'" data-type="eval" data-chart=\'[['+'],['.join(data_eval)+']]\'></div>'
+    #                 html_list.append(html_chart)
+    #
+    #                 if 'EUR' not in anc_eval and 'MAE' not in anc_eval:
+    #                     anc_eval.append('non-EUR')
+    #                 if 'MA' not in anc_eval and 'MAE' in anc_eval:
+    #                     anc_eval.append('MA')
+    #                 anc_eval = [f'"{x}"' for x in anc_eval]
+    #                 html_filter.append("data-anc-eval='["+','.join(anc_eval)+"]'")
+    #             else:
+    #                 html_list.append('<div class="ancestry_chart_empty">-</div>')
+    #
+    #             if html_list:
+    #                 # Dev all
+    #                 if anc_all_dev:
+    #                     anc_all_dev = list(anc_all_dev)
+    #                     if 'EUR' not in anc_all_dev and 'MAE' not in anc_all_dev:
+    #                         anc_all_dev.append('non-EUR')
+    #                     if 'MA' not in anc_all_dev and 'MAE' in anc_all_dev:
+    #                         anc_all_dev.append('MA')
+    #                     anc_all_dev = [f'"{x}"' for x in anc_all_dev]
+    #                     html_filter.append("data-anc-dev_all='["+','.join(anc_all_dev)+"]'")
+    #                     # anc_all_dev = list(anc_all_dev)
+    #                     # if len(anc_all_dev) > 1:
+    #                     #     if '"MA"' not in anc_all_dev and '"MAE"' not in anc_all_dev:
+    #                     #         if '"EUR"' in anc_all_dev:
+    #                     #             anc_all_dev.append('"MAE"')
+    #                     #         else:
+    #                     #             anc_all_dev.append('"MA"')
+    #                     #     elif '"EUR"' in anc_all_dev and '"MA"' in anc_all_dev:
+    #                     #         anc_all_dev.remove('"MA"')
+    #                     #         if '"MAE"' not in anc_all_dev:
+    #                     #             anc_all_dev.append('"MAE"')
+    #                     # html_filter.append("data-anc-dev_all='["+','.join(anc_all_dev)+"]'")
+    #                 # All
+    #                 if anc_all:
+    #                     anc_all = list(anc_all)
+    #                     if 'EUR' not in anc_all and 'MAE' not in anc_all:
+    #                         anc_all.append('non-EUR')
+    #                     if 'MA' not in anc_all and 'MAE' in anc_all:
+    #                         anc_all.append('MA')
+    #                     anc_all = [f'"{x}"' for x in anc_all]
+    #                     html_filter.append("data-anc-all='["+','.join(anc_all)+"]'")
+    #                     # anc_all = list(anc_all)
+    #                     # if len(anc_all) > 1:
+    #                     #     if '"MA"' not in anc_all and '"MAE"' not in anc_all:
+    #                     #         if '"EUR"' in anc_all:
+    #                     #             anc_all.append('"MAE"')
+    #                     #         else:
+    #                     #             anc_all.append('"MA"')
+    #                     #     elif '"EUR"' in anc_all and '"MA"' in anc_all:
+    #                     #         anc_all.remove('"MA"')
+    #                     #         if '"MAE"' not in anc_all:
+    #                     #             anc_all.append('"MAE"')
+    #                     # html_filter.append("data-anc-all='["+','.join(anc_all)+"]'")
+    #                 html = '<div class="ancestry_chart_container">'
+    #                 if len(html_filter) != 0:
+    #                     html += '<div class="ancestry_chart_filter" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'></div>'
+    #                 html += '<div style="display:flex;flex-wrap:wrap">'+''.join(html_list)+'</div>'
+    #                 html += '</div>'
+    #                 return html
+    #             else:
+    #                 return None
+    #     else:
+    #         return None
 
 
     # @property

@@ -220,7 +220,8 @@ class Browse_ScoreTable(tables.Table):
     '''Table to browse Scores (PGS) in the PGS Catalog'''
     list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
-    ancestry_list = Column_format_html(accessor='display_ancestry', verbose_name='Ancestry distributions', orderable=False)
+    #ancestry_list = Column_format_html(accessor='display_ancestry', verbose_name='Ancestry distributions', orderable=False)
+    ancestries =  Column_format_html(accessor='ancestries', verbose_name='Ancestry distributions', orderable=False)
 
     class Meta:
         model = Score
@@ -238,7 +239,8 @@ class Browse_ScoreTable(tables.Table):
             'trait_reported',
             'list_traits',
             'variants_number',
-            'ancestry_list',
+            #'ancestry_list',
+            'ancestries',
             'ftp_link'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
@@ -270,6 +272,100 @@ class Browse_ScoreTable(tables.Table):
 
     def render_variants_number(self, value):
         return '{:,}'.format(value)
+
+    def render_ancestries(self, value, record):
+        if not value:
+            return None
+
+        anc_labels = {
+          'AFR': 'African',
+          'AMR': 'American',
+          'EAS': 'East Asian',
+          'EUR': 'European',
+          'SAS': 'South Asian',
+          'MA' : 'Multi-ancestry (exc. European)',
+          'MAE': 'Multi-ancestry (inc. European)',
+          'OTH': 'Other',
+          'NR' : 'Not Reported'
+        }
+        stages = ('gwas','dev','eval')
+
+        tooltip_headers = {
+            'gwas': 'Source of Variant Associations (GWAS)',
+            'dev': 'Score Development',
+            'eval': 'Evaluation'
+        }
+        ancestries_data = value
+        pgs_id = record.id.lower()
+        chart_id = f'ac_{pgs_id}'
+        data_type = {}
+        data_title = {}
+        anc_list = {}
+        anc_all_list = {
+            'dev_all': set(),
+            'all': set()
+        }
+
+        # Fetch the data for each stage
+        for type in stages:
+            if type in ancestries_data:
+                data_type[type] = []
+                data_title[type] = []
+                anc_list[type] = []
+                for key,val in sorted(ancestries_data[type].items(), key=lambda item: float(item[1]), reverse=True):
+                #for key,val in ancestries_data[type].items():
+                    label = anc_labels[key]
+                    data_type[type].append(f'"{key}",{val}')
+                    data_title[type].append(f'<div><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
+                    anc_list[type].append(key)
+                    if type != 'eval':
+                        anc_all_list['dev_all'].add(key)
+                    anc_all_list['all'].add(key)
+
+        # Skip if no expecting data type available
+        if data_type.keys() == 0:
+            return None
+
+        # Format the data for each stage: build the HTML
+        html_list = []
+        html_filter = []
+        for type in stages:
+            if type in data_type:
+                id = chart_id+'_'+type
+                title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+'</div>'
+                html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="gwas" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
+
+                html_list.append(html_chart)
+                anc_list_stage = anc_list[type]
+                if 'EUR' not in anc_list_stage and 'MAE' not in anc_list_stage:
+                    anc_list_stage.append('non-EUR')
+                if 'MA' not in anc_list_stage and 'MAE' in anc_list_stage:
+                    anc_list_stage.append('MA')
+                anc_list_stage = [f'"{x}"' for x in anc_list_stage]
+                html_filter.append("data-anc-"+type+"='["+','.join(anc_list_stage)+"]'")
+            else:
+                html_list.append('<div>-</div>')
+
+
+        # All dev and all data
+        for all_type in anc_all_list.keys():
+            if len(anc_all_list[all_type]):
+                anc_all_data = list(anc_all_list[all_type])
+                if 'EUR' not in anc_all_data and 'MAE' not in anc_all_data:
+                    anc_all_data.append('non-EUR')
+                if 'MA' not in anc_all_data and 'MAE' in anc_all_data:
+                    anc_all_data.append('MA')
+                anc_all_data = [f'"{x}"' for x in anc_all_data]
+                html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
+
+        # Wrap up the HTML
+        #html = '<div class="ancestry_chart_container">'
+        #html += '  <div class="ancestry_chart_filter" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'></div>'
+        #html += '  <div class="ancestry_chart_box">'+''.join(html_list)+'</div>'
+        html = '<div class="ancestry_chart_container" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'>'
+        html += ''.join(html_list)
+        html += '</div>'
+        return format_html(html)
 
 
 class Browse_ScoreTableBar(tables.Table):
