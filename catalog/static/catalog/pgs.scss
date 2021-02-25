@@ -444,6 +444,9 @@ h2 {
 .btn-secondary {
   background-color:$pgs_colour_1;
   border-color: $pgs_dark3;
+  i {
+    color:#FFF !important;
+  }
   &:hover, &:focus, &:active {
     background-color:$pgs_colour_1_lighter !important;
     border-color: $pgs_dark3;
@@ -2012,12 +2015,18 @@ footer {
   flex-direction:row;
   display: flex;
   justify-content: flex-end;
+  > div:not(:last-child) {
+    margin-right: 1rem!important;
+  }
 }
 /* Mobile phone display */
 @media screen and (max-width: 499px) {
   .pgs_form_container {
     flex-direction:column;
     justify-content: center;
+    > div {
+      margin-right:0px;
+    }
   }
 }
 
@@ -2089,12 +2098,16 @@ footer {
 
 .ancestry_chart_container {
   display:flex;
+  //display:none;
   flex-wrap:wrap;
   > div {
     width:50px;
     height:50px;
     text-align:center;
     line-height:50px;
+    &:hover {
+      cursor:default;
+    }
   }
 }
 

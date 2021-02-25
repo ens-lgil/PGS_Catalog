@@ -36,6 +36,7 @@ var anc_types = {
 
 var single_anc_svg = '<g transform="translate(25,25)"><path fill="####COLOUR####" d="M1.2246467991473533e-15,-20A20,20,0,1,1,-1.2246467991473533e-15,20A20,20,0,1,1,1.2246467991473533e-15,-20M-1.1790629835294509e-14,-11A11,11,0,1,0,1.1790629835294509e-14,11A11,11,0,1,0,-1.1790629835294509e-14,-11Z"></path><text dy=".35em" style="text-anchor: middle;">####TYPE####</text></g>'
 
+var data_toggle_table = 'table[data-toggle="table"]';
 
 $(document).ready(function() {
 
@@ -51,6 +52,9 @@ $(document).ready(function() {
     // it can provide the offset in that case too. Having a timeout
     // seems necessary to allow the browser to jump to the anchor first.
     window.setTimeout(offsetAnchor, 0.1);
+
+    //$("td>div").tooltip({container:'body'});
+    //$("td").tooltip({container:'body'});
 
     // Shorten content having long text
     shorten_displayed_content();
@@ -71,28 +75,7 @@ $(document).ready(function() {
 
 
     // Add external link icon and taget blank for external links
-    function alter_external_links(prefix) {
-      if (!prefix) {
-        prefix = '';
-      }
-      else {
-        prefix += ' '
-      }
-      $(prefix+'a[href^="http"]').attr('target','_blank');
-      $(prefix+'a[href^="http"]').not('[class*="pgs_no_icon_link"]').addClass("external-link");
-    }
-    alter_external_links();
-
-
-    // Tooltip | Popover
-    function pgs_tooltip() {
-      $('.pgs_helptip').attr('data-toggle','tooltip').attr('data-placement','bottom').attr('data-delay','800');
-      $('.pgs_helpover').attr('data-toggle','popover').attr('data-placement','right');
-
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="popover"]').popover();
-    }
-    pgs_tooltip();
+    format_table_content();
 
 
     // Draw ancestry charts
@@ -111,7 +94,6 @@ $(document).ready(function() {
           svg = svg.replace('####COLOUR####',colour);
           svg = svg.replace('####TYPE####',type_letter);
           single_anc_svgs[key] = svg;
-          //console.log(key+": "+svg);
         }
       }
 
@@ -127,19 +109,25 @@ $(document).ready(function() {
           $('#'+id).html(single_anc_svgs[key]);
         }
         else {
-          var pgs_samples_chart = new PGSPieChartTinyV2(id,data_chart,anc_width,anc_height,10);
+          console.log(id);
+          var pgs_samples_chart = new PGSPieChartTiny(id,data_chart,anc_width,anc_height,10);
           pgs_samples_chart.draw_piechart();
           pgs_samples_chart.add_text(anc_types[type]);
         }
       });
 
-      var timeout_tooltip = 1500;
-      if (navigator.userAgent.indexOf("Chrome") !== -1) {
-        timeout_tooltip = 2500;
-      }
-      setTimeout(function(){
-        pgs_tooltip();
-      }, timeout_tooltip);
+      $('.ancestry_chart_container').each(function () {
+        $(this).show();
+        //$(this).css('display','flex');
+      });
+
+      // var timeout_tooltip = 1500;
+      // if (navigator.userAgent.indexOf("Chrome") !== -1) {
+      //   timeout_tooltip = 2500;
+      // }
+      // setTimeout(function(){
+      //   pgs_tooltip();
+      // }, timeout_tooltip);
     }
 
 
@@ -154,15 +142,6 @@ $(document).ready(function() {
       ebiFrameworkRunDataProtectionBanner(localFrameworkVersion); // invoke the banner
     };
 
-    function pgs_toggle_btn(el) {
-      el.find('i').toggleClass("fa-plus-circle fa-minus-circle");
-      id = el.attr('id');
-      prefix = '#list_';
-      $(prefix+id).toggle();
-      if ($(prefix+id).is(":visible")) {
-        fadeIn($(prefix+id));
-      }
-    }
 
     // Button toggle
     $('.toggle_btn').click(function() {
@@ -175,44 +154,40 @@ $(document).ready(function() {
 
     // Shorten long text in table after each sorting or filtering of the table
     // This is due to the bootstrap-table library rebuilding the table content at each sorting/filtering
-    // Shorten long text in table after each sorting or filtering of the table
-    // This is due to the bootstrap-table library rebuilding the table content at each sorting/filtering
 
-    // Run the "post processing" once the tables have been loaded and sorted by default
-    $('table.table[data-toggle="table"]').each(function(){
-      // Remove column search if the number of rows is too small
-      var trs = $( this ).find( "tbody > tr");
-      if (trs.length < 3) {
-        $( this ).find('.fht-cell').hide()
-      }
-      // Alter the table display
-      setTimeout(function(){
-        alter_external_links('table.table[data-toggle="table"] tbody');
-        pgs_tooltip();
-        shorten_displayed_content();
-      }, 500);
-    });
+    // $(data_toggle_table).each(function(){
+    //   // Remove column search if the number of rows is too small
+    //   var trs = $( this ).find( "tbody > tr");
+    //   if (trs.length < 3) {
+    //     $(this).find('.fht-cell').hide()
+    //   }
+    //   else {
+    //     var list = ['ancestries','link_filename'];
+    //     for (var i=0; i < list.length; i++) {
+    //       var th = $(this).find(`[data-field="ancestries"] div.fht-cell`).hide();
+    //       console.log("FOUND: "+th.html());
+    //       //var cell = th.find('div.fht-cell');
+    //       //console.log(cell.text());
+    //       //$( this ).find('th[data-field="ancestries"] > div.fht-cell').remove();
+    //     }
+    //   }
+    //   // Alter the table display
+    //   format_table_content(500);
+    // });
 
     // Run the "post processing" after a manual sorting
-    $('table.table[data-toggle="table"]').on("click", ".sortable", function(){
-      setTimeout(function(){
-        alter_external_links('table.table[data-toggle="table"] tbody');
-        pgs_tooltip();
-        shorten_displayed_content();
-      }, 0);
+    $(data_toggle_table).on("click", ".sortable", function(){
+      format_table_content(10);
     });
-    // Run the "post processing" after a manual filtering
-    var timer;
-    $('.form-control').keyup(function(){
-      clearTimeout(timer);
-      if ($('.form-control').val) {
-          timer = setTimeout(function(){
-            alter_external_links('table.table[data-toggle="table"] tbody');
-            pgs_tooltip();
-            shorten_displayed_content();
-          }, 1000);
-      }
-    });
+
+    // Set timeout to catch the extra input fields in the table header which take time to load
+    // setTimeout(function(){
+    //   var input = document.querySelectorAll(".form-control");
+    //   console.log("inputs: "+input.length);
+    //   for (var i=0; i < input.length; i++ ) {
+    //     input[i].addEventListener('input', format_table_event);
+    //   }
+    // }, 500);
 
 
     // Remove pagination text if there is no pagination links
@@ -303,77 +278,77 @@ $(document).ready(function() {
 
 
     // Filter to include or not children traits
-    $("#include_children").click(function() {
-      var trait_label = '';
-
-      // Filter by value - not filtering
-      if ($(this).prop('checked')) {
-        $('#scores_table').bootstrapTable('filterBy', {});
-        $('#performances_table').bootstrapTable('filterBy', {});
-        $('#samples_table').bootstrapTable('filterBy', {});
-      }
-      // Filter by value - filter out the children terms
-      else {
-        // Scores
-        trait_label = $(this).val();
-        var default_pagination = 15;
-        var tmp_pagination =  'All';
-        var pgs_ids_list = [];
-        var pgs_ids_list_link = [];
-        var scores_table_id = '#scores_table';
-
-        var score_data = $(scores_table_id).bootstrapTable('getData');
-        $.each(score_data,function(i, row) {
-          //console.log(row['list_traits']);
-          var traits_html = $(row['list_traits']);
-          var traits = traits_html.children('a');
-          for (var j = 0; j < traits.length; j++) {
-            if (traits[j].innerHTML == trait_label) {
-              var pgs_td = row['id'];
-              var pgs_id = $(pgs_td).text();
-              pgs_ids_list.push(pgs_id);
-              pgs_ids_list_link.push(pgs_td);
-            }
-          }
-        });
-
-        $(scores_table_id).bootstrapTable('filterBy', {
-          id: pgs_ids_list_link
-        });
-
-        // Performances & Samples
-        var perf_table_id = '#performances_table';
-        if ($(perf_table_id).length != 0) {
-          var ppm_ids_list = [];
-          var pss_ids_list = [];
-
-          var perf_data = $(perf_table_id).bootstrapTable('getData');
-          $.each(perf_data,function(i, row) {
-            //console.log(row);
-            var pgs_td = row['score'];
-            var pgs_id = $(pgs_td).html(); // Only take the <a> text
-            //console.log("PGS_ID: "+pgs_id);
-            if ($.inArray(pgs_id, pgs_ids_list) != -1) {
-              // PPM
-              var ppm_id = row['id'];
-              //console.log("PPM_ID: "+ppm_td);
-              ppm_ids_list.push(ppm_id);
-              // PSS
-              var pss_td = row['sampleset'];
-              var pss_id = $(pss_td).text();
-              pss_ids_list.push('<a id="'+pss_id+'" href="/sampleset/'+pss_id+'">'+pss_id+'</a>');
-            }
-          });
-          $(perf_table_id).bootstrapTable('filterBy', {
-             id: ppm_ids_list
-          });
-          $('#samples_table').bootstrapTable('filterBy', {
-             display_sampleset: pss_ids_list
-          });
-        }
-      }
-      shorten_displayed_content();
-    });
+    // $("#include_children").click(function() {
+    //   var trait_label = '';
+    //
+    //   // Filter by value - not filtering
+    //   if ($(this).prop('checked')) {
+    //     $('#scores_table').bootstrapTable('filterBy', {});
+    //     $('#performances_table').bootstrapTable('filterBy', {});
+    //     $('#samples_table').bootstrapTable('filterBy', {});
+    //   }
+    //   // Filter by value - filter out the children terms
+    //   else {
+    //     // Scores
+    //     trait_label = $(this).val();
+    //     var default_pagination = 15;
+    //     var tmp_pagination =  'All';
+    //     var pgs_ids_list = [];
+    //     var pgs_ids_list_link = [];
+    //     var scores_table_id = '#scores_table';
+    //
+    //     var score_data = $(scores_table_id).bootstrapTable('getData');
+    //     $.each(score_data,function(i, row) {
+    //       //console.log(row['list_traits']);
+    //       var traits_html = $(row['list_traits']);
+    //       var traits = traits_html.children('a');
+    //       for (var j = 0; j < traits.length; j++) {
+    //         if (traits[j].innerHTML == trait_label) {
+    //           var pgs_td = row['id'];
+    //           var pgs_id = $(pgs_td).text();
+    //           pgs_ids_list.push(pgs_id);
+    //           pgs_ids_list_link.push(pgs_td);
+    //         }
+    //       }
+    //     });
+    //
+    //     $(scores_table_id).bootstrapTable('filterBy', {
+    //       id: pgs_ids_list_link
+    //     });
+    //
+    //     // Performances & Samples
+    //     var perf_table_id = '#performances_table';
+    //     if ($(perf_table_id).length != 0) {
+    //       var ppm_ids_list = [];
+    //       var pss_ids_list = [];
+    //
+    //       var perf_data = $(perf_table_id).bootstrapTable('getData');
+    //       $.each(perf_data,function(i, row) {
+    //         //console.log(row);
+    //         var pgs_td = row['score'];
+    //         var pgs_id = $(pgs_td).html(); // Only take the <a> text
+    //         //console.log("PGS_ID: "+pgs_id);
+    //         if ($.inArray(pgs_id, pgs_ids_list) != -1) {
+    //           // PPM
+    //           var ppm_id = row['id'];
+    //           //console.log("PPM_ID: "+ppm_td);
+    //           ppm_ids_list.push(ppm_id);
+    //           // PSS
+    //           var pss_td = row['sampleset'];
+    //           var pss_id = $(pss_td).text();
+    //           pss_ids_list.push('<a id="'+pss_id+'" href="/sampleset/'+pss_id+'">'+pss_id+'</a>');
+    //         }
+    //       });
+    //       $(perf_table_id).bootstrapTable('filterBy', {
+    //          id: ppm_ids_list
+    //       });
+    //       $('#samples_table').bootstrapTable('filterBy', {
+    //          display_sampleset: pss_ids_list
+    //       });
+    //     }
+    //   }
+    //   shorten_displayed_content();
+    // });
 
 
     // $('.ancestry_barchart').each(function() {
@@ -443,7 +418,7 @@ $(document).ready(function() {
       $('#ancestry_legend_content').append(div);
     }
 
-    // Filter to include or not children traits
+    // Filter to show/hide ancestry form
     $("#ancestry_type_list").change(function() {
       var anc = $("#ancestry_type_list option:selected").val();
       if (anc != '') {
@@ -458,33 +433,56 @@ $(document).ready(function() {
     });
 
 
+    // Include children filter
+    $("#include_children").click(function() {
+      filter_score_table();
+    });
     // Ancestry Filters
     $("#ancestry_type_list").change(function() {
-      filter_score_table_with_ancestry();
+      filter_score_table();
     });
     $("#ancestry_filter_list").on("change", ".ancestry_filter_cb",function() {
-      filter_score_table_with_ancestry();
+      filter_score_table();
       console.log("Change!");
     });
     $("#ancestry_filter_ind").change(function() {
-      filter_score_table_with_ancestry();
+      filter_score_table();
     });
 
-    function filter_score_table_with_ancestry() {
 
-      var stage = $("#ancestry_type_list option:selected").val();
+    function filter_score_table() {
 
-      var anc_filter = [];
-      $(".ancestry_filter_cb").each(function () {
-        if ($(this).prop("checked"))  {
-          anc_filter.push($(this).val());
+      // Traits
+      var trait_filter = '';
+      var include_children = $("#include_children");
+      if (include_children.length) {
+        if (!include_children.prop('checked')) {
+          trait_filter = include_children.val();
         }
-      });
-      var ind_anc = $("#ancestry_filter_ind option:selected").val();
-      if (ind_anc != '') {
-        anc_filter.push(ind_anc);
       }
-      var anc_filter_length = anc_filter.length;
+
+      // Ancestries
+      var stage;
+      var anc_filter = [];
+      if ($("#ancestry_type_list").length) {
+
+        stage = $("#ancestry_type_list option:selected").val();
+
+        if (!stage) {
+          reset_ancestry_form();
+        }
+        else {
+          $(".ancestry_filter_cb").each(function () {
+            if ($(this).prop("checked"))  {
+              anc_filter.push($(this).val());
+            }
+          });
+          var ind_anc = $("#ancestry_filter_ind option:selected").val();
+          if (ind_anc != '') {
+            anc_filter.push(ind_anc);
+          }
+        }
+      }
 
       $('#scores_table').bootstrapTable('filterBy', {});
       $('#performances_table').bootstrapTable('filterBy', {});
@@ -492,30 +490,53 @@ $(document).ready(function() {
 
       console.log("Selection: "+anc_filter);
 
+
       // Filter by value
-      if (anc_filter.length != 0 && stage != '-') {
+      if ((anc_filter.length != 0 && stage) || trait_filter != '') {
+
+        var anc_filter_length = anc_filter.length;
+        if (trait_filter != '') {
+          anc_filter_length += 1;
+        }
 
         // Scores
         var pgs_ids_list = [];
         var pgs_ids_list_link = [];
         var scores_table_id = '#scores_table';
         var ancestry_col = 'ancestries';
+        var traits_col = 'list_traits';
         var data = $(scores_table_id).bootstrapTable('getData');
 
         $.each(data,function(i, row) {
-          var ancestry_html = $(row[ancestry_col]);
-          var anc_list = ancestry_html.attr('data-anc-'+stage);
-          if (!anc_list) {
-            return;
-          }
-          anc_list = JSON.parse(anc_list);
-
           var pass_filter = 0;
-          for (var f in anc_filter) {
-            if (anc_list.includes(anc_filter[f])) {
-              pass_filter += 1;
+          // Ancestry
+          if (anc_filter.length != 0 && stage) {
+            var ancestry_html = $(row[ancestry_col]);
+            var anc_list = ancestry_html.attr('data-anc-'+stage);
+            if (!anc_list) {
+              return;
+            }
+            anc_list = JSON.parse(anc_list);
+
+            for (var f in anc_filter) {
+              if (anc_list.includes(anc_filter[f])) {
+                pass_filter += 1;
+              }
             }
           }
+
+          // Traits
+          if (trait_filter != '') {
+            var traits_html = $(row['list_traits']);
+            var traits = traits_html.children('a');
+            for (var j = 0; j < traits.length; j++) {
+              if (traits[j].innerHTML == trait_filter) {
+                pass_filter += 1;
+              }
+            }
+          }
+
+          // Select scores
           if (pass_filter == anc_filter_length) {
             var pgs_td = row['id'];
             var pgs_id = $(pgs_td).text();
@@ -523,15 +544,83 @@ $(document).ready(function() {
             pgs_ids_list_link.push(pgs_td);
           }
         });
+
         $(scores_table_id).bootstrapTable('filterBy', {
           id: pgs_ids_list_link
         });
-        pgs_tooltip();
+
+        // Performances & Samples
+        var perf_table_id = '#performances_table';
+        if ($(perf_table_id).length != 0) {
+          var ppm_ids_list = [];
+          var pss_ids_list = [];
+
+          var perf_data = $(perf_table_id).bootstrapTable('getData');
+          $.each(perf_data,function(i, row) {
+            //console.log(row);
+            var pgs_td = row['score'];
+            var pgs_id = $(pgs_td).html(); // Only take the <a> text
+            //console.log("PGS_ID: "+pgs_id);
+            if ($.inArray(pgs_id, pgs_ids_list) != -1) {
+              // PPM
+              var ppm_id = row['id'];
+              //console.log("PPM_ID: "+ppm_td);
+              ppm_ids_list.push(ppm_id);
+              // PSS
+              var pss_td = row['sampleset'];
+              var pss_id = $(pss_td).text();
+              pss_ids_list.push('<a id="'+pss_id+'" href="/sampleset/'+pss_id+'">'+pss_id+'</a>');
+            }
+          });
+          $(perf_table_id).bootstrapTable('filterBy', {
+             id: ppm_ids_list
+          });
+          $('#samples_table').bootstrapTable('filterBy', {
+             display_sampleset: pss_ids_list
+          });
+        }
       }
       setTimeout(function(){
         pgs_tooltip();
       }, 1000);
     }
+});
+
+// Wait for the rendering of the whole page (DOM + but everything else is loaded)
+$(window).on('load', function() {
+
+  // var timeout_tooltip = 1500;
+  // if (navigator.userAgent.indexOf("Chrome") !== -1) {
+  //   timeout_tooltip = 2500;
+  // }
+  setTimeout(function(){
+    pgs_tooltip();
+  }, 1500);
+
+  // Add even listener
+  var input = document.querySelectorAll(".form-control");
+  console.log("inputs: "+input.length);
+  for (var i=0; i < input.length; i++ ) {
+    input[i].addEventListener('input', format_table_event);
+  }
+
+  $(data_toggle_table).each(function(){
+    // Remove column search if the number of rows is too small
+    var trs = $( this ).find( "tbody > tr");
+    if (trs.length < 3) {
+      $(this).find('.fht-cell').hide()
+    }
+    // Remove column search where the filtering is not relevant
+    else {
+      var list = ['ancestries','link_filename'];
+      for (var i=0; i < list.length; i++) {
+        $(this).find(`[data-field='${list[i]}'] div.fht-cell`).hide();
+        $(this).find(`[data-field='${list[i]}']`).css({"vertical-align": "top"});
+      }
+    }
+    // Alter the table display
+    format_table_content(500);
+  });
 });
 
 
@@ -545,9 +634,32 @@ function search_validator(){
    }
 }
 
+
+function pgs_toggle_btn(el) {
+  el.find('i').toggleClass("fa-plus-circle fa-minus-circle");
+  id = el.attr('id');
+  prefix = '#list_';
+  $(prefix+id).toggle();
+  if ($(prefix+id).is(":visible")) {
+    fadeIn($(prefix+id));
+  }
+}
+
+
+function reset_ancestry_form() {
+  $(".ancestry_filter_cb").each(function () {
+    $(this).prop('checked', false);
+  });
+  $('#ancestry_filter_ind option:eq(0)').prop('selected', true);
+}
+
+
+
 /*
- * Function to shorten content having long text
+ * Functions to (re)format data in boostrap-table cells
  */
+
+// Function to shorten content having long text
 var showChar = 100;  // How many characters are shown by default
 var ellipsestext = "...";
 var moretext = 'Show more';
@@ -567,6 +679,43 @@ function shorten_displayed_content() {
   });
 }
 
+// Add external link icon and taget blank for external links
+function alter_external_links(prefix) {
+  if (!prefix) {
+    prefix = '';
+  }
+  else {
+    prefix += ' '
+  }
+  $(prefix+'a[href^="http"]').attr('target','_blank');
+  $(prefix+'a[href^="http"]').not('[class*="pgs_no_icon_link"]').addClass("external-link");
+}
+
+
+// Tooltip | Popover
+function pgs_tooltip() {
+  $('.pgs_helptip').attr('data-toggle','tooltip').attr('data-placement','bottom').attr('data-delay','800');
+  $('.pgs_helpover').attr('data-toggle','popover').attr('data-placement','right');
+
+  $('[data-toggle="tooltip"]').tooltip();
+  $('[data-toggle="popover"]').popover();
+}
+
+// Reformat the table content (links, shortened text, tooltips)
+function format_table_content(timeout) {
+  if (!timeout) {
+    timeout = 0;
+  }
+  setTimeout(function(){
+    alter_external_links(data_toggle_table+' tbody');
+    shorten_displayed_content();
+    pgs_tooltip();
+  }, timeout);
+}
+
+function format_table_event(e) {
+  format_table_content(750);
+}
 
 
 /*
@@ -1100,7 +1249,7 @@ class PGSPieChartSmall extends PGSPieChart {
 
 
 
-class PGSPieChartTinyV2 extends PGSPieChart {
+class PGSPieChartTiny extends PGSPieChart {
 
   constructor(svg_id,data,width,height,margin) {
     super(svg_id,data,width,height,margin);
@@ -1117,6 +1266,18 @@ class PGSPieChartTinyV2 extends PGSPieChart {
     this.transition_time = 0;
   }
 
+  // Return a D3 arc object
+  get_d3_arc(inner_coef, outer_coef) {
+    if (!outer_coef) {
+      outer_coef = 1;
+    }
+   return d3.arc()
+    .innerRadius(this.radius * inner_coef)
+    .outerRadius(this.radius * outer_coef)
+    .context(this.context);
+  }
+
+
   set_piechart() {
     this.pie = d3.pie()
       .padAngle(0.025)
@@ -1129,11 +1290,6 @@ class PGSPieChartTinyV2 extends PGSPieChart {
       .domain(this.data.map(d => d[0]))
       .range(this.data.map(d => anc_colours[d[0]]));
   }
-
-  // set_g() {
-  //   this.g = this.svg.append("g")
-  //     .attr("transform", "translate(" + this.width / 2 + "," + ((this.height - (this.margin - 20)) / 2) + ")");
-  // }
 
   set_arcs_path(arcs) {
     var obj = this;
@@ -1150,12 +1306,6 @@ class PGSPieChartTinyV2 extends PGSPieChart {
   add_text(label) {
     var obj = this;
     this.g.append("text")
-    	// .attr("transform", function(d) {
-      //   var _d = obj.arc.centroid(d);
-      //   _d[0] *= 1.5;	//multiply by a constant factor
-      //   _d[1] *= 1.5;	//multiply by a constant factor
-      //   return "translate(" + _d + ")";
-      // })
       .attr("dy", ".35em")
       .style("text-anchor", "middle")
       .text(label);

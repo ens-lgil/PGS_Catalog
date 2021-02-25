@@ -118,9 +118,10 @@
 
     <section>
     <h3>Associated Polygenic Score(s)</h3>
+    <div class="mb-3 pgs_form_container">
     {% if trait_scores_child_count and trait_scores_direct_count %}
-      <div class="clearfix mb-2">
-        <div class="mt-2 float_left pgs_note pgs_note_1">
+      <div class="mb-3" style="margin-top:auto">
+        <div class="pgs_note pgs_note_1">
           <div class="mb-2">
             <span>Note: </span>This table shows all PGS for "<b>{{ trait.label }}</b>" and any child terms of this trait in the EFO hierarchy by default.
           </div>
@@ -131,14 +132,61 @@
         </div>
       </div>
     {% elif trait_scores_child_count  %}
-      <div class="clearfix mb-2">
-        <div class="mt-2 float_left pgs_note pgs_note_1">
+      <div class="mb-3" style="margin-top:auto">
+        <div class="pgs_note pgs_note_1">
           <div>
             <span>Note: </span>This table shows PGS for child terms of "<b>{{ trait.label }}</b>" in the EFO hierarchy.
           </div>
         </div>
       </div>
     {% endif %}
+
+      <!-- Ancestry form -->
+      <div id="ancestry_filter" class="filter_container mb-3">
+        <div class="filter_header">Filter PGS by Participant Ancestry</div>
+        <div class="clearfix">
+          <div style="float:left">
+            <div class="filter_subheader mb-1">Samples included in:</div>
+            <select id="ancestry_type_list">
+              <option value="">--</option>
+               <option value="dev_all">Development [V, D]</option>
+               <option value="gwas">&nbsp;&nbsp;- GWAS [V]</option>
+                <option value="dev">&nbsp;&nbsp;- Score development [D]</option>
+               <option value="eval">PGS Evaluation [E]</option>
+               <option value="all">All Stages combined [V, D, E]</option>
+            </select>
+            <div class="filter_legend pl-1 mt-2">
+              <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
+              <div><b>D</b> - Score <b>D</b>evelopment</div>
+              <div><b>E</b> - Score <b>E</b>valuation</div>
+            </div>
+          </div>
+          <div class="filter_ancestry">
+            <div class="filter_subheader mb-1">Ancestry filter:</div>
+            <div id="ancestry_filter_list">
+              <div>
+                <input type="checkbox" class="ancestry_filter_cb" value="non-EUR" id="anc_0">
+                <label class="mb-0" for="anc_0">Non European</label>
+              </div>
+              <div>
+                <input type="checkbox" class="ancestry_filter_cb" value="MA" id="anc_10">
+                <label class="mb-0" for="anc_1">Multi Ancestry</label>
+              </div>
+              <div class="filter_subheader mt-1 mb-1">Single ancestry:</div>
+              <div>
+                <select id="ancestry_filter_ind">
+                  <option value="">--</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="ancestry_legend" class="filter_container mb-3">
+        <div class="filter_header">Ancestry legend</div>
+        <div id="ancestry_legend_content" class="clearfix"></div>
+      </div>
+    </div>
 
     {% render_table table_scores %}
     </section>
