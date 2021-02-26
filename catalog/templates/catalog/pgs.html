@@ -163,13 +163,7 @@
                   <tr>
                     <td class="table_title table_title_g" colspan="2">Ancestry distribution</td>
                   </tr>
-                  <tr>
-                    <td style="background-color:#FFF">{{ score.display_ancestry_v2|safe }}</td>
-                    <td rowspan="2">{{ score.display_ancestry_html|safe }}</td>
-                  </tr>
-                  <tr>
-                    <td style="background-color:#FFF">{{ score.display_ancestry_bar|safe }}</td>
-                  </tr>
+                  {{ score.display_ancestry_html|safe }}
                 </tbody>
               </table>
             </div>

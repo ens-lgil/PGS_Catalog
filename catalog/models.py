@@ -699,27 +699,42 @@ class Score(models.Model):
           'MAE': 'Multi-ancestry (including European)',
           'OTH': 'Other'
         }
-
+        types = {
+            'gwas': 'Source of Variant Associations (GWAS)',
+            'dev': 'Score Development',
+            'eval': 'Evaluation'
+        }
         if self.ancestries:
-            gwas = ''
-            if 'gwas' in self.ancestries:
-                gwas += '<div class="mt-2 mb-1"><b>GWAS:</b></div>'
-                for key,val in self.ancestries['gwas'].items():
-                    #data.append(f'"name":"{key}","value":{val}')
-                    gwas += f'<div class="ml-2"><span style="padding:0px 8px;margin-right:5px;line-height:10px;background-color:{colours[key]}"></span><small>{labels[key]} ({key}): {val}%</small></div>'
-            dev = ''
-            if 'dev' in self.ancestries:
-                dev += '<div class="mt-2 mb-1"><b>Dev:</b></div>'
-                for key,val in self.ancestries['dev'].items():
-                    #data.append(f'"name":"{key}","value":{val}')
-                    dev += f'<div class="ml-2"><span style="padding:0px 8px;margin-right:5px;line-height:10px;background-color:{colours[key]}"></span><small>{labels[key]} ({key}): {val}%</small></div>'
-            eval = ''
-            if 'eval' in self.ancestries:
-                eval += '<div class="mt-2 mb-1"><b>Eval:</b></div>'
-                for key,val in self.ancestries['eval'].items():
-                    #data.append(f'"name":"{key}","value":{val}')
-                    eval +=  f'<div class="ml-2"><span style="padding:0px 8px;margin-right:5px;line-height:10px;background-color:{colours[key]}"></span><small>{labels[key]} ({key}): {val}%</small></div>'
-            return f'{gwas}{dev}{eval}'
+            html = ''
+            for type in ('gwas','dev','eval'):
+                html_type = ''
+                if type in self.ancestries:
+                    html_type += f'<tr><td>{types[type]}:</td><td>'
+                    html_type += '<div style="display:flex;flex-wrap:wrap">'
+                    chart = []
+                    legend = ''
+                    id = "score_anc_"+type
+                    for key,val in sorted(self.ancestries[type].items(), key=lambda item: float(item[1]), reverse=True):
+                        chart.append(f'"{key}",{val}')
+                        legend += f'<div><span class="filter_ancestry_box" style="background-color:{colours[key]}"></span>{labels[key]}: {val}%</div>';
+                    html_type += f'<div class="ancestry_chart" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
+                    html_type += '<div class="filter_legend ml-4">'+legend+'</div>'
+                    html_type += '</div></td></tr>'
+                html += html_type
+            # dev = ''
+            # if 'dev' in self.ancestries:
+            #     dev += '<div class="mt-2 mb-1"><b>Dev:</b></div>'
+            #     for key,val in self.ancestries['dev'].items():
+            #         #data.append(f'"name":"{key}","value":{val}')
+            #         dev += f'<div class="ml-2"><span style="padding:0px 8px;margin-right:5px;line-height:10px;background-color:{colours[key]}"></span><small>{labels[key]} ({key}): {val}%</small></div>'
+            # eval = ''
+            # if 'eval' in self.ancestries:
+            #     eval += '<div class="mt-2 mb-1"><b>Eval:</b></div>'
+            #     for key,val in self.ancestries['eval'].items():
+            #         #data.append(f'"name":"{key}","value":{val}')
+            #         eval +=  f'<div class="ml-2"><span style="padding:0px 8px;margin-right:5px;line-height:10px;background-color:{colours[key]}"></span><small>{labels[key]} ({key}): {val}%</small></div>'
+            # return f'{gwas}{dev}{eval}'
+            return html
         else:
             return None
 

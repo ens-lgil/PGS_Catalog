@@ -251,7 +251,8 @@ def pgp(request, pub_id):
         context = {
             'publication' : pub,
             'performance_disclaimer': performance_disclaimer(),
-            'has_table': 1
+            'has_table': 1,
+            'has_chart': 1
         }
 
         # Display scores that were developed by this publication
@@ -270,7 +271,8 @@ def pgp(request, pub_id):
             if perf_score not in related_scores:
                 external_scores.add(perf_score)
         if len(external_scores) > 0:
-            table = Browse_ScoreTable(external_scores)
+            #table = Browse_ScoreTable(external_scores)
+            table = Browse_ScoreTableEval(external_scores)
             context['table_evaluated'] = table
 
         #Find + table the evaluations
