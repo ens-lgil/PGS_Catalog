@@ -2016,7 +2016,8 @@ footer {
 .pgs_form_container {
   flex-direction:row;
   display: flex;
-  justify-content: flex-end;
+  //justify-content: flex-end;
+  justify-content: flex-start;
   > div:not(:last-child) {
     margin-right: 1rem!important;
   }
@@ -2059,7 +2060,7 @@ footer {
 }
 .filter_ancestry_box {
   padding:0px 7px;
-  margin-right:5px;
+  margin-right:8px;
   line-height:10px;
 }
 
@@ -2117,18 +2118,6 @@ footer {
 text.pie_text {
   text-anchor:middle;
 }
-
-// .ancestry_chart {
-//   width:50px;
-//   height:50px;
-// }
-//
-// .ancestry_chart_empty {
-//   width:50px;
-//   height:50px;
-//   text-align:center;
-//   line-height:50px;
-// }
 
 .anc_AFR {
   background-color: #FFFF33; // yellow

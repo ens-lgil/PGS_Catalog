@@ -118,7 +118,7 @@
 
     <section>
     <h3>Associated Polygenic Score(s)</h3>
-    <div class="mb-3 pgs_form_container">
+    <!-- <div class="mb-3 pgs_form_container">
     {% if trait_scores_child_count and trait_scores_direct_count %}
       <div class="mb-3" style="margin-top:auto">
         <div class="pgs_note pgs_note_1">
@@ -139,10 +139,34 @@
           </div>
         </div>
       </div>
-    {% endif %}
+    {% endif %} -->
 
       <!-- Ancestry form -->
-      <div id="ancestry_filter" class="filter_container mb-3">
+      {% if ancestry_form %}
+        {{ ancestry_form|safe }}
+      {% endif %}
+      {% if trait_scores_child_count and trait_scores_direct_count %}
+        <div class="mb-3" style="margin-top:auto">
+          <div class="pgs_note pgs_note_1">
+            <div class="mb-2">
+              <span>Note: </span>This table shows all PGS for "<b>{{ trait.label }}</b>" and any child terms of this trait in the EFO hierarchy by default.
+            </div>
+            <span>
+              <input type="checkbox" {% if include_children %}checked{% endif %} id="include_children" name="include_children" value="{{ trait.label }}"/>
+              <label class="mb-0" for="include_children"> Include PGS Score(s) for child traits</label>
+            </span>
+          </div>
+        </div>
+      {% elif trait_scores_child_count  %}
+        <div class="mb-3" style="margin-top:auto">
+          <div class="pgs_note pgs_note_1">
+            <div>
+              <span>Note: </span>This table shows PGS for child terms of "<b>{{ trait.label }}</b>" in the EFO hierarchy.
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      <!-- <div id="ancestry_filter" class="filter_container mb-3">
         <div class="filter_header">Filter PGS by Participant Ancestry</div>
         <div class="clearfix">
           <div style="float:left">
@@ -186,7 +210,7 @@
         <div class="filter_header">Ancestry legend</div>
         <div id="ancestry_legend_content" class="clearfix"></div>
       </div>
-    </div>
+    </div> -->
 
     {% render_table table_scores %}
     </section>

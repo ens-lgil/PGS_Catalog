@@ -7,6 +7,7 @@ from django.db.models import Prefetch
 from django.db.models.functions import Lower
 
 from .tables import *
+from .context_processors import pgs_ancestry_labels
 
 
 generic_attributes =[ 'curation_notes','publication__title','publication__PMID','publication__authors','publication__curation_status','publication__curation_notes','publication__date_released']
@@ -38,6 +39,95 @@ def score_disclaimer(publication_url):
     return disclaimer_formatting("""The original published polygenic score is unavailable.
     The authors have provided an alternative polygenic for the Catalog.
     Please note some details and performance metrics may differ from the <a href="https://doi.org/{}">publication</a>.""".format(publication_url))
+
+
+def ancestry_form():
+    ''' HTML code for the Ancestry form. '''
+
+    ancestry_labels = pgs_ancestry_labels()
+    count = 0;
+    val = len(ancestry_labels.keys()) / 2
+    print("VAL: "+str(val))
+    entry_per_col = int((len(ancestry_labels.keys()) + 1) / 2);
+
+    div_html_1 = '<div class="filter_legend" style="float:left'
+
+    div_html = div_html_1
+    option_html = ''
+
+    legend_html = ''
+    div_content = ''
+    for key in ancestry_labels.keys():
+        if count == entry_per_col:
+            div_html += ';margin-right:1rem">'
+            div_html += div_content+'</div>'
+            legend_html += div_html
+            # New div
+            div_html = div_html_1
+            div_content = ''
+            count = 0
+
+        label = ancestry_labels[key]
+        div_content += '<div><span class="filter_ancestry_box anc_'+key+'" data-key="'+key+'"></span>'+label+'</div>'
+
+        if key != 'MA' and key != 'MAE':
+          opt = f'<option value="{key}">{label}</option>'
+          option_html += opt
+        count += 1
+    div_html += '">'+div_content+'</div>'
+    legend_html += div_html
+
+    return '''
+    <div class="mb-3 pgs_form_container">
+        <!-- Ancestry form -->
+        <div id="ancestry_filter" class="filter_container mr-3 mb-3">
+            <div class="filter_header">Filter PGS by Participant Ancestry</div>
+            <div class="clearfix">
+              <!-- Type of study -->
+              <div style="float:left">
+                <div class="filter_subheader mb-1">Samples included in:</div>
+                  <select id="ancestry_type_list">
+                    <option value="">--</option>
+                     <option value="dev_all">Development [V, D]</option>
+                     <option value="gwas">&nbsp;&nbsp;- GWAS [V]</option>
+                      <option value="dev">&nbsp;&nbsp;- Score development [D]</option>
+                     <option value="eval">PGS Evaluation [E]</option>
+                     <option value="all">All Stages combined [V, D, E]</option>
+                  </select>
+                  <div class="filter_legend pl-1 mt-2">
+                    <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
+                    <div><b>D</b> - Score <b>D</b>evelopment</div>
+                    <div><b>E</b> - Score <b>E</b>valuation</div>
+                  </div>
+                </div>
+                <!-- Type of ancestry -->
+                <div class="filter_ancestry">
+                  <div class="filter_subheader mb-1">Ancestry filter:</div>
+                  <div id="ancestry_filter_list">
+                    <div>
+                      <input type="checkbox" class="ancestry_filter_cb" value="non-EUR" id="anc_0">
+                      <label class="mb-0" for="anc_0">Non European</label>
+                    </div>
+                    <div>
+                      <input type="checkbox" class="ancestry_filter_cb" value="MA" id="anc_10">
+                      <label class="mb-0" for="anc_1">Multi Ancestry</label>
+                    </div>
+                    <div class="filter_subheader mt-1 mb-1">Single ancestry:</div>
+                    <div>
+                      <select id="ancestry_filter_ind">
+                        <option value="">--</option>
+                        {ancestry_option}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+        <div id="ancestry_legend" class="filter_container mb-3">
+            <div class="filter_header">Ancestry legend</div>
+            <div id="ancestry_legend_content" class="clearfix">{ancestry_legend}</div>
+        </div>
+    </div>'''.format(ancestry_option=option_html,ancestry_legend=legend_html)
 
 
 def get_efo_traits_data():
@@ -156,7 +246,7 @@ def browseby(request, view_selection):
         context = {
             'view_name': 'Polygenic Scores (PGS)',
             'table': table,
-            'has_form': 1,
+            'ancestry_form': ancestry_form(),
             'has_chart': 1
         }
 
@@ -252,7 +342,8 @@ def pgp(request, pub_id):
             'publication' : pub,
             'performance_disclaimer': performance_disclaimer(),
             'has_table': 1,
-            'has_chart': 1
+            'has_chart': 1,
+            'ancestry_form': ancestry_form()
         }
 
         # Display scores that were developed by this publication
@@ -327,7 +418,8 @@ def efo(request, efo_id):
         'table_scores': Browse_ScoreTable(related_scores),
         'include_children': False if exclude_children else True,
         'has_table': 1,
-        'has_chart': 1
+        'has_chart': 1,
+        'ancestry_form': ancestry_form()
     }
 
     # Check if there are multiple descriptions

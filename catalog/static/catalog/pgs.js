@@ -6,28 +6,28 @@
 // var tc_arc = get_d3_arc(tc_radius, 0.55);
 // var tc_arcOver = get_d3_arc(tc_radius, 0.53, 1.02);
 
-var anc_colours = {
-  'AFR': '#FFFF33', // yellow
-  'AMR': '#E41A1C', // red
-  'EAS': '#4DAF4A', // green
-  'EUR': '#377EB8', // blue
-  'SAS': '#984EA3', // purple
-  'MA' : '#FF7F00', // orange
-  'MAE': '#A6CEE3', // light blue   '#1f4869',//'#F781BF', // pink
-  'OTH': '#999', // grey
-  'NR' : '#BBB' // lighter grey
-};
-var anc_labels = {
-  'AFR': 'African',
-  'AMR': 'American',
-  'EAS': 'East Asian',
-  'EUR': 'European',
-  'SAS': 'South Asian',
-  'MA' : 'Multi-ancestry (excluding European)',
-  'MAE': 'Multi-ancestry (including European)',
-  'OTH': 'Other',
-  'NR' : 'Not Reported'
-};
+// var anc_colours = {
+//   'AFR': '#FFFF33', // yellow
+//   'AMR': '#E41A1C', // red
+//   'EAS': '#4DAF4A', // green
+//   'EUR': '#377EB8', // blue
+//   'SAS': '#984EA3', // purple
+//   'MA' : '#FF7F00', // orange
+//   'MAE': '#A6CEE3', // light blue   '#1f4869',//'#F781BF', // pink
+//   'OTH': '#999', // grey
+//   'NR' : '#BBB' // lighter grey
+// };
+// var anc_labels = {
+//   'AFR': 'African',
+//   'AMR': 'American',
+//   'EAS': 'East Asian',
+//   'EUR': 'European',
+//   'SAS': 'South Asian',
+//   'MA' : 'Multi-ancestry (excluding European)',
+//   'MAE': 'Multi-ancestry (including European)',
+//   'OTH': 'Other',
+//   'NR' : 'Not Reported'
+// };
 var anc_types = {
   'gwas': 'V',
   'dev' : 'D',
@@ -83,10 +83,17 @@ $(document).ready(function() {
       var anc_width = 40;
       var anc_height = 40;
 
+      anc_colours = {};
+      $('.filter_ancestry_box').each(function() {
+        var key = $(this).data('key');
+        var colour = $(this).css('background-color');
+        anc_colours[key] = colour;
+      });
+
       // Pre-generate chart SVG code for single ancestry category
       single_anc_svgs = {};
       for (anc_sym in anc_colours) {
-        colour = anc_colours[anc_sym];
+        var colour = anc_colours[anc_sym];
         for (type in anc_types) {
           var type_letter = anc_types[type];
           var key = anc_sym+"_"+type;
@@ -305,44 +312,43 @@ $(document).ready(function() {
     // });
 
 
-    if($('#ancestry_legend_content').length) {
-      var count = 0;
-      var entry_per_col = Math.round(Object.keys(anc_labels).length / 2);
-
-      var div = $('<div>');
-      div.addClass('filter_legend');
-      div.css('float','left');
-
-      var opt = $('<option>');
-
-      var html = '';
-      for (key in anc_labels) {
-        if (count == entry_per_col) {
-          div.html(html);
-          div.css('margin-right','1rem');
-          $('#ancestry_legend_content').append(div);
-          div = $('<div>');
-          div.addClass('filter_legend');
-          div.css('float','left');
-          html = ''
-          count = 0;
-        }
-        var label = anc_labels[key];
-        var colour = anc_colours[key];
-        html += '<div><span class="filter_ancestry_box" style="background-color:'+colour+'"></span> '+label+'</div>';
-
-        if (key != 'MA' && key != 'MAE') {
-          var opt = $('<option>');
-          opt.attr('value', key);
-          opt.html(label);
-          $('#ancestry_filter_ind').append(opt);
-        }
-
-        count += 1;
-      }
-      div.html(html);
-      $('#ancestry_legend_content').append(div);
-    }
+    // if($('#ancestry_legend_content').length) {
+    //   var count = 0;
+    //   var entry_per_col = Math.round(Object.keys(anc_labels).length / 2);
+    //
+    //   var div = $('<div>');
+    //   div.addClass('filter_legend');
+    //   div.css('float','left');
+    //
+    //   var opt = $('<option>');
+    //
+    //   var html = '';
+    //   for (key in anc_labels) {
+    //     if (count == entry_per_col) {
+    //       div.html(html);
+    //       div.css('margin-right','1rem');
+    //       $('#ancestry_legend_content').append(div);
+    //       div = $('<div>');
+    //       div.addClass('filter_legend');
+    //       div.css('float','left');
+    //       html = ''
+    //       count = 0;
+    //     }
+    //     var label = anc_labels[key];
+    //     var colour = anc_colours[key];
+    //     html += '<div><span class="filter_ancestry_box" style="background-color:'+colour+'"></span> '+label+'</div>';
+    //
+    //     if (key != 'MA' && key != 'MAE') {
+    //       var opt = $('<option>');
+    //       opt.attr('value', key);
+    //       opt.html(label);
+    //       $('#ancestry_filter_ind').append(opt);
+    //     }
+    //     count += 1;
+    //   }
+    //   div.html(html);
+    //   $('#ancestry_legend_content').append(div);
+    // }
 
     // Filter to show/hide ancestry form
     $("#ancestry_type_list").change(function() {
@@ -475,7 +481,6 @@ $(document).ready(function() {
             if (pass_filter == anc_filter_length) {
               var pgs_td = row['id'];
               var pgs_id = $(pgs_td).text().split('(')[0];
-              console.log(pgs_id);
               if (!pgs_ids_list.includes(pgs_id)) {
                 pgs_ids_list.push(pgs_id);
               }
@@ -524,6 +529,7 @@ $(document).ready(function() {
       }, 1000);
     }
 });
+
 
 // Wait for the rendering of the whole page (DOM + but everything else is loaded)
 $(window).on('load', function() {

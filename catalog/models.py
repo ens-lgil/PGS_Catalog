@@ -2,6 +2,10 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.postgres.fields import DecimalRangeField
+from .context_processors import pgs_ancestry_labels
+
+
+
 
 class Publication(models.Model):
     """Class for publications with PGS"""
@@ -671,34 +675,34 @@ class Score(models.Model):
             for key,val in self.ancestries['eval'].items():
                 eval += f'<li>{key}: {val}</li>'
             eval = f'<div class="mr-1">EVAL:<ul>{eval}</ul></div>'
-            #print(f'<div class="clearfix">{gwas}{dev}{eval}</div>')
-            print("YES-end")
             return f'<div class="flex">{gwas}{dev}{eval}</div>'
         else:
             return None
 
+
     @property
     def display_ancestry_html(self):
-        colours = {
-          'AFR': '#FFFF33', # yellow
-          'AMR': '#E41A1C', # red
-          'EAS': '#4DAF4A', # green
-          'EUR': '#377EB8', # blue
-          'SAS': '#984EA3', # purple
-          'MA' : '#FF7F00', # orange
-          'MAE': '#A6CEE3', # light blue   '#1f4869',//'#F781BF', // pink
-          'OTH': '#999' # grey
-        }
-        labels = {
-          'AFR': 'African',
-          'AMR': 'American',
-          'EAS': 'East Asian',
-          'EUR': 'European',
-          'SAS': 'South Asian',
-          'MA' : 'Multi-ancestry',
-          'MAE': 'Multi-ancestry (including European)',
-          'OTH': 'Other'
-        }
+        # colours = {
+        #   'AFR': '#FFFF33', # yellow
+        #   'AMR': '#E41A1C', # red
+        #   'EAS': '#4DAF4A', # green
+        #   'EUR': '#377EB8', # blue
+        #   'SAS': '#984EA3', # purple
+        #   'MA' : '#FF7F00', # orange
+        #   'MAE': '#A6CEE3', # light blue   '#1f4869',//'#F781BF', // pink
+        #   'OTH': '#999' # grey
+        # }
+        # labels = {
+        #   'AFR': 'African',
+        #   'AMR': 'American',
+        #   'EAS': 'East Asian',
+        #   'EUR': 'European',
+        #   'SAS': 'South Asian',
+        #   'MA' : 'Multi-ancestry',
+        #   'MAE': 'Multi-ancestry (including European)',
+        #   'OTH': 'Other'
+        # }
+        ancestry_labels = pgs_ancestry_labels()
         types = {
             'gwas': 'Source of Variant Associations (GWAS)',
             'dev': 'Score Development',
@@ -716,7 +720,8 @@ class Score(models.Model):
                     id = "score_anc_"+type
                     for key,val in sorted(self.ancestries[type].items(), key=lambda item: float(item[1]), reverse=True):
                         chart.append(f'"{key}",{val}')
-                        legend += f'<div><span class="filter_ancestry_box" style="background-color:{colours[key]}"></span>{labels[key]}: {val}%</div>';
+                        label = ancestry_labels[key]
+                        legend += f'<div><span class="filter_ancestry_box anc_{key}" data-key="{key}"></span>{label}: {val}%</div>';
                     html_type += f'<div class="ancestry_chart" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
                     html_type += '<div class="filter_legend ml-4">'+legend+'</div>'
                     html_type += '</div></td></tr>'
@@ -738,7 +743,18 @@ class Score(models.Model):
         else:
             return None
 
-
+    # def ancestry_labels(self):
+    #     return {
+    #       'AFR': {'label': 'African', 'colour': '#FFFF33'}, # yellow
+    #       'AMR': {'label': 'American', 'colour': '#E41A1C'}, # red
+    #       'EAS': {'label': 'East Asian','colour': '#4DAF4A'}, # green
+    #       'EUR': {'label': 'European', 'colour': '#377EB8'}, # blue
+    #       'SAS': {'label': 'South Asian', 'colour': '#984EA3'}, # purple
+    #       'MA' : {'label': 'Multi-ancestry', 'colour': '#FF7F00'}, # orange
+    #       'MAE': {'label': 'Multi-ancestry (including European)', 'colour': '#A6CEE3'}, # light blue
+    #       'OTH': {'label': 'Other', 'colour': '#999' }, # grey
+    #       'NR' : {'label': 'Not Reported', 'colour':'#BBB'} # lighter grey
+    #     }
     # @property
     # def display_ancestry_bak(self):
     #     if self.ancestries:

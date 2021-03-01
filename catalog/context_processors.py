@@ -25,3 +25,21 @@ def pgs_search_examples(request):
     return {
         'pgs_search_examples': '<a href="/search?q=breast cancer">breast cancer</a>, <a href="/search?q=glaucoma">glaucoma</a><span class="extra_example">, <a href="/search?q=EFO_0001645">EFO_0001645</a></span>'
     }
+
+def pgs_info(request):
+    return {
+        'pgs_citation': settings.PGS_CITATION
+    }
+
+def pgs_ancestry_labels():
+    return {
+      'AFR': 'African',
+      'AMR': 'American',
+      'EAS': 'East Asian',
+      'EUR': 'European',
+      'SAS': 'South Asian',
+      'MA' : 'Multi-ancestry',
+      'MAE': 'Multi-ancestry (including European)',
+      'OTH': 'Other',
+      'NR' : 'Not Reported'
+    }

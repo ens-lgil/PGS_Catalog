@@ -88,9 +88,12 @@
             <h3>Publications</h3>
           {% endif %}
 
-          {% if has_form %}
+
+          {% if ancestry_form %}
+            {{ ancestry_form|safe }}
+          {% endif %}
+          <!-- {% if has_form %}
           <div class="mb-3 pgs_form_container">
-            <!-- Ancestry form -->
             <div id="ancestry_filter" class="filter_container mr-3 mb-3">
               <div class="filter_header">Filter PGS by Participant Ancestry</div>
               <div class="clearfix">
@@ -136,7 +139,7 @@
               <div id="ancestry_legend_content" class="clearfix"></div>
             </div>
           </div>
-          {% endif %}
+          {% endif %} -->
 
           {% render_table table %}
         {% else %}
