@@ -226,8 +226,11 @@ class Browse_TraitTable(tables.Table):
 
 class Browse_ScoreTable(tables.Table):
     '''Table to browse Scores (PGS) in the PGS Catalog'''
+    id = tables.Column(accessor='id', verbose_name='Polygenic Score (PGS) ID & Name', orderable=True)
     list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
+    #ancestry_list = Column_format_html(accessor='display_ancestry', verbose_name='Ancestry distributions', orderable=False)
+    ancestries =  Column_format_html(accessor='ancestries', verbose_name='Ancestry distribution', orderable=False)
 
     class Meta:
         model = Score
@@ -240,17 +243,19 @@ class Browse_ScoreTable(tables.Table):
         }
         fields = [
             'id',
-            'name',
+            #'name',
             'publication',
             'trait_reported',
             'list_traits',
             'variants_number',
+            #'ancestry_list',
+            'ancestries',
             'ftp_link'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
 
-    def render_id(self, value):
-        return format_html('<a href="/score/{}">{}</a>', value, value)
+    def render_id(self, value, record):
+        return format_html('<a href="/score/{}">{}</a><div class="small">({})</div>', value, value, record.name)
 
     def render_publication(self, value):
         return publication_format(value)
@@ -273,6 +278,163 @@ class Browse_ScoreTable(tables.Table):
     def render_variants_number(self, value):
         return '{:,}'.format(value)
 
+    def render_ancestries(self, value, record):
+        if not value:
+            return None
+
+        anc_labels = {
+          'AFR': 'African',
+          'AMR': 'American',
+          'EAS': 'East Asian',
+          'EUR': 'European',
+          'SAS': 'South Asian',
+          'MA' : 'Multi-ancestry (exc. European)',
+          'MAE': 'Multi-ancestry (inc. European)',
+          'OTH': 'Other',
+          'NR' : 'Not Reported'
+        }
+        stages = ('gwas','dev','eval')
+
+        tooltip_headers = {
+            'gwas': 'Source of Variant Associations (GWAS)',
+            'dev': 'Score Development',
+            'eval': 'Evaluation'
+        }
+        ancestries_data = value
+        pgs_id = record.id.lower()
+        chart_id = f'ac_{pgs_id}'
+        data_type = {}
+        data_title = {}
+        anc_list = {}
+        anc_all_list = {
+            'dev_all': set(),
+            'all': set()
+        }
+
+        # Fetch the data for each stage
+        for type in stages:
+            if type in ancestries_data:
+                data_type[type] = []
+                data_title[type] = []
+                anc_list[type] = []
+                for key,val in sorted(ancestries_data[type].items(), key=lambda item: float(item[1]), reverse=True):
+                #for key,val in ancestries_data[type].items():
+                    label = anc_labels[key]
+                    data_type[type].append(f'"{key}",{val}')
+                    data_title[type].append(f'<div><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
+                    anc_list[type].append(key)
+                    if type != 'eval':
+                        anc_all_list['dev_all'].add(key)
+                    anc_all_list['all'].add(key)
+
+        # Skip if no expecting data type available
+        if data_type.keys() == 0:
+            return None
+
+        # Format the data for each stage: build the HTML
+        html_list = []
+        html_filter = []
+        for type in stages:
+            if type in data_type:
+                id = chart_id+'_'+type
+                title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+'</div>'
+                html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
+
+                html_list.append(html_chart)
+                anc_list_stage = anc_list[type]
+                if 'EUR' not in anc_list_stage and 'MAE' not in anc_list_stage:
+                    anc_list_stage.append('non-EUR')
+                if 'MA' not in anc_list_stage and 'MAE' in anc_list_stage:
+                    anc_list_stage.append('MA')
+                anc_list_stage = [f'"{x}"' for x in anc_list_stage]
+                html_filter.append("data-anc-"+type+"='["+','.join(anc_list_stage)+"]'")
+            else:
+                html_list.append('<div>-</div>')
+
+
+        # All dev and all data
+        for all_type in anc_all_list.keys():
+            if len(anc_all_list[all_type]):
+                anc_all_data = list(anc_all_list[all_type])
+                if 'EUR' not in anc_all_data and 'MAE' not in anc_all_data:
+                    anc_all_data.append('non-EUR')
+                if 'MA' not in anc_all_data and 'MAE' in anc_all_data:
+                    anc_all_data.append('MA')
+                anc_all_data = [f'"{x}"' for x in anc_all_data]
+                html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
+
+        # Wrap up the HTML
+        #html = '<div class="ancestry_chart_container">'
+        #html += '  <div class="ancestry_chart_filter" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'></div>'
+        #html += '  <div class="ancestry_chart_box">'+''.join(html_list)+'</div>'
+        html = '<div class="ancestry_chart_container" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'>'
+        html += ''.join(html_list)
+        html += '</div>'
+        return format_html(html)
+
+
+class Browse_ScoreTableEval(Browse_ScoreTable):
+    class Meta:
+        attrs = {
+            "id": "scores_eval_table"
+        }
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+
+# class Browse_ScoreTableBar(tables.Table):
+#     '''Table to browse Scores (PGS) in the PGS Catalog'''
+#     list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
+#     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
+#     #display_ancestry_bar = Column_format_html(accessor='display_ancestry_bar', verbose_name='Ancestry distributions', orderable=False)
+#     display_ancestry_bar = Column_format_html(accessor='display_ancestry_bar', verbose_name='Ancestry distributions', orderable=False)
+#     class Meta:
+#         model = Score
+#         attrs = {
+#             "id": "scores_table",
+#             "data-show-columns" : "true",
+#             "data-sort-name" : "id",
+#             "data-page-size" : page_size,
+#             "data-export-options" : '{"fileName": "pgs_scores_data"}'
+#         }
+#         fields = [
+#             'id',
+#             'name',
+#             'publication',
+#             'trait_reported',
+#             'list_traits',
+#             'variants_number',
+#             'display_ancestry_bar',
+#             'ftp_link'
+#         ]
+#         template_name = 'catalog/pgs_catalog_django_table.html'
+#
+#     def render_id(self, value):
+#         return format_html('<a href="/score/{}">{}</a>', value, value)
+#
+#     def render_publication(self, value):
+#         citation = format_html(' '.join([value.id, '<span class="pgs_pub_details">', value.firstauthor, '<i>et al.</i>', value.journal, '(%s)'%value.date_publication.strftime('%Y'), '</span>']))
+#         is_preprint = ''
+#         if value.is_preprint:
+#             is_preprint = format_html('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
+#         return format_html('<a href="'+publication_path+'/{}">{}</a>{}', value.id, citation, is_preprint)
+#
+#     def render_list_traits(self, value):
+#         l = []
+#         for x in value:
+#             l.append('<a href="/trait/{}">{}</a>'.format(x[0], x[1]))
+#         return format_html('<br>'.join(l))
+#
+#     def render_ftp_link(self, value, record):
+#         id = value.split('.')[0]
+#         ftp_link = '{}/scores/{}/ScoringFiles/'.format(settings.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], id)
+#         ftp_file_link = ftp_link+value
+#         license_icon = ''
+#         if record.has_default_license == False:
+#             license_icon = f'<span class="pgs-info-icon pgs_helpover ml-2" title="Terms and Licenses" data-content="{record.license}" data-placement="left"> <span class="only_export"> - Check </span>Terms/Licenses</span>'
+#         return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
+#
+#     def render_variants_number(self, value):
+#         return '{:,}'.format(value)
 
 class Browse_SampleSetTable(tables.Table):
     '''Table to browse SampleSets (PSS; used in PGS evaluations) in the PGS Catalog'''
@@ -345,6 +507,25 @@ class SampleTable_variants(tables.Table):
             l.append('EuropePMC: <a href="{}">{}</a>'.format(url, value['PMID']))
         return format_html('<br>'.join(l))
 
+
+class SampleTable_variants_simple(SampleTable_variants):
+
+    class Meta:
+        attrs = {
+            "data-show-columns" : "false",
+            "data-sort-name" : "display_ancestry",
+            'data-search' : "false",
+            'data-filter-control': "false",
+            "data-export-options" : '{"fileName": "pgs_sample_variants_data"}'
+        }
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+
+    def render_sources(self, value):
+        pmid = ''
+        if 'PMID' in value and value['PMID']:
+            pmid = '<a href="https://europepmc.org/search?query={}">{}</a>'.format(value['PMID'], value['PMID'])
+        return format_html(pmid)
 
 class SampleTable_training(tables.Table):
     '''Table on PGS page - displays information about the samples used in Score Development'''

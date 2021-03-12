@@ -85,6 +85,10 @@
       <script defer src="https://unpkg.com/bootstrap-table@1.18.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     {% endif %}
 
+    <!-- D3 graph library -->
+    {% if has_chart %}
+      <script src="https://unpkg.com/d3@6.2.0/dist/d3.min.js"></script>
+    {% endif %}
 
     <!-- PGS Javascript file -->
     {% if is_pgs_app_on_gae %}
@@ -93,6 +97,23 @@
       {% compress js file pgs_min %}
         <script defer src="{% static 'catalog/pgs.js' %}"></script>
       {% endcompress %}
+    {% endif %}
+
+    <!-- Benchmark -->
+    {% if is_benchmark %}
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+      <script src="https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"></script>
+      {% if is_pgs_app_on_gae %}
+        <link rel="stylesheet" href="{% static 'benchmark/benchmark.min.css' %}" type="text/css" media="all" />
+        <script src="{% static 'benchmark/benchmark.min.js' %}"></script>
+      {% else %}
+        {% compress css %}
+            <link type="text/x-scss" href="{% static 'benchmark/benchmark.scss' %}" rel="stylesheet" media="screen">
+        {% endcompress %}
+        {% compress js file benchmark_min %}
+          <script src="{% static 'benchmark/benchmark.js' %}"></script>
+        {% endcompress %}
+      {% endif %}
     {% endif %}
 
     {% if is_pgs_live_site and is_pgs_live_site != 'False' %}

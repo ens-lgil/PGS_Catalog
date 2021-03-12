@@ -32,6 +32,7 @@ $header_height_with_margin_mobile: $header_height_with_margin + 58px;
 $footer_height: 97px;
 $footer_height_mobile:150px;
 
+$chart_font_family:"Verdana", "Arial", "sans-serif";
 
 /* CSS mixin */
 
@@ -225,9 +226,12 @@ h2 {
 }
 
 .nav-item {
-  border-left: 1px solid #FFF;
+  //border-left: 1px solid #FFF;
+  font-size: 0.9em;
+  border-left: 1px solid $pgs_colour_1;
   &:last-child {
-    border-right:1px solid #FFF;
+    //border-right:1px solid #FFF;
+    border-right: 1px solid $pgs_colour_1;
   }
   &:hover {
     background-color: $pgs_colour_1;
@@ -256,7 +260,7 @@ h2 {
   background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
 }
 .navbar-collapse {
-  max-width: 500px;
+  max-width: 550px;
 }
 .navbar-nav {
   margin-right: 2rem;
@@ -268,6 +272,9 @@ h2 {
     &:hover, &:active, &:focus {
       color: #FFF;
       border-bottom: none;
+      span {
+        color: #FFF !important;
+      }
     }
   }
 }
@@ -445,11 +452,16 @@ h2 {
 
 /* Bootstrap4 overwrite (other than the navbar)*/
 
-
+.bootstrap-table .fixed-table-container .table thead th .sortable {
+  padding-right: 20px !important;
+}
 
 .btn-secondary {
   background-color:$pgs_colour_1;
   border-color: $pgs_dark3;
+  i {
+    color:#FFF !important;
+  }
   &:hover, &:focus, &:active {
     background-color:$pgs_colour_1_lighter !important;
     border-color: $pgs_dark3;
@@ -467,10 +479,12 @@ h2 {
 }
 .dropdown-menu-right {
   .dropdown-item  {
-    font-size: 14px;
+    //font-size: 14px;
+    font-size: 12px;
   }
 }
 .dropdown-item {
+  font-size: 0.9rem;
    &:hover {
     background-color:$pgs_colour_1;
     color:#FFF;
@@ -590,6 +604,31 @@ th .th-inner {
         padding-left:10px;
         padding-right:8px;
       }
+    }
+  }
+}
+
+.pgs_benchmark {
+  display:flex;
+  justify-content:center;
+  a {
+    display:block;
+    padding:10px 5rem;
+    border:1px solid $pgs_colour_1;
+    color:$pgs_colour_1;
+    border-radius: 2px;
+    box-shadow: 2px 2px 8px $pgs_darkC;
+    font-weight:200;
+    font-size:30px;
+    &:hover, &:focus {
+      color: #FFF;
+      border:1px solid $pgs_colour_1_lighter;
+      background-color: $pgs_colour_1_lighter;
+      transition: background-color .1s;
+    }
+    div:not(:first-child) {
+      font-size:40px;
+      font-weight: 400;
     }
   }
 }
@@ -958,6 +997,7 @@ td > ul {
   background-color: $pgs_colour_2;
 }
 
+
 .pgs_color_1 {
   color: $pgs_colour_1 !important;
 }
@@ -1117,7 +1157,14 @@ a.link-with-btn {
 .sample_piechart_container {
   float:left;
   border:1px solid $pgs_darkC;
-  > div {
+  text-align: center;
+  padding-top: 6px;
+  > div:first-child {
+    font-size: 12px;
+    font-weight: bold;
+    color: $pgs_dark5;
+  }
+  > div:last-child {
     width:200px;
     height:150px;
   }
@@ -1294,6 +1341,22 @@ td.trait_categories {
     margin-top: 2px;
   }
 }
+.trait_item_selected {
+  display:block;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius:8px;
+  color: $pgs_colour_1_lighter;
+  border: 1px solid $pgs_colour_1_lighter;
+  margin-bottom:4px;
+  span:nth-child(2) {
+    font-size: 90%;
+    margin-right: 8px;
+  }
+  span:nth-child(3) {
+    margin-top: 2px;
+  }
+}
 .trait_link {
   padding-right: 8px;
   color: $pgs_colour_1_lighter !important;
@@ -1381,6 +1444,7 @@ footer {
     }
   }
 }
+
 
 /* Search results */
 .pgs_result {
@@ -1570,7 +1634,7 @@ footer {
     font-size: 24px !important;
   }
 
-  .pgs_browse {
+  .pgs_browse, .pgs_benchmark {
     > div {
       > a {
         padding:5px 20px;
@@ -1581,12 +1645,12 @@ footer {
         > div:nth-child(2) {
           font-size: 30px;
         }
-        .pgs_browse_score {
-          > div:first-child {
-            font-size: 30px;
-          }
-        }
       }
+    }
+  }
+  .pgs_browse_score {
+    > div:first-child {
+      font-size: 30px;
     }
   }
 
@@ -1604,6 +1668,12 @@ footer {
     margin-bottom: 0.5rem;
     > div:not(:last-child) {
       margin-bottom:0.5rem;
+    }
+  }
+
+  .filter_container {
+    label, select {
+      font-size: 12px;
     }
   }
 
@@ -1661,6 +1731,7 @@ footer {
       }
     }
   }
+
   .bootstrap-table {
     font-size: 12px;
     .form-control {
@@ -1732,6 +1803,7 @@ footer {
     flex-flow: column;
   }
 }
+
 @media screen and (min-width: 500px) and (max-width: 767px){
   .navbar {
     padding: 0rem 2rem;
@@ -1768,7 +1840,6 @@ footer {
 }
 
 @media screen and (max-width: 991px) {
-
   .navbar {
     justify-content:flex-start;
     display: flex;
@@ -1841,12 +1912,39 @@ footer {
     padding-right: 2.5rem;
   }
 }
-@media screen and (min-width: 992px) and (max-width: 1075px) {
+@media screen and (min-width: 992px) and (max-width: 1060px) {
+  .navbar-brand, .navbar-nav {
+    margin-right: 1rem !important;
+  }
+  .extra_example {
+    display: none;
+  }
+}
+@media screen and (min-width: 992px) and (max-width: 1099px) {
+  .search_box{
+    width:18vw;
+  }
+  .navbar {
+    .nav-link {
+      padding: 0.3rem 0.4rem !important;
+    }
+  }
+  /*.nav-item {
+    //padding: 0.3rem 0.4rem !important;
+    padding:4px 4px;
+  }*/
+}
+@media screen and (min-width: 1100px) {
+  .search_box{
+    width:18vw;
+  }
+}
+@media screen and (min-width: 1136px) {
   .search_box{
     width:20vw;
   }
 }
-@media screen and (min-width: 1076px) {
+@media screen and (min-width: 1205px) {
   .search_box{
     width:25vw;
   }
@@ -1877,6 +1975,13 @@ footer {
     border-bottom: 1px solid $pgs_colour_2;
     > div {
       margin: 10px 0px;
+    }
+  }
+  .pgs_benchmark {
+    display: block;
+    a {
+      padding:5px 20px;
+      margin: 0px 15px;
     }
   }
   .pgs_desc {
@@ -1922,5 +2027,73 @@ footer {
   .pgs_browse {
     margin-left: 7vw;
     margin-right: 7vw;
+  }
+}
+
+
+/* Form */
+.pgs_form_container {
+  flex-direction:row;
+  display: flex;
+  //justify-content: flex-end;
+  justify-content: flex-start;
+  > div:not(:last-child) {
+    margin-right: 1rem!important;
+  }
+}
+/* Mobile phone display */
+@media screen and (max-width: 499px) {
+  .pgs_form_container {
+    flex-direction:column;
+    justify-content: center;
+    > div {
+      margin-right:0px;
+    }
+  }
+}
+
+
+/* Ancestry */
+.filter_container {
+  border:1px solid $pgs_darkC;
+  border-radius:4px;
+  padding:4px 10px;
+}
+.filter_header {
+  font-weight: 200;
+  border-bottom:1px solid $pgs_darkC;
+  color: $pgs_dark0;
+  padding-bottom:4px;
+  margin-bottom: 6px;
+  text-align:center;
+}
+.filter_subheader {
+  font-weight: 200;
+}
+.filter_ancestry {
+  float:left;
+  margin-left:1rem;
+  padding-left:1rem;
+  border-left:1px solid #CCC;
+  display:none;
+}
+.filter_ancestry_box {
+  padding:0px 7px;
+  margin-right:8px;
+  line-height:10px;
+}
+
+.filter_legend {
+  font-size:80%;
+}
+
+/* Mobile phone display */
+@media screen and (max-width: 499px) {
+  .filter_ancestry {
+    margin-left:0rem;
+    padding-left:0rem;
+    margin-top: 1rem;
+    border-left:none;
+    display:none;
   }
 }

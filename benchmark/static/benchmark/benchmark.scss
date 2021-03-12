@@ -1,0 +1,125 @@
+/** Benchmark CSS **/
+
+/* Variables */
+$pgs_petrol: #007C82; /* EBI petrol */
+$pgs_colour_1: $pgs_petrol; // Main colour
+$pgs_dark0: #000;
+$pgs_darkC: #CCC;
+$chart_font_family:"Verdana", "Arial", "sans-serif";
+
+
+/* Benchmark page */
+
+.pgs_benchmark_cohorts {
+  > div {
+    float:left;
+    border:1px solid $pgs_darkC;
+    border-radius:4px;
+    padding:4px 10px;
+    .pgs_benchmark_cohort_title {
+      text-align:center;
+      font-weight:bold;
+      font-size:18px;
+    }
+    .bootstrap-table {
+      margin-bottom: 0.5rem !important;
+    }
+  }
+  > div:not(:last-child) {
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+.filter_container {
+  border:1px solid $pgs_darkC;
+  border-radius:4px;
+  padding:4px 10px;
+}
+.filter_header {
+  font-weight: 200;
+  border-bottom:1px solid $pgs_darkC;
+  color: $pgs_dark0;
+  padding-bottom:4px;
+  text-align:center;
+}
+
+.tooltip {
+  font-size: 12px;
+}
+.tooltip_area:hover {
+  cursor:pointer;
+}
+
+.tooltip_content {
+  font-family: $chart_font_family;
+  .tooltip_section:not(:last-child) {
+    border-bottom: 1px solid #FFF;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
+}
+
+#pgs_chart_super_container {
+  border:2px solid $pgs_colour_1;
+  border-radius:4px;
+  float:left;
+}
+#pgs_chart_container {
+  padding:2px;
+}
+
+.pgs_benchmark_downloads {
+  border:1px solid $pgs_darkC;
+  border-radius:4px;
+  padding:6px 10px;
+  float:left;
+  display:flex;
+}
+.pgs_benchmark_downloads_title {
+  line-height:27px;
+  vertical-align:middle;
+  border-right:1px solid $pgs_darkC;
+  font-weight:200;
+  margin-right:10px;
+  padding-right:10px;
+}
+
+
+
+/* Other small screens */
+
+@media screen and (max-width: 655px){
+  .pgs_benchmark_form {
+    flex-flow: column;
+    > div:not(:last-child) {
+      margin-bottom: 1rem;
+    }
+  }
+  .pgs_benchmark_downloads {
+    flex-flow: column;
+    > div:not(:last-child) {
+      margin-bottom: 0.5rem;
+    }
+    .pgs_benchmark_downloads_title {
+      border-right: none !important;
+      line-height: 19px !important;
+      border-bottom:1px solid $pgs_darkC;
+      padding-bottom:4px;
+      padding-right:0px !important;
+      margin-right:0px !important;
+      margin-bottom:0.5rem !important;
+      text-align:center;
+    }
+  }
+}
+@media screen and (max-width: 850px){
+  #pgs_chart_super_container {
+    width:100%;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+  #pgs_chart_container {
+    width:100%;
+  }
+}
