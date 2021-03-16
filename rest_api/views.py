@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import Throttled
 from rest_framework.serializers import ValidationError
-from django.conf import settings
+from pgs_web import constants
 from django.db.models import Prefetch, Q
 from catalog.models import *
 from .serializers import *
@@ -542,10 +542,10 @@ class RestInfo(generics.RetrieveAPIView):
         }
 
         data = {
-            'rest_api': settings.PGS_REST_API,
+            'rest_api': constants.PGS_REST_API,
             'latest_release': latest_release,
-            'citation': settings.PGS_CITATION,
-            'terms_of_use': settings.USEFUL_URLS['TERMS_OF_USE']
+            'citation': constants.PGS_CITATION,
+            'terms_of_use': constants.USEFUL_URLS['TERMS_OF_USE']
         }
 
         return Response(data)

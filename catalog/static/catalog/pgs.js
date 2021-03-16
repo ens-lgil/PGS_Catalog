@@ -53,11 +53,11 @@ $(document).ready(function() {
     // seems necessary to allow the browser to jump to the anchor first.
     window.setTimeout(offsetAnchor, 0.1);
 
-    //$("td>div").tooltip({container:'body'});
-    //$("td").tooltip({container:'body'});
-
     // Shorten content having long text
     shorten_displayed_content();
+
+    // Add icon and target blank for external links
+    alter_external_links();
 
     $('body').on("click", 'span.morelink', function(){
         if($(this).hasClass("link_less")) {
@@ -90,45 +90,61 @@ $(document).ready(function() {
         anc_colours[key] = colour;
       });
 
-      // Pre-generate chart SVG code for single ancestry category
-      single_anc_svgs = {};
-      for (anc_sym in anc_colours) {
-        var colour = anc_colours[anc_sym];
-        for (type in anc_types) {
-          var type_letter = anc_types[type];
-          var key = anc_sym+"_"+type;
-          var svg = single_anc_svg;
-          svg = svg.replace('####COLOUR####',colour);
-          svg = svg.replace('####TYPE####',type_letter);
-          single_anc_svgs[key] = svg;
-        }
-      }
+      // // Pre-generate chart SVG code for single ancestry category
+      // single_anc_svgs = {};
+      // for (anc_sym in anc_colours) {
+      //   var colour = anc_colours[anc_sym];
+      //   for (type in anc_types) {
+      //     var type_letter = anc_types[type];
+      //     var key = anc_sym+"_"+type;
+      //     var svg = single_anc_svg;
+      //     svg = svg.replace('####COLOUR####',colour);
+      //     svg = svg.replace('####TYPE####',type_letter);
+      //     single_anc_svgs[key] = svg;
+      //   }
+      // }
 
+      var anc_svgs = {};
+      var type_placeholder = '####TYPE####';
       $('.ancestry_chart').each(function() {
         var id = $(this).attr('data-id');
         var type = $(this).attr('data-type');
-        var data_chart = JSON.parse($(this).attr('data-chart'));
+        var type_letter = anc_types[type];
+        var data_chart_string = $(this).attr('data-chart');
+        var data_chart = JSON.parse(data_chart_string);
 
-        if (data_chart.length == 1){
-          var key = data_chart[0][0]+'_'+type;
-          if (single_anc_svgs[key]) {
-            $('#'+id).attr("width",anc_width);
-            $('#'+id).attr("height",anc_height);
-            $('#'+id).html(single_anc_svgs[key]);
-            return;
+        // // Copy generated
+        // if (data_chart.length == 1){
+        //   var key = data_chart[0][0]+'_'+type;
+        //   if (single_anc_svgs[key]) {
+        //     $('#'+id).attr("width",anc_width);
+        //     $('#'+id).attr("height",anc_height);
+        //     $('#'+id).html(single_anc_svgs[key]);
+        //     return;
+        //   }
+        // }
+
+        // Check if similar piechart has already been generated
+        if (anc_svgs[data_chart_string]) {
+          $('#'+id).attr("width",anc_width);
+          $('#'+id).attr("height",anc_height);
+          // Change the type (i.e. the letter in the center of the chart) and copy SVG code
+          var svg_code = anc_svgs[data_chart_string]['html'];
+          var svg_type = anc_svgs[data_chart_string]['type'];
+          // Change the type (i.e. the letter in the center of the chart)
+          if (svg_type != type_letter) {
+            svg_code =  svg_code.replace('>'+svg_type+'<', '>'+type_letter+'<');
           }
+          $('#'+id).html(svg_code);
         }
-
-        //console.log(id);
-        var pgs_samples_chart = new PGSPieChartTiny(id,data_chart,anc_width,anc_height,0);
-        pgs_samples_chart.draw_piechart();
-        pgs_samples_chart.add_text(anc_types[type]);
+        else {
+          var pgs_samples_chart = new PGSPieChartTiny(id,data_chart,anc_width,anc_height,0);
+          pgs_samples_chart.draw_piechart();
+          pgs_samples_chart.add_text(type_letter);
+          // Store the generated SVG HTML code
+          anc_svgs[data_chart_string] = { 'html': $('#'+id).html(), 'type': type_letter };
+        }
       });
-
-      // $('.ancestry_chart_container').each(function () {
-      //   $(this).show();
-      //   //$(this).css('display','flex');
-      // });
     }
 
 
@@ -375,7 +391,6 @@ $(document).ready(function() {
     });
     $("#ancestry_filter_list").on("change", ".ancestry_filter_cb",function() {
       filter_score_table();
-      console.log("Change!");
     });
     $("#ancestry_filter_ind").change(function() {
       filter_score_table();
@@ -416,10 +431,15 @@ $(document).ready(function() {
         }
       }
 
-      $('#scores_table').bootstrapTable('filterBy', {});
-      $('#scores_eval_table').bootstrapTable('filterBy', {});
-      $('#performances_table').bootstrapTable('filterBy', {});
-      $('#samples_table').bootstrapTable('filterBy', {});
+      var scores_table_id = '#scores_table';
+      var scores_eval_table_id = '#scores_eval_table';
+      var perf_table_id = '#performances_table';
+      var sample_table_id = '#samples_table';
+
+      $(scores_table_id).bootstrapTable('filterBy', {});
+      $(scores_eval_table_id).bootstrapTable('filterBy', {});
+      $(perf_table_id).bootstrapTable('filterBy', {});
+      $(sample_table_id).bootstrapTable('filterBy', {});
 
       console.log("Selection: "+anc_filter);
 
@@ -435,7 +455,7 @@ $(document).ready(function() {
         // Scores
         var pgs_ids_list = [];
         var pgs_ids_list_link = {};
-        var scores_table_ids_list = ['#scores_table','#scores_eval_table'];
+        var scores_table_ids_list = [scores_table_id, scores_eval_table_id];
         var ancestry_col = 'ancestries';
         var traits_col = 'list_traits';
 
@@ -468,13 +488,18 @@ $(document).ready(function() {
 
             // Traits
             if (trait_filter != '') {
-              var traits_html = $(row['list_traits']);
-              var traits = traits_html.children('a');
-              for (var j = 0; j < traits.length; j++) {
-                if (traits[j].innerHTML == trait_filter) {
+              // var traits_html = $(row['list_traits']);
+              // var traits = traits_html.children('a');
+              // for (var j = 0; j < traits.length; j++) {
+              //   if (traits[j].innerHTML == trait_filter) {
+              //     pass_filter += 1;
+              //   }
+              // }
+              $(row['list_traits']).each(function() {
+                if ($(this).text() == trait_filter) {
                   pass_filter += 1;
                 }
-              }
+              });
             }
 
             // Select scores
@@ -494,7 +519,6 @@ $(document).ready(function() {
         }
 
         // Performances & Samples
-        var perf_table_id = '#performances_table';
         if ($(perf_table_id).length != 0) {
           var ppm_ids_list = [];
           var pss_ids_list = [];
@@ -519,7 +543,7 @@ $(document).ready(function() {
           $(perf_table_id).bootstrapTable('filterBy', {
              id: ppm_ids_list
           });
-          $('#samples_table').bootstrapTable('filterBy', {
+          $(sample_table_id).bootstrapTable('filterBy', {
              display_sampleset: pss_ids_list
           });
         }
@@ -528,6 +552,13 @@ $(document).ready(function() {
         pgs_tooltip();
       }, 1000);
     }
+
+    // Refresh the tooltip when there is a change in the page number or page size of a bootstrap-table
+    $(data_toggle_table).on('page-change.bs.table', function () {
+      setTimeout(function(){
+        pgs_tooltip();
+      }, 500);
+    });
 });
 
 
@@ -777,7 +808,7 @@ function display_category_list(data_json) {
   var trait_elem = document.getElementById("trait_cat");
   var subtrait_elem = document.getElementById("trait_subcat");
 
-  item_height = 35;
+  item_height = 31;
   number_of_cat = Object.keys(data_json).length;
 
   cat_div_height = number_of_cat * item_height;
@@ -839,7 +870,7 @@ function display_category_list(data_json) {
     se_left.className = class_name;
     se_left.style.color = t_colour;
     se_left.innerHTML = category_arrow;
-    var subcat_div_height_left = cat_index * item_height - 1;
+    var subcat_div_height_left = cat_index * item_height - 4;
     se_left.style.marginTop = subcat_div_height_left+"px";
     se.appendChild(se_left);
 
@@ -878,6 +909,9 @@ function display_category_list(data_json) {
       se_right.classList.add("v-scroll");
     }
 
+    if (subcat_div_height_right < 0) {
+      subcat_div_height_right = 0;
+    }
     se_right.style.marginTop = subcat_div_height_right+"px";
 
     // Create the sub-categories (traits) boxes

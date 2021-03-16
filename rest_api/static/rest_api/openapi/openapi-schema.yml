@@ -1,6 +1,6 @@
 openapi: 3.0.3
 servers:
-  - url: https://www.pgscatalog.org/
+  - url: http://127.0.0.1:7000/
 info:
 
   title: PGS Catalog REST API
@@ -71,7 +71,7 @@ info:
     <a class="toggle_btn" id="changelog">REST API version changelog <i class="fa fa-plus-circle"></i></a>
     <div class="toggle_content" id="content_changelog" style="display:none">
 
-      * <span class="badge badge-pill badge-pgs">1.6</span> - February 2021:
+      * <span class="badge badge-pill badge-pgs">1.6</span> - March 2021:
         * New endpoint `/rest/info` with data such as the REST API version, latest release date and counts, PGS citation, ...
         * New endpoint `/rest/cohort/all` returning all the Cohorts and their associated PGS.
         * New endpoint `/rest/sample_set/all` returning all the Sample Set data.
@@ -1258,7 +1258,6 @@ paths:
           examples:
             pgs_id_sel:
               summary: Select an example or type an ID - click on 'Try it out' first
-              value: ''
             PGS000001:
               value: "PGS000001"
             PGS000018:
@@ -1272,7 +1271,6 @@ paths:
           examples:
             pmid_sel:
               summary: Select an example or type an ID - click on 'Try it out' first
-              value: ''
             pmid_1:
               summary: 'PMID: 25855707'
               value: 25855707
@@ -1288,7 +1286,6 @@ paths:
           examples:
             author_sel:
               summary: Select an example or type a name - click on 'Try it out' first
-              value: ''
             Mavaddat:
               value: 'Mavaddat'
             Inouye:
@@ -1556,7 +1553,6 @@ paths:
           examples:
             pmid_sel:
               summary: Select an example or type an ID - click on 'Try it out' first
-              value: ''
             pmid_1:
               summary: 'PMID: 25855707'
               value: 25855707
@@ -1571,7 +1567,6 @@ paths:
           examples:
             trait_id_sel:
               summary: Select an example or type an ID - click on 'Try it out' first
-              value: ''
             EFO_1000649:
               value: 'EFO_1000649'
             EFO_0001360:
@@ -1584,7 +1579,6 @@ paths:
           examples:
             pgs_ids_sel:
               summary: Select an example or type PGS ID(s) - click on 'Try it out' first
-              value: ''
             pgs_ids_1:
               summary: 'PGS000001, PGS000002'
               value: 'PGS000001,PGS000002'
@@ -1888,7 +1882,11 @@ paths:
         - "Other endpoints"
       operationId: getInfo
       description: |
-        Return diverse information related to the REST API and the PGS Catalog.
+        Return diverse information related to the REST API and the PGS Catalog:
+        * REST API version and latest changelog
+        * Latest release date and data count
+        * PGS citation
+        * Link to terms of use
 
         Example of request:
         ```
@@ -1914,9 +1912,9 @@ paths:
                       changelog:
                           type: array
                           description: "REST API changelog"
+                          example: ["New endpoint '/rest/cohort/all' returning all the Cohorts and their associated PGS.", "New endpoint '/rest/sample_set/all' returning all the Sample Set data."]
                           items:
                             type: string
-                            example: "Setup a maximum value for the `limit` parameter."
                   latest_release:
                     type: object
                     description: "Information about the latest PGS Catalog release"
@@ -1925,19 +1923,19 @@ paths:
                         type: string
                         description: "Date of the latest PGS release (format YYYY-MM-DD)"
                         format: date
-                        example: "2021-02-03"
+                        example: "2021-02-23"
                       scores:
                         type: number
                         description: "Number of Scores in the Catalog"
-                        example: 721
+                        example: 738
                       traits:
                         type: number
                         description: "Number of Traits in the Catalog"
-                        example: 194
+                        example: 202
                       publications:
                         type: number
                         description: "Number of Publications in the Catalog"
-                        example: 133
+                        example: 144
                   citation:
                     type: object
                     description: "Information about the latest PGS Catalog publication"
@@ -1945,11 +1943,11 @@ paths:
                       title:
                         type: string
                         description: "Title of the publication"
-                        example: 'The Polygenic Score Catalog: an open database for reproducibility and systematic evaluation'
+                        example: 'The Polygenic Score Catalog as an open database for reproducibility and systematic evaluation'
                       doi:
                         type: string
                         description: "doi of the publication"
-                        example: '10.1101/2020.05.20.20108217'
+                        example: '10.1038/s41588-021-00783-5'
                       authors:
                         type: string
                         description: "List of the publication authors"
@@ -1957,15 +1955,16 @@ paths:
                       journal:
                         type: string
                         description: "Name of the journal"
-                        example: 'medRxiv'
+                        example: 'Nature Genetics'
                       year:
                         type: number
                         description: "Year of publication"
-                        example: 2020
+                        example: 2021
                   terms_of_use:
                     type: string
                     description: "URL to the terms of use"
                     example: 'https://www.ebi.ac.uk/about/terms-of-use'
+          description: ''
         '4XX':
           content:
               application/json:

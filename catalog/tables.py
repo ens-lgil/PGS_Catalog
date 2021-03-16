@@ -1,9 +1,9 @@
-import django_tables2 as tables
-from django.conf import settings
-from django.utils.html import format_html
-from .models import *
-from django.utils.crypto import get_random_string
 import re
+import django_tables2 as tables
+from django.utils.html import format_html
+from django.utils.crypto import get_random_string
+from pgs_web import constants
+from .models import *
 
 
 publication_path = '/publication'
@@ -13,11 +13,20 @@ page_size = "50"
 def smaller_in_bracket(value):
     bracket_left = '['
     value = value.replace(' '+bracket_left, bracket_left)
-    #value = value.replace(bracket_left,'<span class="smaller_90 pl-2 "><span class="pgs_color_2">[</span>')
-    #value = value.replace(']','<span class="pgs_color_2">]</span></span>')
     value = value.replace(bracket_left,'<span class="smaller_90 pgs_bracket pl-2"><span class="only_export"> [</span>')
     value = value.replace(']','<span class="only_export">]</span></span>')
     return value
+
+def publication_format(value, is_external=False):
+    pub_date = value.date_publication.strftime('%Y')
+    citation = format_html(f'<div class="pgs_pub_details">{value.firstauthor} <i>et al.</i> {value.journal} ({pub_date})</div>')
+    extra_html = ''
+    if is_external:
+        extra_html += format_html('<span class="badge badge-pgs-small" data-toggle="tooltip" title="External PGS evaluation">Ext.</span>')
+    if value.is_preprint:
+        extra_html += format_html('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
+    return format_html(f'<a href="{publication_path}/{value.id}">{value.id}</a>{citation}{extra_html}')#, value.id, value.id, citation, extra_html)
+
 
 class Column_joinlist(tables.Column):
     def render(self, value):
@@ -90,12 +99,11 @@ class Column_ancestry(tables.Column):
         return format_html(value)
 
 class Column_pubexternality(tables.Column):
-    def render(self, value):
-        citation, pgp, externality, is_preprint = value.split('|')
-        if externality == 'E':
-            return format_html('<a href="'+publication_path+'/{}">{}</a> <sup class="pgs_sup" data-toggle="tooltip" title="External PGS evaluation">Ext.</sup> {}', pgp, format_html(citation), format_html(is_preprint))
-        else:
-            return format_html('<a href="'+publication_path+'/{}">{}</a> {}', pgp, format_html(citation), format_html(is_preprint))
+    def render(self, value, record):
+        is_ext = False
+        if value == 'E':
+            is_ext = True
+        return publication_format(record.publication, is_ext)
 
 class Column_cohorts(tables.Column):
     def render(self, value):
@@ -250,21 +258,17 @@ class Browse_ScoreTable(tables.Table):
         return format_html('<a href="/score/{}">{}</a><div class="small">({})</div>', value, value, record.name)
 
     def render_publication(self, value):
-        citation = format_html(' '.join([value.id, '<span class="pgs_pub_details">', value.firstauthor, '<i>et al.</i>', value.journal, '(%s)'%value.date_publication.strftime('%Y'), '</span>']))
-        is_preprint = ''
-        if value.is_preprint:
-            is_preprint = format_html('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
-        return format_html('<a href="'+publication_path+'/{}">{}</a>{}', value.id, citation, is_preprint)
+        return publication_format(value)
 
     def render_list_traits(self, value):
         l = []
         for x in value:
             l.append('<a href="/trait/{}">{}</a>'.format(x[0], x[1]))
-        return format_html('<div>'+'<br>'.join(l)+'</div>')
+        return format_html('<br>'.join(l))
 
     def render_ftp_link(self, value, record):
         id = value.split('.')[0]
-        ftp_link = '{}/scores/{}/ScoringFiles/'.format(settings.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], id)
+        ftp_link = '{}/scores/{}/ScoringFiles/'.format(constants.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], id)
         ftp_file_link = ftp_link+value
         license_icon = ''
         if record.has_default_license == False:
@@ -278,17 +282,7 @@ class Browse_ScoreTable(tables.Table):
         if not value:
             return None
 
-        anc_labels = {
-          'AFR': 'African',
-          'AMR': 'American',
-          'EAS': 'East Asian',
-          'EUR': 'European',
-          'SAS': 'South Asian',
-          'MA' : 'Multi-ancestry (exc. European)',
-          'MAE': 'Multi-ancestry (inc. European)',
-          'OTH': 'Other',
-          'NR' : 'Not Reported'
-        }
+        anc_labels = constants.ANCESTRY_LABELS
         stages = ('gwas','dev','eval')
 
         tooltip_headers = {
@@ -340,8 +334,8 @@ class Browse_ScoreTable(tables.Table):
                 anc_list_stage = anc_list[type]
                 if 'EUR' not in anc_list_stage and 'MAE' not in anc_list_stage:
                     anc_list_stage.append('non-EUR')
-                if 'MA' not in anc_list_stage and 'MAE' in anc_list_stage:
-                    anc_list_stage.append('MA')
+                if 'MAO' not in anc_list_stage and 'MAE' in anc_list_stage:
+                    anc_list_stage.append('MAO')
                 anc_list_stage = [f'"{x}"' for x in anc_list_stage]
                 html_filter.append("data-anc-"+type+"='["+','.join(anc_list_stage)+"]'")
             else:
@@ -354,8 +348,8 @@ class Browse_ScoreTable(tables.Table):
                 anc_all_data = list(anc_all_list[all_type])
                 if 'EUR' not in anc_all_data and 'MAE' not in anc_all_data:
                     anc_all_data.append('non-EUR')
-                if 'MA' not in anc_all_data and 'MAE' in anc_all_data:
-                    anc_all_data.append('MA')
+                if 'MAO' not in anc_all_data and 'MAE' in anc_all_data:
+                    anc_all_data.append('MAO')
                 anc_all_data = [f'"{x}"' for x in anc_all_data]
                 html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
 
@@ -595,14 +589,15 @@ class SampleTable_performance(tables.Table):
 
 class PerformanceTable(tables.Table):
     '''Displays PGS Performance metrics'''
-    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance Metric ID<br />(PPM ID)'))
+    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance<br />Metric ID (PPM ID)'))
     sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'))
     trait_info = Column_trait(accessor='display_trait', verbose_name='Trait', orderable=False)
-    effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br>(per SD change)'), orderable=False)
-    class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='PGS Classification Metrics', orderable=False)
+    effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br />(per SD change)'), orderable=False)
+    class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='Classification Metrics', orderable=False)
     othermetrics = Column_metriclist(accessor='othermetrics_list', verbose_name='Other Metrics', orderable=False)
     pub_withexternality = Column_pubexternality(accessor='publication_withexternality', verbose_name='Performance Source', orderable=False)
     covariates = Column_shorten_text_content(accessor='covariates')
+    performance_comments = tables.Column(accessor='performance_comments', verbose_name=format_html('PGS Performance:<br />Other Relevant Information'))
 
     class Meta:
         model = Performance
@@ -621,7 +616,9 @@ class PerformanceTable(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-        return format_html('<a href="#{}">{}</a>', value, value)
+        ancestry = value.samples_main_ancestry
+        count_ind = '{:,} individuals'.format(value.count_individuals)
+        return format_html('<a href="#{}">{}</a><div class="small">{}</div><div><div class="small">{}</div>', value, value,ancestry,count_ind)
 
     def render_score(self, value):
         return format_html('<a href="/score/{}">{}</a><div class="small">({})</div>', value.id, value.id, value.name)

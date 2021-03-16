@@ -95,11 +95,9 @@
 
     <!-- PGS Javascript file -->
     {% if is_pgs_app_on_gae %}
-      <!--<script defer src="{% static 'catalog/pgs.min.js' %}"></script>-->
       <script src="{% static 'catalog/pgs.min.js' %}"></script>
     {% else %}
       {% compress js file pgs_min %}
-        <!--<script defer src="{% static 'catalog/pgs.js' %}"></script>-->
         <script src="{% static 'catalog/pgs.js' %}"></script>
       {% endcompress %}
     {% endif %}

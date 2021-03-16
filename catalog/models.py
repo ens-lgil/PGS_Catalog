@@ -1,10 +1,7 @@
 from django.db import models
-from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.postgres.fields import DecimalRangeField
-from .context_processors import pgs_ancestry_labels
-
-
+from pgs_web import constants
 
 
 class Publication(models.Model):
@@ -443,7 +440,7 @@ class Sample(models.Model):
         s = 'Sample {}'.format(str(self.pk))
         if self.ancestry_broad:
             s += ' - {}'.format(self.ancestry_broad)
-        s += ' ({} individuals)'.format(self.sample_number)
+        s += ' ({:,} individuals)'.format(self.sample_number)
         return s
 
     def associated_PGS(self):
@@ -640,7 +637,7 @@ class Score(models.Model):
 
     @property
     def ftp_scoring_file(self):
-        ftp_url = '{}/scores/{}/ScoringFiles/{}'.format(settings.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], self.id, self.link_filename)
+        ftp_url = '{}/scores/{}/ScoringFiles/{}'.format(constants.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], self.id, self.link_filename)
         return ftp_url
 
     @property
@@ -702,7 +699,7 @@ class Score(models.Model):
         #   'MAE': 'Multi-ancestry (including European)',
         #   'OTH': 'Other'
         # }
-        ancestry_labels = pgs_ancestry_labels()
+        ancestry_labels = constants.ANCESTRY_LABELS
         types = {
             'gwas': 'Source of Variant Associations (GWAS)',
             'dev': 'Score Development',
@@ -1108,12 +1105,56 @@ class SampleSet(models.Model):
             return '-'
 
     @property
+    def samples_main_ancestry(self):
+        ancestry_list = []
+        main_ancestry_key = ''
+        for sample in self.samples.all():
+            ancestry = sample.ancestry_broad.strip()
+            ancestry_key = self.get_ancestry_key(ancestry)
+            if ancestry_key and ancestry_key not in ancestry_list:
+                ancestry_list.append(ancestry_key)
+
+        if len(ancestry_list) > 1:
+            has_eur = 0
+            for anc in ancestry_list:
+                if anc == 'EUR':
+                    has_eur = 1
+            if has_eur == 1:
+                main_ancestry_key = 'MAE'
+            else:
+                main_ancestry_key = 'MAO'
+        else:
+            main_ancestry_key = ancestry_list[0]
+        return constants.ANCESTRY_GROUP_LABELS[main_ancestry_key]
+
+    @property
     def count_samples(self):
         return len(self.samples.all())
 
     @property
+    def count_individuals(self):
+        count = 0
+        for sample in self.samples.all():
+            if sample.sample_number:
+                count += sample.sample_number
+        return count
+
+    @property
     def count_performances(self):
         return len(Performance.objects.values('id').filter(sampleset_id=self.num))
+
+
+    def get_ancestry_key(self,anc):
+        anc_key = 'OTH'
+        if anc in constants.ANCESTRY_MAPPINGS.keys():
+            anc_key = constants.ANCESTRY_MAPPINGS[anc]
+        elif ',' in anc:
+            if 'European' in anc:
+                anc_key = 'MAE'
+            else:
+                anc_label = 'MAO'
+        return anc_key
+
 
 
 class Performance(models.Model):
@@ -1222,20 +1263,10 @@ class Performance(models.Model):
     @property
     def publication_withexternality(self):
         """This function checks whether the evaluation is internal or external to the score development paper"""
-        p = self.publication
-        info = [' '.join([p.id, '<span class="pgs_pub_details">', p.firstauthor, '<i>et al.</i>', '(%s)' % p.date_publication.strftime('%Y'), '</span>']), p.id]
-
-        if p.id == self.score.publication.id:
-            info.append('D')
+        if self.publication.id == self.score.publication.id:
+            return 'D'
         else:
-            info.append('E')
-
-        if p.is_preprint:
-            info.append('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
-        else:
-            info.append('')
-
-        return '|'.join(info)
+            return 'E'
 
 
     def get_effect_sizes_list(self,as_dict=False):

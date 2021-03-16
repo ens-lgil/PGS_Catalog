@@ -54,8 +54,7 @@
             </script>
 
             <h3 class="mt-4">
-              <span>Browse PGS by Trait Category</span>
-              <span class="info-icon-title" data-toggle="tooltip" data-placement="right" title="The trait categories are based on automatic annotations of the underlying traits in the Experimental Factor Ontology (EFO), and are used to browse the current data and describe the diversity of traits captured in the catalog in a minimal hierarchical structure."><i class="fa fa-info-circle"></i></span>
+              <span>Browse PGS by Trait Category</span><span class="info-icon-title" data-toggle="tooltip" data-placement="right" title="The trait categories are based on automatic annotations of the underlying traits in the Experimental Factor Ontology (EFO), and are used to browse the current data and describe the diversity of traits captured in the catalog in a minimal hierarchical structure."><i class="fa fa-info-circle"></i></span>
               <span id="reset_cat" class="btn btn-pgs pgs_no_icon_link" onclick="reset_showhide_trait();"><span class="fa fa-refresh"></span> Reset view</span>
             </h3>
 
@@ -92,54 +91,6 @@
           {% if ancestry_form %}
             {{ ancestry_form|safe }}
           {% endif %}
-          <!-- {% if has_form %}
-          <div class="mb-3 pgs_form_container">
-            <div id="ancestry_filter" class="filter_container mr-3 mb-3">
-              <div class="filter_header">Filter PGS by Participant Ancestry</div>
-              <div class="clearfix">
-                <div style="float:left">
-                  <div class="filter_subheader mb-1">Samples included in:</div>
-                  <select id="ancestry_type_list">
-                    <option value="">--</option>
-                     <option value="dev_all">Development [V, D]</option>
-                     <option value="gwas">&nbsp;&nbsp;- GWAS [V]</option>
-                      <option value="dev">&nbsp;&nbsp;- Score development [D]</option>
-                     <option value="eval">PGS Evaluation [E]</option>
-                     <option value="all">All Stages combined [V, D, E]</option>
-                  </select>
-                  <div class="filter_legend pl-1 mt-2">
-                    <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
-                    <div><b>D</b> - Score <b>D</b>evelopment</div>
-                    <div><b>E</b> - Score <b>E</b>valuation</div>
-                  </div>
-                </div>
-                <div class="filter_ancestry">
-                  <div class="filter_subheader mb-1">Ancestry filter:</div>
-                  <div id="ancestry_filter_list">
-                    <div>
-                      <input type="checkbox" class="ancestry_filter_cb" value="non-EUR" id="anc_0">
-                      <label class="mb-0" for="anc_0">Non European</label>
-                    </div>
-                    <div>
-                      <input type="checkbox" class="ancestry_filter_cb" value="MA" id="anc_10">
-                      <label class="mb-0" for="anc_1">Multi Ancestry</label>
-                    </div>
-                    <div class="filter_subheader mt-1 mb-1">Single ancestry:</div>
-                    <div>
-                      <select id="ancestry_filter_ind">
-                        <option value="">--</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div id="ancestry_legend" class="filter_container mb-3">
-              <div class="filter_header">Ancestry legend</div>
-              <div id="ancestry_legend_content" class="clearfix"></div>
-            </div>
-          </div>
-          {% endif %} -->
 
           {% render_table table %}
         {% else %}

@@ -85,18 +85,19 @@
         </p>
 
     <h4 id="citation">Citation</h4>
-    <p>The PGS Catalog development is led by <a href="https://www.ebi.ac.uk/about/people/samuel-lambert">Samuel Lambert</a>
+    <p>The PGS Catalog development is led by <a href="{{ ebi_url }}/about/people/samuel-lambert">Samuel Lambert</a>
         under the supervision of <a href="https://www.inouyelab.org/home/people">Michael Inouye</a> (<a href="https://sysgenresearch.org/">University of Cambridge & Baker Institute</a>)
-        and <a href="https://www.ebi.ac.uk/about/people/jackie-macarthur">Jackie MacArthur</a> (<a href="https://www.ebi.ac.uk/gwas/">NHGRI-EBI GWAS Catalog</a>).</p>
-    <p>The Catalog is under active development, and we continue to add new features and curate new data. If you use the Catalog in your research we ask that you cite our recent preprint:
+        in collaboration with <a href="{{ hdr_uk_cam_url }}">Health Data Research - UK</a> (Laurent Gil)
+        and the <a href="{{ ebi_url }}/gwas/">NHGRI-EBI GWAS Catalog</a> (Aoife McMahon & Laura Harris).</p>
+    <p>The Catalog is under active development, and we continue to add new features and curate new data. If you use the Catalog in your research we ask that you cite our recent paper:
     <div class="clearfix mb-3">
       <div class="highlight_content">
-        <p>Samuel A. Lambert, Laurent Gil, Simon Jupp, Scott C. Ritchie, Yu Xu, Annalisa Buniello, Gad Abraham, Michael Chapman, Helen Parkinson, John Danesh, Jacqueline A.L. MacArthur, and Michael Inouye.</p>
-        <p><u>The Polygenic Score Catalog: an open database for reproducibility and systematic evaluation</u></p>
-        <p><span class="with_sep_right">Preprint at <i>medRxiv</i></span>doi: <a href="https://doi.org/10.1101/2020.05.20.20108217">10.1101/2020.05.20.20108217</a> (2020).</p>
+        <p>{{ pgs_citation.authors }}</p>
+        <p><u>{{ pgs_citation.title }}</u></p>
+        <p><span class="with_sep_right"><i>{{ pgs_citation.journal }}</i></span>doi: <a href="https://doi.org/{{ pgs_citation.doi }}">{{ pgs_citation.doi }}</a> ({{ pgs_citation.year }}).</p>
       </div>
     </div>
-    <p>Individual PGS obtained from the database should also be cited appropriately, and used in accordance with any licensing restrictions set by the authors (see our <a href="https://www.ebi.ac.uk/about/terms-of-use">Terms of Use</a> for more information).</p>
+    <p>Individual PGS obtained from the database should also be cited appropriately, and used in accordance with any licensing restrictions set by the authors (see our <a href="{{ terms_of_use }}">Terms of Use</a> for more information).</p>
     </section>
 
 
@@ -166,12 +167,14 @@
       <h3 id="acknowledgements">Acknowledgements</h3>
       <p>We wish to acknowledge the help of the following people & teams for their support of the PGS Catalog:
         <ul>
-          <li><a href="{{ ebi_url }}/about/spot-team">EMBL-EBI Samples Phenotypes and Ontologies Team</a> - Helen Parkinson, Simon Jupp, James Hayhurst, Trish Whetzel</li>
-          <li><a href="{{ ebi_url }}/gwas">NHGRI-EBI GWAS Catalog Team</a> - Annalisa Buniello, Aoife McMahon</li>
-          <li><a href="https://www.inouyelab.org">Inouye Lab Members</a> - Jonathan Marten, Petar Scepanovic, Scott Ritchie, Gad Abraham</li>
+          <li><b>PGS Catalog Data Curators</b> — Emily Tinsley, Shirin Saverimuttu, Aoife McMahon, Sam Lambert</li>
+          <li class="mt-1"><a href="{{ hdr_uk_cam_url }}"><b>Health Data Research UK, Cambridge</b></a> — Laurent Gil, Michael Chapman, Richard Houghton, Prof. John Danesh</li>
+          <li class="mt-1"><a href="{{ ebi_url }}/gwas"><b>NHGRI-EBI GWAS Catalog Team</b></a> — Annalisa Buniello, Aoife McMahon, Jackie MacArthur, Laura Harris</li>
+          <li class="mt-1"><a href="{{ ebi_url }}/about/spot-team"><b>EMBL-EBI Samples Phenotypes and Ontologies Team</b></a> — Helen Parkinson, Simon Jupp, James Hayhurst, Trish Whetzel</li>
+          <li class="mt-1"><a href="https://www.inouyelab.org"><b>Inouye Lab Members</b></a> — Jonathan Marten, Petar Scepanovic, Scott Ritchie, Gad Abraham</li>
         </ul>
       </p>
-      <p>The development of the <b>PGS Catalog</b> is supported by:</p>
+      <p class="mt-4">The development of the <b>PGS Catalog</b> is supported by:</p>
       <div class="row justify-content-center mb-4">
         <div class="col">
           <a class="pgs_no_icon_link" href="{{ uoc_url }}"><img class="img-fluid pgs_big_icons" src="{% static 'catalog/imgs/UofCambridge.png' %}" alt="University of Cambridge"></a>

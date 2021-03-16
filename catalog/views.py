@@ -1,3 +1,4 @@
+import os
 from django.http import Http404
 from django.shortcuts import render,redirect
 from django.views.generic import TemplateView
@@ -6,8 +7,8 @@ from django.conf import settings
 from django.db.models import Prefetch
 from django.db.models.functions import Lower
 
+from pgs_web import constants
 from .tables import *
-from .context_processors import pgs_ancestry_labels
 
 
 generic_attributes =[ 'curation_notes','publication__title','publication__PMID','publication__authors','publication__curation_status','publication__curation_notes','publication__date_released']
@@ -28,26 +29,18 @@ def disclaimer_formatting(content):
     return '<div class="clearfix"><div class="mt-2 float_left pgs_note pgs_note_2"><div><span>Disclaimer: </span>{}</div></div></div>'.format(content)
 
 def performance_disclaimer():
-    return disclaimer_formatting("""The performance metrics are displayed as reported by the source studies.
-        It is important to note that metrics are not necessarily comparable with
-        each other. For example, metrics depend on the sample characteristics
-        (described by the PGS Catalog Sample Set [PSS] ID), phenotyping, and
-        statistical modelling. Please refer to the source publication for additional
-        guidance on performance.""")
+    return disclaimer_formatting(constants.DISCLAIMERS['performance'])
 
 def score_disclaimer(publication_url):
-    return disclaimer_formatting("""The original published polygenic score is unavailable.
-    The authors have provided an alternative polygenic for the Catalog.
-    Please note some details and performance metrics may differ from the <a href="https://doi.org/{}">publication</a>.""".format(publication_url))
+    return disclaimer_formatting(constants.DISCLAIMERS['score'].format(publication_url))
 
 
 def ancestry_form():
     ''' HTML code for the Ancestry form. '''
 
-    ancestry_labels = pgs_ancestry_labels()
+    ancestry_labels = constants.ANCESTRY_LABELS
     count = 0;
     val = len(ancestry_labels.keys()) / 2
-    print("VAL: "+str(val))
     entry_per_col = int((len(ancestry_labels.keys()) + 1) / 2);
 
     div_html_1 = '<div class="filter_legend" style="float:left'
@@ -70,7 +63,7 @@ def ancestry_form():
         label = ancestry_labels[key]
         div_content += '<div><span class="filter_ancestry_box anc_'+key+'" data-key="'+key+'"></span>'+label+'</div>'
 
-        if key != 'MA' and key != 'MAE':
+        if key != 'MAO' and key != 'MAE':
           opt = f'<option value="{key}">{label}</option>'
           option_html += opt
         count += 1
@@ -109,7 +102,7 @@ def ancestry_form():
                       <label class="mb-0" for="anc_0">Non European</label>
                     </div>
                     <div>
-                      <input type="checkbox" class="ancestry_filter_cb" value="MA" id="anc_10">
+                      <input type="checkbox" class="ancestry_filter_cb" value="MAO" id="anc_10">
                       <label class="mb-0" for="anc_1">Multi Ancestry</label>
                     </div>
                     <div class="filter_subheader mt-1 mb-1">Single ancestry:</div>
@@ -187,6 +180,10 @@ def index(request):
         'num_pubs' : Publication.objects.count(),
         'has_ebi_icons' : 1
     }
+
+    if hasattr(constants, 'ANNOUNCEMENT'):
+        if constants.ANNOUNCEMENT and constants.ANNOUNCEMENT != '':
+            context['announcement'] = constants.ANNOUNCEMENT
 
     if settings.PGS_ON_CURATION_SITE=='True':
         released_traits = set()
@@ -541,10 +538,10 @@ class ReportStudyView(TemplateView):
     template_name = "catalog/report_study.html"
 
 class CurrentTemplateView(RedirectView):
-    url = settings.USEFUL_URLS['TEMPLATEGoogleDoc_URL']
+    url = constants.USEFUL_URLS['TEMPLATEGoogleDoc_URL']
 
 class CurationDocView(RedirectView):
-    url = settings.USEFUL_URLS['CurationGoogleDoc_URL']
+    url = constants.USEFUL_URLS['CurationGoogleDoc_URL']
 
 
 # Method used for the App Engine warmup
