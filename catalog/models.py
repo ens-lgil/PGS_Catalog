@@ -1105,7 +1105,12 @@ class SampleSet(models.Model):
             return '-'
 
     @property
-    def samples_main_ancestry(self):
+    def samples_combined_ancestry_key(self):
+        '''
+        Fetch the ancestry of each sample and group them into multi-ancestry
+        if there are more than one ancestry categories.
+        Returns the corresponding ancestry key (2-3 letters).
+        '''
         ancestry_list = []
         main_ancestry_key = ''
         for sample in self.samples.all():
@@ -1125,7 +1130,7 @@ class SampleSet(models.Model):
                 main_ancestry_key = 'MAO'
         else:
             main_ancestry_key = ancestry_list[0]
-        return constants.ANCESTRY_GROUP_LABELS[main_ancestry_key]
+        return main_ancestry_key
 
     @property
     def count_samples(self):

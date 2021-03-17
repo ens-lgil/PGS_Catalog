@@ -616,9 +616,10 @@ class PerformanceTable(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-        ancestry = value.samples_main_ancestry
+        ancestry_key = value.samples_combined_ancestry_key
+        ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
         count_ind = '{:,} individuals'.format(value.count_individuals)
-        return format_html('<a href="#{}">{}</a><div class="small">{}</div><div><div class="small">{}</div>', value, value,ancestry,count_ind)
+        return format_html('<a href="#{}">{}</a><div class="small"><i class="fa fa-circle-o anc_colour_{} font-bold"></i> {}</div><div class="small">{}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
         return format_html('<a href="/score/{}">{}</a><div class="small">({})</div>', value.id, value.id, value.name)

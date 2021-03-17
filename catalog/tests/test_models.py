@@ -1,6 +1,7 @@
 from django.test import TestCase
 from datetime import datetime
 from psycopg2.extras import NumericRange
+from pgs_web import constants
 from catalog.models import *
 
 test_sample_number = 5
@@ -735,6 +736,7 @@ class SampleSetTest(TestCase):
         for i in range(1,test_sample_count+1):
             sample = sampletest.get_sample(300+i)
             samples.append(sample)
+
         # Create SampleSet object and add list of Samples
         sampleset = SampleSet.objects.create(num=num)
         sampleset.samples.set(samples)
@@ -745,11 +747,13 @@ class SampleSetTest(TestCase):
 
         sampletest = SampleTest()
         samples = []
+
         # Create samples objects
         for i in range(1,len(self.test_ancestry)+1):
             sample = sampletest.create_sample_ancestry(sample_number=i,broad=self.test_ancestry[i-1])
             self.assertRegexpMatches(sample.__str__(), r'\s\-\s'+self.test_ancestry[i-1])
             samples.append(sample)
+
         # Create SampleSet object and add list of Samples
         sampleset = SampleSet.objects.create(num=num)
         sampleset.samples.set(samples)
@@ -768,10 +772,14 @@ class SampleSetTest(TestCase):
         # Other methods
         self.assertEqual(sampleset.__str__(),  self.sample_set_id)
         self.assertEqual(sampleset.count_samples, test_sample_count)
-        sample = sampleset.samples.all()[0]
-        self.assertRegexpMatches(sample.__str__(), r'^Sample\s\d+')
-        self.assertTrue(isinstance(sample.display_sampleset, SampleSet))
-        self.assertEqual(sample.display_sampleset, sampleset)
+        sample_1 = sampleset.samples.all()[0]
+        self.assertRegexpMatches(sample_1.__str__(), r'^Sample\s\d+')
+        self.assertTrue(isinstance(sample_1.display_sampleset, SampleSet))
+        self.assertEqual(sample_1.display_sampleset, sampleset)
+        count_ind = 0
+        for sample in sampleset.samples.all():
+            count_ind += sample.sample_number
+        self.assertEqual(sampleset.count_individuals, count_ind)
 
         id += 1
         sampleset_2 = sampleset = self.create_sampleset_ancestry(id)
@@ -780,6 +788,11 @@ class SampleSetTest(TestCase):
         # Other methods
         ancestry = ', '.join(self.test_ancestry)
         self.assertEqual(sampleset_2.samples_ancestry, ancestry)
+        self.assertEqual(sampleset_2.samples_combined_ancestry_key, 'MAE')
+
+        self.assertEqual(sampleset_2.get_ancestry_key(','.join(self.test_ancestry)), 'MAE')
+        for desc, key in constants.ANCESTRY_MAPPINGS.items():
+            self.assertEqual(sampleset_2.get_ancestry_key(desc), key)
 
 
 class ScoreTest(TestCase):
