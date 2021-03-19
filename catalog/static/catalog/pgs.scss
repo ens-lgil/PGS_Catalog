@@ -2039,7 +2039,6 @@ footer {
 .pgs_form_container {
   flex-direction:row;
   display: flex;
-  //justify-content: flex-end;
   justify-content: flex-start;
   > div:not(:last-child) {
     margin-right: 1rem!important;
@@ -2124,14 +2123,13 @@ footer {
 
 .ancestry_chart_container {
   display:flex;
-  //display:none;
   flex-wrap:wrap;
   > div {
     width:50px;
-    height:40px;//50px;
+    height:40px;
     padding:0px 5px;
     text-align:center;
-    line-height:40px;//50px;
+    line-height:40px;
     &:hover {
       cursor:default;
     }
@@ -2142,83 +2140,27 @@ text.pie_text {
   text-anchor:middle;
 }
 
+
 /* Ancestry colours */
-$anc_colour_AFR: #FFFF33; // yellow
-$anc_colour_AMR: #E41A1C; // red
-$anc_colour_ASN: #B15928; // brown
-$anc_colour_EAS: #4DAF4A; // green
-$anc_colour_EUR: #377EB8; // blue
-$anc_colour_GME: #00CED1; // turquoise
-$anc_colour_SAS: #984EA3; // purple
-$anc_colour_MAE: #A6CEE3; // light blue
-$anc_colour_MAO: #FF7F00; // orange
-$anc_colour_NR:  #BBB;    // lighter grey
-$anc_colour_OTH: #999;    // grey
+$ancestry_colours: (
+  "AFR": #FFD900, //gold(ish)
+  "AMR": #E41A1C, // red
+  "ASN": #B15928, // brown
+  "EAS": #4DAF4A, // green
+  "EUR": #377EB8, // blue
+  "GME": #00CED1, // turquoise
+  "SAS": #984EA3, // purple
+  "MAE": #A6CEE3, // light blue
+  "MAO": #FF7F00, // orange
+  "NR":  #BBB,    // lighter grey
+  "OTH": #999     // grey
+);
 
-.anc_AFR {
-  background-color: $anc_colour_AFR;
-}
-.anc_AMR {
-  background-color: $anc_colour_AMR;
-}
-.anc_ASN {
-  background-color: $anc_colour_ASN;
-}
-.anc_EAS {
-  background-color: $anc_colour_EAS;
-}
-.anc_EUR {
-  background-color: $anc_colour_EUR;
-}
-.anc_GME {
-  background-color: $anc_colour_GME;
-}
-.anc_SAS {
-  background-color: $anc_colour_SAS;
-}
-.anc_MAE {
-  background-color: $anc_colour_MAE;
-}
-.anc_MAO {
-  background-color: $anc_colour_MAO;
-}
-.anc_NR {
-  background-color: $anc_colour_NR;
-}
-.anc_OTH {
-  background-color: $anc_colour_OTH;
-}
-
-.anc_colour_AFR {
-  color: $anc_colour_AFR;
-}
-.anc_colour_AMR {
-  color: $anc_colour_AMR;
-}
-.anc_colour_ASN {
-  color: $anc_colour_ASN;
-}
-.anc_colour_EAS {
-  color: $anc_colour_EAS;
-}
-.anc_colour_EUR {
-  color: $anc_colour_EUR;
-}
-.anc_colour_GME {
-  color: $anc_colour_GME;
-}
-.anc_colour_SAS {
-  color: $anc_colour_SAS;
-}
-.anc_colour_MAE {
-  color: $anc_colour_MAE;
-}
-.anc_colour_MAO {
-  color: $anc_colour_MAO;
-}
-.anc_colour_NR {
-  color: $anc_colour_NR;
-}
-.anc_colour_OTH {
-  color: $anc_colour_OTH;
+@each $anc_key, $anc_colour in $ancestry_colours {
+  .anc_#{$anc_key} {
+    background-color: $anc_colour;
+  }
+  .anc_colour_#{$anc_key} {
+    color: $anc_colour;
+  }
 }
