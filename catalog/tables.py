@@ -17,15 +17,20 @@ def smaller_in_bracket(value):
     value = value.replace(']','<span class="only_export">]</span></span>')
     return value
 
+
+def score_format(value):
+    return format_html(f'<a href="/score/{value.id}">{value.id}</a> <div class="small">({value.name})</div>')
+
+
 def publication_format(value, is_external=False):
     pub_date = value.date_publication.strftime('%Y')
     citation = format_html(f'<div class="pgs_pub_details">{value.firstauthor} <i>et al.</i> {value.journal} ({pub_date})</div>')
     extra_html = ''
     if is_external:
-        extra_html += format_html('<span class="badge badge-pgs-small" data-toggle="tooltip" title="External PGS evaluation">Ext.</span>')
+        extra_html += format_html('<span class="only_export">|</span><span class="badge badge-pgs-small" data-toggle="tooltip" title="External PGS evaluation">Ext.</span>')
     if value.is_preprint:
-        extra_html += format_html('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
-    return format_html(f'<a href="{publication_path}/{value.id}">{value.id}</a>{citation}{extra_html}')#, value.id, value.id, citation, extra_html)
+        extra_html += format_html('<span class="only_export">|</span><span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
+    return format_html(f'<a href="{publication_path}/{value.id}">{value.id}</a> {citation}{extra_html}')
 
 
 class Column_joinlist(tables.Column):
@@ -255,7 +260,7 @@ class Browse_ScoreTable(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_id(self, value, record):
-        return format_html('<a href="/score/{}">{}</a><div class="small">({})</div>', value, value, record.name)
+        return score_format(record)
 
     def render_publication(self, value):
         return publication_format(value)
@@ -619,10 +624,10 @@ class PerformanceTable(tables.Table):
         ancestry_key = value.samples_combined_ancestry_key
         ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
         count_ind = '{:,} individuals'.format(value.count_individuals)
-        return format_html('<a href="#{}">{}</a><div class="small"><i class="fa fa-circle-o anc_colour_{} font-bold"></i> {}</div><div class="small">{}</div>', value, value, ancestry_key, ancestry,count_ind)
+        return format_html('<a href="#{}">{}</a> <div class="small"><i class="fa fa-circle-o anc_colour_{} font-bold"></i> {}</div><span class="only_export">|</span><div class="small">{}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
-        return format_html('<a href="/score/{}">{}</a><div class="small">({})</div>', value.id, value.id, value.name)
+        return score_format(value)
 
     def render_performance_comments(self, value):
         comments = value
