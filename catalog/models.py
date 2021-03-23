@@ -509,7 +509,7 @@ class Sample(models.Model):
             sstring += '<span class="only_export">]</span>'
             sstring += '</div>'
         else:
-            sstring += '{:,} individuals'.format(self.sample_number)
+            sstring += self.display_sample_number_total()
         if self.sample_percent_male != None:
             sstring += '<span class="only_export">, </span>'
             sstring += '<div class="mt-2 smaller-90">%s %% Male samples</div>'%str(round(self.sample_percent_male,2))
@@ -653,28 +653,6 @@ class Score(models.Model):
             return True
         else:
             return False
-
-
-    @property
-    def display_ancestry_text(self):
-        if self.ancestries:
-            gwas = ''
-            if self.ancestries['gwas']:
-                print(self.ancestries['gwas'])
-                for key,val in self.ancestries['gwas'].items():
-                    gwas += f'<li>{key}: {val}</li>'
-                gwas = f'<div class="mr-1">GWAS:<ul>{gwas}</ul></div>'
-            dev = ''
-            for key,val in self.ancestries['dev'].items():
-                dev += f'<li>{key}: {val}</li>'
-            dev = f'<div class="mr-1">DEV:<ul>{dev}</ul></div>'
-            eval = ''
-            for key,val in self.ancestries['eval'].items():
-                eval += f'<li>{key}: {val}</li>'
-            eval = f'<div class="mr-1">EVAL:<ul>{eval}</ul></div>'
-            return f'<div class="flex">{gwas}{dev}{eval}</div>'
-        else:
-            return None
 
 
     @property
@@ -1157,7 +1135,7 @@ class SampleSet(models.Model):
             if 'European' in anc:
                 anc_key = 'MAE'
             else:
-                anc_label = 'MAO'
+                anc_key = 'MAO'
         return anc_key
 
 

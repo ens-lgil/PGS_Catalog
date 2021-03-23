@@ -872,6 +872,7 @@ td > ul {
     position:absolute;
     top: -20px;
     right:10px;
+    cursor: default;
 }
 
 .page_title {
@@ -1170,7 +1171,7 @@ a.link-with-btn {
   }
   > div:last-child {
     width:200px;
-    height:150px;
+    height:130px;
   }
 }
 

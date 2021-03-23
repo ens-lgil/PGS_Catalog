@@ -11,11 +11,12 @@ from pgs_web import constants
 from .tables import *
 
 
-generic_attributes =[ 'curation_notes','publication__title','publication__PMID','publication__authors','publication__curation_status','publication__curation_notes','publication__date_released']
+generic_attributes =['publication__title','publication__PMID','publication__authors','publication__curation_status','publication__curation_notes','publication__date_released']
 sampleset_samples_prefetch = Prefetch('sampleset__samples', queryset=Sample.objects.select_related('sample_age','followup_time').all().prefetch_related('sampleset','cohorts'))
 pgs_defer = {
     'generic': generic_attributes,
-    'perf'   : [*generic_attributes,'date_released','score__curation_notes','score__date_released']
+    'perf'   : [*generic_attributes,'date_released','score__curation_notes','score__date_released'],
+    'perf_extra': ['score__method_name','score__method_params','score__variants_interactions','score__ancestries','score__license']
 }
 pgs_prefetch = {
     'trait': Prefetch('trait_efo', queryset=EFOTrait.objects.only('id','label').all()),
@@ -169,7 +170,7 @@ def get_efo_traits_data():
 
 
 def index(request):
-    current_release = Release.objects.values('date').order_by('-date').first()
+    current_release = Release.objects.values('date','score_count','publication_count').order_by('-date').first()
 
     traits_count = EFOTrait.objects.count()
 
@@ -293,7 +294,7 @@ def pgs(request, pgs_id):
             context['table_sample_training'] = table
 
         # Extract + display Performance + associated samples
-        pquery = Performance.objects.defer(*pgs_defer['perf']).select_related('score', 'publication').filter(score=score).prefetch_related(*pgs_prefetch['perf'])
+        pquery = Performance.objects.defer(*pgs_defer['perf'],*pgs_defer['perf_extra']).select_related('score', 'publication').filter(score=score).prefetch_related(*pgs_prefetch['perf'])
         table = PerformanceTable(pquery)
         table.exclude = ('score')
         context['table_performance'] = table

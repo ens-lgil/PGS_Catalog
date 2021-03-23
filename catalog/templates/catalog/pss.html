@@ -128,7 +128,7 @@
           <script type="text/javascript">
             document.addEventListener("DOMContentLoaded", function(event) {
               var data_chart = {{ sample.display_sample_category_number|safe }};
-              var pgs_samples_piechart = new PGSPieChartSmall('sample_piechart_{{ forloop.counter }}',data_chart,200,160,60,'sample');
+              var pgs_samples_piechart = new PGSPieChartSmall('sample_piechart_{{ forloop.counter }}',data_chart,200,140,65,'sample');
               pgs_samples_piechart.draw_piechart();
               pgs_samples_piechart.draw_legend();
             });
@@ -145,7 +145,7 @@
           <script type="text/javascript">
             document.addEventListener("DOMContentLoaded", function(event) {
               var data_chart = {{ sample.display_sample_gender_percentage|safe }};
-              var pgs_samples_piechart = new PGSPieChartSmall('sample_piechart_gender_{{ forloop.counter }}',data_chart,200,160,60,'gender');
+              var pgs_samples_piechart = new PGSPieChartSmall('sample_piechart_gender_{{ forloop.counter }}',data_chart,200,140,65,'gender');
               pgs_samples_piechart.draw_piechart();
               pgs_samples_piechart.draw_legend();
             });

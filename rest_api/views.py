@@ -27,8 +27,8 @@ related_dict = {
     'traitcategory_ontology_prefetch': [Prefetch('traitcategory', queryset=TraitCategory.objects.only('label','efotraits_ontology__id').all())],
     'efotraits_ontology_set_prefetch': [Prefetch('efotraits_ontology_set', queryset=EFOTrait_Ontology.objects.only('label','child_traits__id').all())],
     'efotraits_prefetch': [Prefetch('efotraits', queryset=EFOTrait.objects.defer('synonyms','mapped_terms').all())],
-    'score_defer': [*generic_defer,'publication__curation_status','publication__curation_notes','publication__date_released','publication__authors'],
-    'perf_defer': [*generic_defer,'score__curation_notes','score__date_released','publication__curation_status','publication__curation_notes','publication__date_released','publication__authors'],
+    'score_defer': [*generic_defer,'ancestries','publication__curation_status','publication__curation_notes','publication__date_released','publication__authors'],
+    'perf_defer': [*generic_defer,'score__ancestries','score__curation_notes','score__date_released','publication__curation_status','publication__curation_notes','publication__date_released','publication__authors'],
     'publication_defer': [*generic_defer,'curation_status']
 }
 

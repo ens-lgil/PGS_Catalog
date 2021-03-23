@@ -613,7 +613,7 @@ class PerformanceTable(tables.Table):
             "data-export-options" : '{"fileName": "pgs_performance_metrics_data"}'
         }
         fields = [
-            'id','score', 'sampleset', 'pub_withexternality',
+            'id', 'score', 'sampleset', 'pub_withexternality',
             'trait_info',
             'effect_sizes', 'class_accuracy', 'othermetrics',
             'covariates', 'performance_comments'

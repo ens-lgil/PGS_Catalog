@@ -488,13 +488,6 @@ $(document).ready(function() {
 
             // Traits
             if (trait_filter != '') {
-              // var traits_html = $(row['list_traits']);
-              // var traits = traits_html.children('a');
-              // for (var j = 0; j < traits.length; j++) {
-              //   if (traits[j].innerHTML == trait_filter) {
-              //     pass_filter += 1;
-              //   }
-              // }
               $(row['list_traits']).each(function() {
                 if ($(this).text() == trait_filter) {
                   pass_filter += 1;
@@ -505,7 +498,7 @@ $(document).ready(function() {
             // Select scores
             if (pass_filter == anc_filter_length) {
               var pgs_td = row['id'];
-              var pgs_id = $(pgs_td).text().split('(')[0];
+              var pgs_id = $(pgs_td).text().split('(')[0].trim();
               if (!pgs_ids_list.includes(pgs_id)) {
                 pgs_ids_list.push(pgs_id);
               }
@@ -532,11 +525,11 @@ $(document).ready(function() {
             if ($.inArray(pgs_id, pgs_ids_list) != -1) {
               // PPM
               var ppm_id = row['id'];
-              //console.log("PPM_ID: "+ppm_td);
+              //console.log("PGS_ID: "+pgs_id+"| PPM_ID: "+ppm_id+"|");
               ppm_ids_list.push(ppm_id);
               // PSS
               var pss_td = row['sampleset'];
-              var pss_id = $(pss_td).text();
+              var pss_id = $(pss_td).text().split(' ')[0];
               pss_ids_list.push('<a id="'+pss_id+'" href="/sampleset/'+pss_id+'">'+pss_id+'</a>');
             }
           });
@@ -1222,7 +1215,7 @@ class PGSPieChartSmall extends PGSPieChart {
     });
 
     legend.attr('transform', function() {
-      return `translate(${(obj.width - nodeWidth(this)) / 2},${0})`
+      return `translate(${(obj.width - nodeWidth(this)) / 2},0)`
     });
   }
 }
