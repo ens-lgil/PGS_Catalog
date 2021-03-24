@@ -106,7 +106,7 @@ class UpdateScoreAncestry:
                     if 'EUR' in sampleset_sample_anc[key_id]:
                         anc_key = 'MAE'
                     else:
-                        anc_key = 'MOA'
+                        anc_key = 'MAO'
                 else:
                     anc_key = sampleset_sample_anc[key_id][0]
 
@@ -119,16 +119,16 @@ class UpdateScoreAncestry:
 
 
 
-        anc_data = {}
-        for type in ['gwas','dev','eval']:
-            if score_ancestry_data[type]['data']:
-                anc_data[type] = {}
-                print(f'\t#### '+type.upper())
-                count_total = score_ancestry_data[type]['total']
-                for key, value in score_ancestry_data[type]['data'].items():
-                    percent = "{:.1f}".format((value/count_total)*100)
-                    print(f'\t>>>> PERCENT: {key} => {percent}%')
-                    anc_data[type][key] = percent
+            anc_data = {}
+            for type in ['gwas','dev','eval']:
+                if score_ancestry_data[type]['data']:
+                    anc_data[type] = {}
+                    print(f'\t#### '+type.upper())
+                    count_total = score_ancestry_data[type]['total']
+                    for key, value in score_ancestry_data[type]['data'].items():
+                        percent = "{:.1f}".format((value/count_total)*100)
+                        print(f'\t>>>> PERCENT: {key} => {percent}%')
+                        anc_data[type][key] = percent
 
         # if variant_ancestry:
         #     anc_data['gwas'] = {}
@@ -151,8 +151,8 @@ class UpdateScoreAncestry:
         #         percent = "{:.1f}".format((value/data_eval_ancestry_total)*100)
         #         print(f'\t>>>> PERCENT: {key} => {percent}%')
         #         anc_data['eval'][key] = percent
-        score.ancestries = anc_data
-        score.save()
+            score.ancestries = anc_data
+            score.save()
 
 
 ################################################################################

@@ -425,7 +425,7 @@ class Sample(models.Model):
     followup_time = models.OneToOneField(Demographic, on_delete=models.CASCADE,related_name='followuptime_of', null=True)
 
     ## Ancestry
-    ancestry_broad = models.CharField('Broad Ancestry Category', max_length=100)
+    ancestry_broad = models.CharField('Broad Ancestry Category', max_length=250)
     ancestry_free = models.TextField('Ancestry (e.g. French, Chinese)', null=True)
     ancestry_country = models.TextField('Country of Recruitment', null=True)
     ancestry_additional = models.TextField('Additional Ancestry Description', null=True)
