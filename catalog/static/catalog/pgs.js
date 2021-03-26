@@ -558,38 +558,37 @@ $(document).ready(function() {
 // Wait for the rendering of the whole page (DOM + but everything else is loaded)
 $(window).on('load', function() {
 
-  // var timeout_tooltip = 1500;
-  // if (navigator.userAgent.indexOf("Chrome") !== -1) {
-  //   timeout_tooltip = 2500;
-  // }
   setTimeout(function(){
-    pgs_tooltip();
-  }, 1500);
 
-  // Add even listener
-  var input = document.querySelectorAll(".form-control");
-  console.log("inputs: "+input.length);
-  for (var i=0; i < input.length; i++ ) {
-    input[i].addEventListener('input', format_table_event);
-  }
-
-  $(data_toggle_table).each(function(){
-    // Remove column search if the number of rows is too small
-    var trs = $( this ).find( "tbody > tr");
-    if (trs.length < 3) {
-      $(this).find('.fht-cell').hide()
+    // Add even listener
+    var input = document.querySelectorAll(".form-control");
+    console.log("inputs: "+input.length);
+    for (var i=0; i < input.length; i++ ) {
+      input[i].addEventListener('input', format_table_event);
     }
-    // Remove column search where the filtering is not relevant
-    else {
-      var list = ['ancestries','link_filename'];
-      for (var i=0; i < list.length; i++) {
-        $(this).find(`[data-field='${list[i]}'] div.fht-cell`).hide();
-        $(this).find(`[data-field='${list[i]}']`).css({"vertical-align": "top"});
+
+    // Hide column search input fields
+    $(data_toggle_table).each(function(){
+      // Remove column search if the number of rows is too small
+      var trs = $( this ).find( "tbody > tr");
+      if (trs.length < 3) {
+        $(this).find('.fht-cell').hide()
       }
-    }
+      // Remove column search where the filtering is not relevant
+      else {
+        var list = ['ancestries','link_filename'];
+        for (var i=0; i < list.length; i++) {
+          var field = $(this).find(`[data-field='${list[i]}']`);
+          field.find(`div.fht-cell`).hide();
+          field.css({"vertical-align": "top"});
+        }
+      }
+    });
+
     // Alter the table display
-    format_table_content(500);
-  });
+    format_table_content(0);
+
+  }, 500);
 });
 
 

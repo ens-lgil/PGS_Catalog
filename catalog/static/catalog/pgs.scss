@@ -1251,6 +1251,16 @@ a.link-with-btn {
   scrollbar-color: $pgs_colour_1 $pgs_light_grey;
 }
 
+.gwas_source {
+  display: flex;
+  line-height: 24px;//31px;
+  &:before {
+    content: url('/static/catalog/imgs/GWAS_Catalog_logo_24.png');
+    width: 29px;//35px;
+  }
+}
+
+
 /* Trait CSS */
 .trait_graph_container {
   display:block;
@@ -2124,7 +2134,6 @@ footer {
 
 .ancestry_chart_container {
   display:flex;
-  flex-wrap:wrap;
   > div {
     width:50px;
     height:40px;

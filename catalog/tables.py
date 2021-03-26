@@ -24,7 +24,7 @@ def score_format(value):
 
 def publication_format(value, is_external=False):
     pub_date = value.date_publication.strftime('%Y')
-    citation = format_html(f'<div class="pgs_pub_details">{value.firstauthor} <i>et al.</i> {value.journal} ({pub_date})</div>')
+    citation = format_html(f'<span class="only_export">|</span><div class="pgs_pub_details">{value.firstauthor} <i>et al.</i> {value.journal} ({pub_date})</div>')
     extra_html = ''
     if is_external:
         extra_html += format_html('<span class="only_export">|</span><span class="badge badge-pgs-small" data-toggle="tooltip" title="External PGS evaluation">Ext.</span>')
@@ -474,7 +474,9 @@ class SampleTable_variants(tables.Table):
         model = Sample
         attrs = {
             "data-show-columns" : "false",
-            "data-sort-name" : "display_ancestry",
+            "data-sort-name" : "display_sources",
+            #'data-search' : "false",
+            #'data-filter-control': "false",
             "data-export-options" : '{"fileName": "pgs_sample_source_data"}'
         }
         fields = [
@@ -487,7 +489,7 @@ class SampleTable_variants(tables.Table):
     def render_sources(self, value):
         l = []
         if 'GCST' in value:
-            l.append('GWAS Catalog: <a href="https://www.ebi.ac.uk/gwas/studies/{}">{}</a>'.format(value['GCST'], value['GCST']))
+            l.append('<div class="gwas_source"><span>GWAS Catalog: <a href="{}/gwas/studies/{}">{}</a></span></div>'.format(constants.USEFUL_URLS['EBI_URL'],value['GCST'], value['GCST']))
         if 'PMID' in value and value['PMID']:
             publication_id = value['PMID']
             url = ""
@@ -499,28 +501,9 @@ class SampleTable_variants(tables.Table):
                 if re.match(r'^10\.',publication_id):
                     publication_id = "DOI:"+publication_id
                 url = "https://europepmc.org/search?query={}".format(publication_id)
-            l.append('EuropePMC: <a href="{}">{}</a>'.format(url, value['PMID']))
-        return format_html('<br>'.join(l))
+            l.append('<div>Europe PMC: <a href="{}">{}</a></div>'.format(url, value['PMID']))
+        return format_html(''.join(l))
 
-
-class SampleTable_variants_simple(SampleTable_variants):
-
-    class Meta:
-        attrs = {
-            "data-show-columns" : "false",
-            "data-sort-name" : "display_ancestry",
-            'data-search' : "false",
-            'data-filter-control': "false",
-            "data-export-options" : '{"fileName": "pgs_sample_variants_data"}'
-        }
-        template_name = 'catalog/pgs_catalog_django_table.html'
-
-
-    def render_sources(self, value):
-        pmid = ''
-        if 'PMID' in value and value['PMID']:
-            pmid = '<a href="https://europepmc.org/search?query={}">{}</a>'.format(value['PMID'], value['PMID'])
-        return format_html(pmid)
 
 class SampleTable_training(tables.Table):
     '''Table on PGS page - displays information about the samples used in Score Development'''
@@ -624,7 +607,7 @@ class PerformanceTable(tables.Table):
         ancestry_key = value.samples_combined_ancestry_key
         ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
         count_ind = '{:,} individuals'.format(value.count_individuals)
-        return format_html('<a href="#{}">{}</a> <div class="small"><i class="fa fa-circle-o anc_colour_{} font-bold"></i> {}</div><span class="only_export">|</span><div class="small">{}</div>', value, value, ancestry_key, ancestry,count_ind)
+        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fa fa-circle-o anc_colour_{} font-bold"></i> {}</div><span class="only_export">|</span><div class="small"><i class="fa fa-user"></i> {}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
         return score_format(value)

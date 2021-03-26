@@ -509,7 +509,7 @@ class Sample(models.Model):
             sstring += '<span class="only_export">]</span>'
             sstring += '</div>'
         else:
-            sstring += self.display_sample_number_total()
+            sstring += self.display_sample_number_total
         if self.sample_percent_male != None:
             sstring += '<span class="only_export">, </span>'
             sstring += '<div class="mt-2 smaller-90">%s %% Male samples</div>'%str(round(self.sample_percent_male,2))
@@ -657,29 +657,9 @@ class Score(models.Model):
 
     @property
     def display_ancestry_html(self):
-        # colours = {
-        #   'AFR': '#FFFF33', # yellow
-        #   'AMR': '#E41A1C', # red
-        #   'EAS': '#4DAF4A', # green
-        #   'EUR': '#377EB8', # blue
-        #   'SAS': '#984EA3', # purple
-        #   'MA' : '#FF7F00', # orange
-        #   'MAE': '#A6CEE3', # light blue   '#1f4869',//'#F781BF', // pink
-        #   'OTH': '#999' # grey
-        # }
-        # labels = {
-        #   'AFR': 'African',
-        #   'AMR': 'American',
-        #   'EAS': 'East Asian',
-        #   'EUR': 'European',
-        #   'SAS': 'South Asian',
-        #   'MA' : 'Multi-ancestry',
-        #   'MAE': 'Multi-ancestry (including European)',
-        #   'OTH': 'Other'
-        # }
         ancestry_labels = constants.ANCESTRY_LABELS
         types = {
-            'gwas': 'Source of Variant Associations (GWAS)',
+            'gwas': 'Source of Variant<br />Associations (GWAS)',
             'dev': 'Score Development',
             'eval': 'Evaluation'
         }
@@ -689,7 +669,7 @@ class Score(models.Model):
                 html_type = ''
                 if type in self.ancestries:
                     html_type += f'<tr><td>{types[type]}:</td><td>'
-                    html_type += '<div style="display:flex;flex-wrap:wrap">'
+                    html_type += '<div style="display:flex">'
                     chart = []
                     legend = ''
                     id = "score_anc_"+type
@@ -697,8 +677,8 @@ class Score(models.Model):
                         chart.append(f'"{key}",{val}')
                         label = ancestry_labels[key]
                         legend += f'<div><span class="filter_ancestry_box anc_{key}" data-key="{key}"></span>{label}: {val}%</div>';
-                    html_type += f'<div class="ancestry_chart" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
-                    html_type += '<div class="filter_legend ml-4">'+legend+'</div>'
+                    html_type += f'<div class="ancestry_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
+                    html_type += '<div class="filter_legend">'+legend+'</div>'
                     html_type += '</div></td></tr>'
                 html += html_type
             # dev = ''
