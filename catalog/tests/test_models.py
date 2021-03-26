@@ -232,7 +232,7 @@ class EFOTraitTest(TestCase):
         label_url =  r'^\<a\s.*href=.+\/trait\/'+efo_id+r'.*\>'+efo_name+r'\<\/a\>$'
         self.assertRegexpMatches(efo_trait_1.display_label, label_url)
         id_url = r'^\<a\s.*href=.+\>'+efo_id+r'</a>.+$'
-        self.assertRegexpMatches(efo_trait_1.display_id_url(), id_url)
+        self.assertRegexpMatches(efo_trait_1.display_ext_url, id_url)
         efo_trait_1.parse_api()
         self.assertEqual(efo_trait_1.label, efo_name)
         self.assertEqual(efo_trait_1.description, efo_desc)
@@ -1022,7 +1022,7 @@ class EFOTrait_OntologyTest(TestCase):
         label_url =  r'^\<a\s.*href=.+\/trait\/'+efo_id+r'.*\>'+efo_name+r'\<\/a\>$'
         self.assertRegexpMatches(efo_trait_1.display_label, label_url)
         id_url = r'^\<a\s.*href=.+\>'+efo_id+r'</a>.+$'
-        self.assertRegexpMatches(efo_trait_1.display_id_url(), id_url)
+        self.assertRegexpMatches(efo_trait_1.display_ext_url, id_url)
 
 
         # Test empty synonyms & mapped_terms

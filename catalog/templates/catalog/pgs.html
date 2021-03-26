@@ -30,14 +30,14 @@
                 <td>Mapped Trait(s)</td>
                 <td>
                  {% if efos|length == 1 %}
-                  <a class="mr-2" href="/trait/{{ efos.0.id }}"><b>{{ efos.0.label }}</b></a>
-                  (<a href="{{ efos.0.url }}">{{ efos.0.id }}</a>)
+                  <span class="mr-2 font-bold">{{ efos.0.display_label|safe }}</span>
+                  ({{ efos.0.display_ext_url|safe }})
                  {% else %}
                   <ul class="mb-0">
                    {% for trait in efos %}
                     <li>
-                     <a class="mr-2" href="/trait/{{ trait.id }}"><b>{{ trait.label }}</b></a>
-                     (<a href="{{ trait.url }}">{{ trait.id }}</a>)
+                     <span class="mr-2 font-bold">{{ trait.display_label|safe }}</span>
+                     ({{ trait.display_ext_url|safe }})
                     </li>
                    {% endfor %}
                   </ul>

@@ -209,7 +209,6 @@ class Browse_TraitTable(tables.Table):
     '''Table to browse Traits in the PGS Catalog'''
     label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term label)', orderable=True)
     scores_count = tables.Column(accessor='scores_count', verbose_name='Number of Related PGS')
-    id_url = Column_format_html(accessor='display_id_url', verbose_name='Trait Identifier (Experimental Factor Ontology ID)')
     category_labels = Column_format_html(accessor='display_category_labels', verbose_name='Trait Category')
 
     class Meta:
@@ -222,19 +221,21 @@ class Browse_TraitTable(tables.Table):
         }
         fields = [
             'label_link',
-            'id_url',
+            'display_ext_url',
             'category_labels',
             'scores_count'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
 
+    def render_display_ext_url(self, value, record):
+        return format_html(f'{value}<span class="only_export">: {record.url}</span>')
+
 
 class Browse_ScoreTable(tables.Table):
     '''Table to browse Scores (PGS) in the PGS Catalog'''
     id = tables.Column(accessor='id', verbose_name='Polygenic Score (PGS) ID & Name', orderable=True)
-    list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
+    trait_efo = tables.Column(accessor='trait_efo', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
-    #ancestry_list = Column_format_html(accessor='display_ancestry', verbose_name='Ancestry distributions', orderable=False)
     ancestries =  Column_format_html(accessor='ancestries', verbose_name='Ancestry distribution', orderable=False)
 
     class Meta:
@@ -248,12 +249,10 @@ class Browse_ScoreTable(tables.Table):
         }
         fields = [
             'id',
-            #'name',
             'publication',
             'trait_reported',
-            'list_traits',
+            'trait_efo',
             'variants_number',
-            #'ancestry_list',
             'ancestries',
             'ftp_link'
         ]
@@ -265,11 +264,9 @@ class Browse_ScoreTable(tables.Table):
     def render_publication(self, value):
         return publication_format(value)
 
-    def render_list_traits(self, value):
-        l = []
-        for x in value:
-            l.append('<a href="/trait/{}">{}</a>'.format(x[0], x[1]))
-        return format_html('<br>'.join(l))
+    def render_trait_efo(self,value):
+        traits_list = [ t.display_label for t in value.all() ]
+        return format_html(',<br />'.join(traits_list))
 
     def render_ftp_link(self, value, record):
         id = value.split('.')[0]
@@ -278,7 +275,7 @@ class Browse_ScoreTable(tables.Table):
         license_icon = ''
         if record.has_default_license == False:
             license_icon = f'<span class="pgs-info-icon pgs_helpover ml-2" title="Terms and Licenses" data-content="{record.license}" data-placement="left"> <span class="only_export"> - Check </span>Terms/Licenses</span>'
-        return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
+        return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" data-toggle="tooltip" data-placement="bottom" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
 
     def render_variants_number(self, value):
         return '{:,}'.format(value)
@@ -359,9 +356,6 @@ class Browse_ScoreTable(tables.Table):
                 html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
 
         # Wrap up the HTML
-        #html = '<div class="ancestry_chart_container">'
-        #html += '  <div class="ancestry_chart_filter" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'></div>'
-        #html += '  <div class="ancestry_chart_box">'+''.join(html_list)+'</div>'
         html = '<div class="ancestry_chart_container" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'>'
         html += ''.join(html_list)
         html += '</div>'
@@ -375,61 +369,6 @@ class Browse_ScoreTableEval(Browse_ScoreTable):
         }
         template_name = 'catalog/pgs_catalog_django_table.html'
 
-
-# class Browse_ScoreTableBar(tables.Table):
-#     '''Table to browse Scores (PGS) in the PGS Catalog'''
-#     list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
-#     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
-#     #display_ancestry_bar = Column_format_html(accessor='display_ancestry_bar', verbose_name='Ancestry distributions', orderable=False)
-#     display_ancestry_bar = Column_format_html(accessor='display_ancestry_bar', verbose_name='Ancestry distributions', orderable=False)
-#     class Meta:
-#         model = Score
-#         attrs = {
-#             "id": "scores_table",
-#             "data-show-columns" : "true",
-#             "data-sort-name" : "id",
-#             "data-page-size" : page_size,
-#             "data-export-options" : '{"fileName": "pgs_scores_data"}'
-#         }
-#         fields = [
-#             'id',
-#             'name',
-#             'publication',
-#             'trait_reported',
-#             'list_traits',
-#             'variants_number',
-#             'display_ancestry_bar',
-#             'ftp_link'
-#         ]
-#         template_name = 'catalog/pgs_catalog_django_table.html'
-#
-#     def render_id(self, value):
-#         return format_html('<a href="/score/{}">{}</a>', value, value)
-#
-#     def render_publication(self, value):
-#         citation = format_html(' '.join([value.id, '<span class="pgs_pub_details">', value.firstauthor, '<i>et al.</i>', value.journal, '(%s)'%value.date_publication.strftime('%Y'), '</span>']))
-#         is_preprint = ''
-#         if value.is_preprint:
-#             is_preprint = format_html('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
-#         return format_html('<a href="'+publication_path+'/{}">{}</a>{}', value.id, citation, is_preprint)
-#
-#     def render_list_traits(self, value):
-#         l = []
-#         for x in value:
-#             l.append('<a href="/trait/{}">{}</a>'.format(x[0], x[1]))
-#         return format_html('<br>'.join(l))
-#
-#     def render_ftp_link(self, value, record):
-#         id = value.split('.')[0]
-#         ftp_link = '{}/scores/{}/ScoringFiles/'.format(settings.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], id)
-#         ftp_file_link = ftp_link+value
-#         license_icon = ''
-#         if record.has_default_license == False:
-#             license_icon = f'<span class="pgs-info-icon pgs_helpover ml-2" title="Terms and Licenses" data-content="{record.license}" data-placement="left"> <span class="only_export"> - Check </span>Terms/Licenses</span>'
-#         return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
-#
-#     def render_variants_number(self, value):
-#         return '{:,}'.format(value)
 
 class Browse_SampleSetTable(tables.Table):
     '''Table to browse SampleSets (PSS; used in PGS evaluations) in the PGS Catalog'''

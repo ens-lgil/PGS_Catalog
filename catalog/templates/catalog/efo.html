@@ -28,7 +28,7 @@
           </tr>
           <tr>
             <td>Identifier</td>
-            <td><b><a href="{{ trait.url }}">{{ trait.id }}</a></b></td>
+            <td><b>{{ trait.display_ext_url|safe }}</b></td>
           </tr>
           {% if trait.description %}
             <tr>
