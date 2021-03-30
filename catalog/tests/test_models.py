@@ -1021,7 +1021,7 @@ class EFOTrait_OntologyTest(TestCase):
         self.assertEqual(efo_trait_1.__str__(), efo_id+' | '+efo_name+' ')
         label_url =  r'^\<a\s.*href=.+\/trait\/'+efo_id+r'.*\>'+efo_name+r'\<\/a\>$'
         self.assertRegexpMatches(efo_trait_1.display_label, label_url)
-        id_url = r'^\<a\s.*href=.+\>'+efo_id+r'</a>.+$'
+        id_url = r'^\<a\s.*href=.+\>'+efo_id+r'\<\/a\>$'
         self.assertRegexpMatches(efo_trait_1.display_ext_url, id_url)
 
 
