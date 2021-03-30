@@ -508,6 +508,12 @@ h2 {
   color: $pgs_colour_2;
 }
 
+.custom-control-label {
+  line-height: 24px;
+  vertical-align:middle !important;
+  margin-bottom: 0px !important;
+}
+
 
 /* boostrap-table overwrite */
 .bootstrap-table {
@@ -788,6 +794,16 @@ td > ul {
   margin-left:0.5rem;
   i {
     font-size: 18px;
+    color: $pgs_colour_1;
+    &:hover {
+      color: $pgs_colour_1_lighter;
+    }
+  }
+}
+.info-icon-small {
+  margin-left:0.5rem;
+  i {
+    font-size: 14px;
     color: $pgs_colour_1;
     &:hover {
       color: $pgs_colour_1_lighter;

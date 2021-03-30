@@ -14,7 +14,7 @@ from .tables import *
 generic_attributes =['publication__title','publication__PMID','publication__authors','publication__curation_status','publication__curation_notes','publication__date_released']
 sampleset_samples_prefetch = Prefetch('sampleset__samples', queryset=Sample.objects.select_related('sample_age','followup_time').all().prefetch_related('sampleset','cohorts'))
 pgs_defer = {
-    'generic': generic_attributes,
+    'generic': [*generic_attributes, 'curation_notes'],
     'perf'   : [*generic_attributes,'date_released','score__curation_notes','score__date_released'],
     'perf_extra': ['score__method_name','score__method_params','score__variants_interactions','score__ancestries','score__license']
 }
@@ -75,7 +75,7 @@ def ancestry_form():
     <div class="mb-3 pgs_form_container">
         <!-- Ancestry form -->
         <div id="ancestry_filter" class="filter_container mr-3 mb-3">
-            <div class="filter_header">Filter PGS by Participant Ancestry</div>
+            <div class="filter_header">Filter PGS by Participant Ancestry <a class="pgs_no_icon_link info-icon" target="_blank" href="/docs/#desc_anc" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see information about the Ancestry Distribution (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
             <div class="clearfix">
               <!-- Type of study -->
               <div style="float:left">
@@ -96,17 +96,17 @@ def ancestry_form():
                 </div>
                 <!-- Type of ancestry -->
                 <div class="filter_ancestry">
-                  <div class="filter_subheader mb-1">Ancestry filter:</div>
+                  <div class="filter_subheader mb-1">Ancestries Included:</div>
                   <div id="ancestry_filter_list">
-                    <div>
-                      <input type="checkbox" class="ancestry_filter_cb" value="non-EUR" id="anc_0">
-                      <label class="mb-0" for="anc_0">Non European</label>
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="MAO" id="anc_1">
+                      <label class="custom-control-label" for="anc_1">Multiple-Ancestries<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that include data from multiple ancestry groups at the selected study stage."><i class="fa fa-info-circle"></i></span></label>
                     </div>
-                    <div>
-                      <input type="checkbox" class="ancestry_filter_cb" value="MAO" id="anc_10">
-                      <label class="mb-0" for="anc_1">Multi Ancestry</label>
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="non-EUR" id="anc_0">
+                      <label class="custom-control-label" for="anc_0">Only Non-European<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that do not include data from European ancestry individuals at the selected study stage."><i class="fa fa-info-circle"></i></span></label>
                     </div>
-                    <div class="filter_subheader mt-1 mb-1">Single ancestry:</div>
+                    <div class="filter_subheader mt-1 mb-1">Select an ancestry:</div>
                     <div>
                       <select id="ancestry_filter_ind">
                         <option value="">--</option>
@@ -464,7 +464,9 @@ def gwas_gcst(request, gcst_id):
         'performance_disclaimer': performance_disclaimer(),
         'table_scores' : Browse_ScoreTable(related_scores),
         'has_table': 1,
-        'use_gwas_api': 1
+        'use_gwas_api': 1,
+        'ancestry_form': ancestry_form(),
+        'has_chart': 1
     }
 
     pquery = Performance.objects.defer(*pgs_defer['perf']).select_related('publication','score').filter(score__in=related_scores).prefetch_related(*pgs_prefetch['perf'])
