@@ -508,11 +508,25 @@ h2 {
   color: $pgs_colour_2;
 }
 
-.custom-control-label {
+.custom-control-label, .custom-control > span {
   line-height: 24px;
   vertical-align:middle !important;
   margin-bottom: 0px !important;
 }
+
+.custom-control-input:checked ~ .custom-control-label::before {
+  border-color: $pgs_colour_1 !important;
+  background-color: $pgs_colour_1 !important;
+}
+
+.tooltip-inner {
+  ul {
+    font-size: 90%;
+    margin-bottom: 0.4rem;
+    padding-left:35px;
+  }
+}
+
 
 
 /* boostrap-table overwrite */
@@ -914,7 +928,7 @@ td > ul {
 .pgs_note_1 {
   div {
     border-left:5px solid $pgs_note_title_1;
-    span {
+    span:first-child {
       color: $pgs_note_title_1;
     }
   }
@@ -922,7 +936,7 @@ td > ul {
 .pgs_note_2 {
   div {
     border-left:5px solid $pgs_note_title_2;
-    span {
+    span:first-child {
       color: $pgs_note_title_2;
     }
   }
@@ -930,7 +944,7 @@ td > ul {
 .pgs_note_3 {
   div {
     border-left:5px solid $pgs_note_title_3;
-    span {
+    span:first-child {
       color: $pgs_note_title_3;
     }
   }
@@ -1116,6 +1130,12 @@ a.link-with-btn {
       font-size:16px;
     }
   }
+}
+.bordered_content {
+  float:left;
+  border: 1px solid $pgs_colour_1;
+  border-radius: 4px;
+  padding:0.5rem;
 }
 .with_sep_right {
   border-right: 1px solid $pgs_colour_2;

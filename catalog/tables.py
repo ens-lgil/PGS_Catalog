@@ -298,6 +298,7 @@ class Browse_ScoreTable(tables.Table):
         data_type = {}
         data_title = {}
         anc_list = {}
+        multi_list = {}
         anc_all_list = {
             'dev_all': set(),
             'all': set()
@@ -306,18 +307,43 @@ class Browse_ScoreTable(tables.Table):
         # Fetch the data for each stage
         for type in stages:
             if type in ancestries_data:
+                anc_list[type] = set()
+                # Details of the multi ancestry data
+                multi_title = {}
+                multi_type = 'multi_'+type
+                if 'multi_'+type in ancestries_data:
+                    for mt in ancestries_data[multi_type]:
+                        (ma,anc) = mt.split('_')
+                        if ma not in multi_title:
+                            multi_title[ma] = []
+                        multi_title[ma].append(f'<li>{anc_labels[anc]}</li>')
+
+                        # Add to the unique list of ancestries
+                        anc_list[type].add(anc)
+
+                        if anc != 'MAE':
+                            # Add to the unique list of ALL ancestries
+                            anc_all_list['all'].add(anc)
+                            if type != 'eval':
+                                # Add to the unique list of DEV ancestries
+                                anc_all_list['dev_all'].add(anc)
+
+                # Ancestry data for the stage (type): distribution, list of ancestries and content of the chart tootlip
                 data_type[type] = []
                 data_title[type] = []
-                anc_list[type] = []
                 for key,val in sorted(ancestries_data[type].items(), key=lambda item: float(item[1]), reverse=True):
-                #for key,val in ancestries_data[type].items():
                     label = anc_labels[key]
                     data_type[type].append(f'"{key}",{val}')
-                    data_title[type].append(f'<div><span class=\'anc_{key}\'></span>{label}: {val}%</div>')
-                    anc_list[type].append(key)
-                    if type != 'eval':
-                        anc_all_list['dev_all'].add(key)
-                    anc_all_list['all'].add(key)
+                    extra_title = ''
+                    if key in multi_title:
+                        extra_title += '<ul>'+''.join(multi_title[key])+'</ul>'
+                    data_title[type].append(f'<div><span class=\'anc_{key}\'></span>{label}: {val}%{extra_title}</div>')
+                    if key != 'MAE':
+                        anc_list[type].add(key)
+                        if type != 'eval':
+                            anc_all_list['dev_all'].add(key)
+                        anc_all_list['all'].add(key)
+
 
         # Skip if no expecting data type available
         if data_type.keys() == 0:
@@ -329,17 +355,20 @@ class Browse_ScoreTable(tables.Table):
         for type in stages:
             if type in data_type:
                 id = chart_id+'_'+type
+                anc_list_stage = anc_list[type]
+
+                if len(anc_list_stage) > 1:
+                    anc_list_stage.add('MAO')
+                if 'EUR' not in anc_list_stage:
+                    anc_list_stage.add('non-EUR')
+
+                anc_list_stage = [f'"{x}"' for x in list(anc_list_stage)]
+
+                html_filter.append("data-anc-"+type+"='["+','.join(anc_list_stage)+"]'")
+
                 title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+'</div>'
                 html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
-
                 html_list.append(html_chart)
-                anc_list_stage = anc_list[type]
-                if 'EUR' not in anc_list_stage and 'MAE' not in anc_list_stage:
-                    anc_list_stage.append('non-EUR')
-                if 'MAO' not in anc_list_stage and 'MAE' in anc_list_stage:
-                    anc_list_stage.append('MAO')
-                anc_list_stage = [f'"{x}"' for x in anc_list_stage]
-                html_filter.append("data-anc-"+type+"='["+','.join(anc_list_stage)+"]'")
             else:
                 html_list.append('<div>-</div>')
 
@@ -347,12 +376,15 @@ class Browse_ScoreTable(tables.Table):
         # All dev and all data
         for all_type in anc_all_list.keys():
             if len(anc_all_list[all_type]):
-                anc_all_data = list(anc_all_list[all_type])
-                if 'EUR' not in anc_all_data and 'MAE' not in anc_all_data:
-                    anc_all_data.append('non-EUR')
-                if 'MAO' not in anc_all_data and 'MAE' in anc_all_data:
-                    anc_all_data.append('MAO')
-                anc_all_data = [f'"{x}"' for x in anc_all_data]
+                anc_all_data = anc_all_list[all_type]
+
+                if len(anc_all_data) > 1:
+                        anc_all_data.add('MAO')
+                if 'EUR' not in anc_all_data:
+                    anc_all_data.add('non-EUR')
+
+                anc_all_data = [f'"{x}"' for x in list(anc_all_data)]
+
                 html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
 
         # Wrap up the HTML

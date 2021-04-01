@@ -411,6 +411,7 @@ $(document).ready(function() {
       // Ancestries
       var stage;
       var anc_filter = [];
+      var anc_filter_length = 0;
       if ($("#ancestry_type_list").length) {
 
         stage = $("#ancestry_type_list option:selected").val();
@@ -424,10 +425,15 @@ $(document).ready(function() {
               anc_filter.push($(this).val());
             }
           });
+
           var ind_anc = $("#ancestry_filter_ind option:selected").val();
           if (ind_anc != '') {
             anc_filter.push(ind_anc);
           }
+          anc_filter_length = anc_filter.length;
+
+          // console.log("Filters: "+anc_filter);
+          // console.log("Filter length: "+anc_filter_length);
         }
       }
 
@@ -445,9 +451,8 @@ $(document).ready(function() {
 
 
       // Filter by value
-      if ((anc_filter.length != 0 && stage) || trait_filter != '') {
+      if ((anc_filter_length != 0 && stage) || trait_filter != '') {
 
-        var anc_filter_length = anc_filter.length;
         if (trait_filter != '') {
           anc_filter_length += 1;
         }
@@ -457,7 +462,7 @@ $(document).ready(function() {
         var pgs_ids_list_link = {};
         var scores_table_ids_list = [scores_table_id, scores_eval_table_id];
         var ancestry_col = 'ancestries';
-        var traits_col = 'list_traits';
+        var traits_col = 'trait_efo';
 
         for (var i=0; i < scores_table_ids_list.length; i++) {
           var scores_table_id = scores_table_ids_list[i];
@@ -488,7 +493,7 @@ $(document).ready(function() {
 
             // Traits
             if (trait_filter != '') {
-              $(row['list_traits']).each(function() {
+              $(row[traits_col]).each(function() {
                 if ($(this).text() == trait_filter) {
                   pass_filter += 1;
                 }
@@ -529,7 +534,7 @@ $(document).ready(function() {
               ppm_ids_list.push(ppm_id);
               // PSS
               var pss_td = row['sampleset'];
-              var pss_id = $(pss_td).text().split(' ')[0];
+              var pss_id = $(pss_td).html();
               pss_ids_list.push('<a id="'+pss_id+'" href="/sampleset/'+pss_id+'">'+pss_id+'</a>');
             }
           });
