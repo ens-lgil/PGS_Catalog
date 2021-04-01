@@ -28,7 +28,6 @@
     <p>
       This page contains information regarding the contents of the PGS Catalog, describing the curated data fields and tables extracted from PGS publications.
       The descriptions are based on the major data structures in the Catalog:
-
     </p>
     <div class="content_container">
       <div class="table-of-contents">
@@ -40,7 +39,7 @@
             <li><a href="#desc_trait">Trait</a></li>
             <li><a href="#desc_smpl">Sample</a></li>
             <li><a href="#desc_perf">Performance Metrics</a></li>
-            <li><a href="#desc_anc">Ancestry Distribution</a></li>
+            <!-- <li><a href="#desc_anc">Ancestry Distribution</a></li> -->
           </ul>
         </nav>
       </div>
@@ -326,94 +325,5 @@
             </tr>
           </tbody>
         </table>
-
-        <br />
-        <h4 id="desc_anc">Ancestry Distribution</h4>
-        <p>
-          The ancestry distribution provides a summary information about the ancestry of the individuals used to develop and evaluate the each polygenic score.<br />
-          It is calculated and reported for each stage of the Polygenic Score construction (variants association, development/training and evaluation).
-        </p>
-        <table class="table table-bordered table-left-col-filled">
-          <tbody>
-            <tr>
-              <td>
-                <b>Source of Variant Associations (GWAS)</b></td>
-              <td>Count individuals ancestry per sample, e.g.:
-                <ul>
-                  <li>Sample A: 1000 individuals - European</li>
-                  <li>Sample B: 3000 individuals - European</li>
-                  <li>Sample C: 1000 individuals - East Asian</li>
-                </ul>
-                <p></p>
-                Distribution:
-                <ul>
-                  <li><b><i class="fa fa-circle-o anc_colour_EUR"></i> European</b>: 80% (4000 individuals)</li>
-                  <li><b><i class="fa fa-circle-o anc_colour_EAS"></i> East Asian</b>: 20% (1000 individuals)</li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <td><b>Score Development</b></td>
-              <td>Same distribution calculation as <b>Source of Variant Associations (GWAS)</b></td>
-            </tr>
-            <tr>
-              <td><b>Score Evaluation</b></td>
-              <td>
-                <p>
-                  Assign one ancestry per Sample Set and calculate distribution using the Sample Sets.
-                  When a Sample Set contains more than one sample, the sample ancestries are combined, e.g.:
-                </p>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td style="background-color:#FFF">
-                        <div class="mb-2" style="text-align:center;background-color:#E9ECEF">Sample Set A</div>
-                        <ul class="mb-2">
-                          <li>Sample A1: European</li>
-                          <li>Sample A2: European</li>
-                          <li>Sample A3: East Asian</li>
-                        </ul>
-                        Combined ancestry: <b><i class="fa fa-circle-o anc_colour_MAE"></i> Multi-ancestry (including European)</b>
-                      </td>
-                      <td>
-                        <div class="mb-2" style="text-align:center;background-color:#E9ECEF">Sample Set B</div>
-                        <ul class="mb-2">
-                          <li>Sample B1: African</li>
-                          <li>Sample B2: African</li>
-                        </ul>
-                        <div style="margin-top:29px">Combined ancestry: <b><i class="fa fa-circle-o anc_colour_AFR"></i> African</b>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="background-color:#FFF">
-                        <div class="mb-2" style="text-align:center;background-color:#E9ECEF">Sample Set C</div>
-                        <ul class="mb-2">
-                          <li>Sample C1: East Asian</li>
-                        </ul>
-                        Combined ancestry: <b><i class="fa fa-circle-o anc_colour_EAS"></i> East Asian</b>
-                      </td>
-                      <td>
-                        <div class="mb-2" style="text-align:center;background-color:#E9ECEF">Sample Set D</div>
-                        <ul class="mb-2">
-                          <li>Sample D1: African</li>
-                        </ul>
-                        Combined ancestry: <b><i class="fa fa-circle-o anc_colour_AFR"></i> African</b>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <p></p>
-                Distribution:
-                <ul>
-                  <li><b><i class="fa fa-circle-o anc_colour_AFR"></i> African</b>: 50% (2 Sample Sets)</li>
-                  <li><b><i class="fa fa-circle-o anc_colour_EAS"></i> East Asian</b>: 25% (1 Sample Set)</li>
-                  <li><b><i class="fa fa-circle-o anc_colour_MAE"></i> Multi-ancestry (including European)</b>: 25% (1 Sample Set)</li>
-                </ul>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
     </section>
 {% endblock %}

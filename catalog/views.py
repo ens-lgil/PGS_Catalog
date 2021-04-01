@@ -100,13 +100,13 @@ def ancestry_form():
                   <div id="ancestry_filter_list">
                     <div class="custom-control custom-switch">
                       <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="MAO" id="anc_1">
-                      <label class="custom-control-label" for="anc_1">Multiple-Ancestries<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that include data from multiple ancestry groups at the selected study stage."><i class="fa fa-info-circle"></i></span></label>
+                      <label class="custom-control-label" for="anc_1">Multiple-Ancestries</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that include data from multiple ancestry groups at the selected study stage."><i class="fa fa-info-circle"></i></span>
                     </div>
                     <div class="custom-control custom-switch">
                       <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="non-EUR" id="anc_0">
-                      <label class="custom-control-label" for="anc_0">Only Non-European<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that do not include data from European ancestry individuals at the selected study stage."><i class="fa fa-info-circle"></i></span></label>
+                      <label class="custom-control-label" for="anc_0">Only Non-European</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that do not include data from European ancestry individuals at the selected study stage."><i class="fa fa-info-circle"></i></span>
                     </div>
-                    <div class="filter_subheader mt-1 mb-1">Select an ancestry:</div>
+                    <div id="single_ancestry" class="filter_subheader mt-1 mb-1">Select an ancestry:</div>
                     <div>
                       <select id="ancestry_filter_ind">
                         <option value="">--</option>
@@ -530,6 +530,9 @@ def pss(request, pss_id):
 
 class AboutView(TemplateView):
     template_name = "catalog/about.html"
+
+class AncestryView(TemplateView):
+    template_name = "catalog/ancestry.html"
 
 class DocsView(TemplateView):
     template_name = "catalog/docs.html"

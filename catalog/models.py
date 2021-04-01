@@ -441,7 +441,7 @@ class Sample(models.Model):
         s = 'Sample {}'.format(str(self.pk))
         if self.ancestry_broad:
             s += ' - {}'.format(self.ancestry_broad)
-        s += ' ({:,} individuals)'.format(self.sample_number)
+        s += ' '+self.display_sample_number_total
         return s
 
     def associated_PGS(self):

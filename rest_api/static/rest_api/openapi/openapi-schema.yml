@@ -6,7 +6,10 @@ info:
   title: PGS Catalog REST API
   version: '1.6'
   description: |
-    Programatic access to the PGS Catalog metadata. More information about the metadata and its structure can be found [here](/docs/).
+    Programmatic access to the PGS Catalog metadata. More information about the metadata and its structure can be found [here](/docs/).
+
+    <i class="fa fa-exclamation-circle pgs_color_1"></i> Each PGS is provided as a scoring file (containing the variants, alleles, effect weights) on our <a href="http://ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/" target="_blank">FTP site</a>.
+    The variants are not distributed within this API; however, a link to the scoring file is provided in the<code>ftp_scoring_file</code>field for each result of the<code>/rest/score/</code>endpoints for ease of download.
 
     ---
 

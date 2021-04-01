@@ -29,19 +29,19 @@
               <tr>
                 <td>Mapped Trait(s)</td>
                 <td>
-                 {% if efos|length == 1 %}
+                {% if efos|length == 1 %}
                   <span class="mr-2 font-bold">{{ efos.0.display_label|safe }}</span>
                   ({{ efos.0.display_ext_url|safe }})
-                 {% else %}
+                {% else %}
                   <ul class="mb-0">
                    {% for trait in efos %}
                     <li>
-                     <span class="mr-2 font-bold">{{ trait.display_label|safe }}</span>
-                     ({{ trait.display_ext_url|safe }})
+                      <span class="mr-2 font-bold">{{ trait.display_label|safe }}</span>
+                      ({{ trait.display_ext_url|safe }})
                     </li>
                    {% endfor %}
                   </ul>
-                 {% endif %}
+                {% endif %}
                 </td>
               </tr>
               {% if score.trait_additional != '' and score.trait_additional != None %}

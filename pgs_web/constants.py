@@ -66,7 +66,7 @@ ANCESTRY_MAPPINGS = {
     'Central Asian': 'ASN',
     'East Asian': 'EAS',
     'European': 'EUR',
-    'Greater Middle Eastern (Middle Eastern, North African, or Persian)': 'GME',
+    'Greater Middle Eastern (Middle Eastern, North African or Persian)': 'GME',
     'Hispanic or Latin American': 'AMR',
     'Native American': 'OTH',
     'Not reported': 'NR',
