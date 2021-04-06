@@ -289,7 +289,7 @@ class Browse_ScoreTable(tables.Table):
 
         tooltip_headers = {
             'gwas': 'Source of Variant Associations (GWAS)',
-            'dev': 'Score Development',
+            'dev':  'Score Development',
             'eval': 'Evaluation'
         }
         ancestries_data = value
@@ -311,7 +311,7 @@ class Browse_ScoreTable(tables.Table):
                 # Details of the multi ancestry data
                 multi_title = {}
                 multi_type = 'multi_'+type
-                if 'multi_'+type in ancestries_data:
+                if multi_type in ancestries_data:
                     for mt in ancestries_data[multi_type]:
                         (ma,anc) = mt.split('_')
                         if ma not in multi_title:
@@ -337,7 +337,8 @@ class Browse_ScoreTable(tables.Table):
                     extra_title = ''
                     if key in multi_title:
                         extra_title += '<ul>'+''.join(multi_title[key])+'</ul>'
-                    data_title[type].append(f'<div><span class=\'anc_{key}\'></span>{label}: {val}%{extra_title}</div>')
+                    data_title[type].append(f'<div class=\'anc_bd_{key}\'>{label}: {val}%{extra_title}</div>')
+
                     if key != 'MAE':
                         anc_list[type].add(key)
                         if type != 'eval':
@@ -388,7 +389,7 @@ class Browse_ScoreTable(tables.Table):
                 html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
 
         # Wrap up the HTML
-        html = '<div class="ancestry_chart_container" data-id="'+chart_id+'_filter" '+' '.join(html_filter)+'>'
+        html = '<div class="ancestry_chart_container" '+' '.join(html_filter)+'>'
         html += ''.join(html_list)
         html += '</div>'
         return format_html(html)

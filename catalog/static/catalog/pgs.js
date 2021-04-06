@@ -84,9 +84,9 @@ $(document).ready(function() {
       var anc_height = 40;
 
       anc_colours = {};
-      $('.filter_ancestry_box').each(function() {
+      $('.ancestry_box_legend').each(function() {
         var key = $(this).data('key');
-        var colour = $(this).css('background-color');
+        var colour = $(this).css('color');
         anc_colours[key] = colour;
       });
 

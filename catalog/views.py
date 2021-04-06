@@ -44,7 +44,7 @@ def ancestry_form():
     val = len(ancestry_labels.keys()) / 2
     entry_per_col = int((len(ancestry_labels.keys()) + 1) / 2);
 
-    div_html_1 = '<div class="filter_legend" style="float:left'
+    div_html_1 = '<div class="ancestry_legend" style="float:left'
 
     div_html = div_html_1
     option_html = ''
@@ -62,7 +62,7 @@ def ancestry_form():
             count = 0
 
         label = ancestry_labels[key]
-        div_content += '<div><span class="filter_ancestry_box anc_'+key+'" data-key="'+key+'"></span>'+label+'</div>'
+        div_content += '<div><span class="fa fa-square ancestry_box_legend anc_colour_'+key+'" data-key="'+key+'"></span>'+label+'</div>'
 
         if key != 'MAO' and key != 'MAE':
           opt = f'<option value="{key}">{label}</option>'
@@ -88,7 +88,7 @@ def ancestry_form():
                      <option value="eval">PGS Evaluation [E]</option>
                      <option value="all">All Stages combined [V, D, E]</option>
                   </select>
-                  <div class="filter_legend pl-1 mt-2">
+                  <div class="ancestry_legend pl-1 mt-2">
                     <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
                     <div><b>D</b> - Score <b>D</b>evelopment</div>
                     <div><b>E</b> - Score <b>E</b>valuation</div>

@@ -674,12 +674,26 @@ class Score(models.Model):
                     chart = []
                     legend = ''
                     id = "score_anc_"+type
+                    multi_legend = {}
+                    multi_type = 'multi_'+type
+                    if multi_type in self.ancestries:
+                        for mt in self.ancestries[multi_type]:
+                            (ma,anc) = mt.split('_')
+                            if ma not in multi_legend:
+                                multi_legend[ma] = []
+                            multi_legend[ma].append(f'<li>{ancestry_labels[anc]}</li>')
+
                     for key,val in sorted(self.ancestries[type].items(), key=lambda item: float(item[1]), reverse=True):
                         chart.append(f'"{key}",{val}')
                         label = ancestry_labels[key]
-                        legend += f'<div><span class="filter_ancestry_box anc_{key}" data-key="{key}"></span>{label}: {val}%</div>';
+                        multi_anc = ''
+                        if key in multi_legend:
+                            multi_anc += f' <a class="toggle_btn" data-toggle="tooltip" data-placement="right" data-delay="500" id="{multi_type}" title="" data-original-title="Click to show/hide the list of ancestries"><i class="fa fa-plus-circle"></i></a></div>'
+                            multi_anc += f'<div class="toggle_list" id="list_{multi_type}"><ul>{"".join(multi_legend[ma])}</ul>'
+                        legend += f'<div><span class="fa fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc}</div>'
+
                     html_type += f'<div class="ancestry_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
-                    html_type += '<div class="filter_legend">'+legend+'</div>'
+                    html_type += '<div class="ancestry_legend">'+legend+'</div>'
                     html_type += '</div></td></tr>'
                 html += html_type
             return html
