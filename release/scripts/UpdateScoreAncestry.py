@@ -10,12 +10,14 @@ class UpdateScoreAncestry:
 
     ancestry_keys = constants.ANCESTRY_LABELS.keys()
 
-    multi_keys = ['MAO','MAE']
+
 
     extra_ancestry_cat = {
         "Multi-Ancestry (excluding European)": "MAO",
         "Multi-Ancestry (including European)": "MAE"
     }
+
+    multi_keys = extra_ancestry_cat.values()
 
     anc_not_found = []
 
@@ -27,7 +29,10 @@ class UpdateScoreAncestry:
 
     def get_ancestry_code(self,anc,type):
         ''' Retrieve the ancestry 3 letters code from the ancestry label '''
-        a_code = self.ancestry_cat['Other']
+        if anc == '':
+            a_code = self.ancestry_cat['Not reported']
+        else:
+            a_code = self.ancestry_cat['Other']
         if anc in self.ancestry_cat_keys:
             a_code = self.ancestry_cat[anc]
         elif ',' in anc:
@@ -52,6 +57,7 @@ class UpdateScoreAncestry:
             print(f'\t\t- {ancestry} ({anc_code}): {sample_number}')
             if not anc_code in data_ancestry:
                 data_ancestry[anc_code] = sample_number
+                # Fetch multi ancestry data
                 multi_ancestry = self.update_multi_ancestry_details(anc_code,ancestry,multi_ancestry,type)
             else:
                 data_ancestry[anc_code] += sample_number
@@ -84,7 +90,10 @@ class UpdateScoreAncestry:
 
 
     def update_ancestry(self):
-
+        '''
+        For each Score, generate the JSON file with the ancestries and the breakdown of the multi-ancestries for each study stage.
+        Then save it into the database (Score model).
+        '''
         for score in self.scores:
             # Get Variant selection ancestries
             score_ancestry_data = {}
@@ -93,14 +102,17 @@ class UpdateScoreAncestry:
             print("# "+self.score_id+" #")
 
             print("\t> Variant:")
+            stage_v = 'gwas'
             samples_variant = score.samples_variants.all()
-            score_ancestry_data['gwas'] = self.get_samples_ancestry_data(samples_variant,'gwas')
+            score_ancestry_data[stage_v] = self.get_samples_ancestry_data(samples_variant,stage_v)
 
             print("\t> Development:")
+            stage_d = 'dev'
             samples_dev = score.samples_training.all()
-            score_ancestry_data['dev'] = self.get_samples_ancestry_data(samples_dev,'dev')
+            score_ancestry_data[stage_d] = self.get_samples_ancestry_data(samples_dev,stage_d)
 
             print("\t> Evaluation:")
+            stage_e = 'eval'
             publication_samplesets_list = set()
             sampleset_sample_anc = {}
             data_eval_ancestry = {}
@@ -119,8 +131,8 @@ class UpdateScoreAncestry:
                 # Samples
                 for sample in sampleset.samples.all():
                     ancestry = sample.ancestry_broad.strip()
-                    anc_code = self.get_ancestry_code(ancestry,'eval')
-                    multi_ancestry = self.update_multi_ancestry_details(anc_code,ancestry,multi_ancestry,'eval')
+                    anc_code = self.get_ancestry_code(ancestry,stage_e)
+                    multi_ancestry = self.update_multi_ancestry_details(anc_code,ancestry,multi_ancestry,stage_e)
                     print(f'\t\t- {ancestry} ({anc_code}): {sample.sample_number}')
                     if key_id in sampleset_sample_anc.keys():
                         if not anc_code in sampleset_sample_anc[key_id]:
@@ -146,10 +158,10 @@ class UpdateScoreAncestry:
                 data_eval_ancestry[anc_key] += 1
 
                 data_eval_ancestry_total += 1
-            score_ancestry_data['eval'] = { 'data': data_eval_ancestry, 'total': data_eval_ancestry_total, 'multi': multi_ancestry }
+            score_ancestry_data[stage_e] = { 'data': data_eval_ancestry, 'total': data_eval_ancestry_total, 'multi': multi_ancestry }
 
 
-
+            # Generate a dictionary and convert it into JSON for the database.
             anc_data = {}
             for type in ['gwas','dev','eval']:
                 if score_ancestry_data[type]['data']:
@@ -166,6 +178,7 @@ class UpdateScoreAncestry:
             score.ancestries = anc_data
             score.save()
 
+        # Return message errors for the ancestries not found in the list of allowed ancestries
         if len(self.anc_not_found):
             print("Some ancestries don't match the list of allowed ancestries:")
             for anc_msg in self.anc_not_found:
