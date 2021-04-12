@@ -1,0 +1,223 @@
+{% extends 'catalog/base.html' %}
+{% load static %}
+
+{% block title %}Polygenic Score - Ancestry Description{% endblock %}
+
+{% block content %}
+    <nav aria-label="You are here:">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">PGS Catalog</a></li>
+        <li class="breadcrumb-item">Documentation</li>
+        <li class="breadcrumb-item">Ancestry</li>
+      </ol>
+    </nav>
+
+    <h2>PGS Catalog Ancestry Description</h2>
+    <p>
+      This page contains information regarding the sample ancestry in the PGS Catalog.
+    </p>
+    <div class="content_container">
+      <div class="table-of-contents">
+        <nav role="navigation">
+          <h5>Table of Contents</h5>
+          <ul>
+            <li><a href="#anc_category">Ancestry Categories</a></li>
+            <li><a href="#anc_dist">Ancestry Distribution</a></li>
+            <li><a href="#anc_filter">Ancestry Filters</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <section>
+      <h3 id="anc_category">Ancestry Categories</h3>
+      <p>
+        Our Ancestry categories are based on the publication <a href="https://doi.org/10.1186/s13059-018-1396-2">Morales, J. et al. Genome Biol. (2018).</a> (<a href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-018-1396-2/tables/1">Table 1</a>).<br/>
+        See below the list of ancestry categories in PGS Catalog:
+      </p>
+      <table class="table table-striped table_pgs_auto">
+        <thead class="thead-light">
+          <tr><th style="width:15%">Ancestry category</th><th style="width:15%">Display category (Chart)</th><th style="width:70%">Definition</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Aboriginal Australian</td><td><i class="fa fa-square mr-2 anc_colour_OTH"></i>Additional Diverse Ancestries</td><td>Includes individuals who either self-report or have been described by authors as Australian Aboriginal. These are expected to be descendants of early human migration into Australia from Eastern Asia and can be distinguished from other Asian populations by mtDNA and Y chromosome variation.</td></tr>
+          <tr><td>African American or<br/>Afro-Caribbean</td><td><i class="fa fa-square mr-2 anc_colour_AFR"></i>African</td><td>Includes individuals who either self-report or have been described by authors as African American or Afro-Caribbean. This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes and/or HapMap ACB or ASW populations. We note that there is likely to be significant admixture with European ancestry populations.</td></tr>
+          <tr><td>African unspecified</td><td><i class="fa fa-square mr-2 anc_colour_AFR"></i>African</td><td>Includes individuals that either self-report or have been described as African, but there was not sufficient information to allow classification as African American, Afro-Caribbean or Sub-Saharan African.</td></tr>
+          <tr><td>Asian unspecified</td><td><i class="fa fa-square mr-2 anc_colour_ASN"></i>Additional Asian Ancestries<br/>(including Central, and South East Asian)</td><td>Includes individuals that either self-report or have been described as Asian but there was not sufficient information to allow classification as East Asian, Central Asian, South Asian, or South-East Asian.</td></tr>
+          <tr><td>Central Asian</td><td><i class="fa fa-square mr-2 anc_colour_ASN"></i>Additional Asian Ancestries<br/>(including Central, and South East Asian)</td><td>Includes individuals who either self-report or have been described by authors as Central Asian. We note that there does not appear to be a suitable reference population for this population and efforts are required to fill this gap.</td></tr>
+          <tr><td>East Asian</td><td><i class="fa fa-square mr-2 anc_colour_EAS"></i>East Asian</td><td>Includes individuals who either self-report or have been described by authors as East Asian or one of the sub-populations from this region (e.g., Chinese). This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes and/or HapMap CDX, CHB, CHS, and JPT populations.</td></tr>
+          <tr><td>European</td><td><i class="fa fa-square mr-2 anc_colour_EUR"></i>European</td><td>Includes individuals who either self-report or have been described by authors as European, Caucasian, white, or one of the sub-populations from this region (e.g., Dutch). This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes and/or HapMap CEU, FIN, GBR, IBS, and TSI populations.</td></tr>
+          <tr><td>Greater Middle Eastern<br/><small>(Middle Eastern, North African or Persian)</small></td><td><i class="fa fa-square mr-2 anc_colour_GME"></i>Greater Middle Eastern<br/>(Middle Eastern, North African or Persian)</td><td>Includes individuals who self-report or were described by authors as Middle Eastern, North African, Persian, or one of the sub-populations from this region (e.g., Saudi Arabian). We note there is heterogeneity in this category with different degrees of admixture as well as levels of genetic isolation. We note that there does not appear to be a suitable reference population for this category and efforts are required to fill this gap.</td></tr>
+          <tr><td>Hispanic or Latin American</td><td><i class="fa fa-square mr-2 anc_colour_AMR"></i>Hispanic or Latin American</td><td>Includes individuals who either self-report or are described by authors as Hispanic, Latino, Latin American, or one of the sub-populations from this region. This category includes individuals with known admixture of primarily European, African, and Native American ancestries, though some may have also a degree of Asian (e.g., Peru). We also note that the levels of admixture vary depending on the country, with Caribbean countries carrying higher levels of African admixture when compared to South American countries, for example. This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes and/or HapMap CLM, MXL, PEL, and PUR populations.</td></tr>
+          <tr><td>Native American</td><td><i class="fa fa-square mr-2 anc_colour_OTH"></i>Additional Diverse Ancestries</td><td>Includes indigenous individuals of North, Central, and South America, descended from the original human migration into the Americas from Siberia. We note that there does not appear to be a suitable reference population for this category and efforts are required to fill this gap.</td></tr>
+          <tr><td>Not reported</td><td><i class="fa fa-square mr-2 anc_colour_NR"></i>Ancestry Not Reported</td><td>Includes individuals for which no ancestry or country of recruitment information is available.</td></tr>
+          <tr><td>Oceanian</td><td><i class="fa fa-square mr-2 anc_colour_OTH"></i>Additional Diverse Ancestries</td><td>Includes individuals that either self-report or have been described by authors as Oceanian or one of the sub-populations from this region (e.g., Native Hawaiian). We note that there does not appear to be a suitable reference population for this category and efforts are required to fill this gap.</td></tr>
+          <tr><td>Other</td><td><i class="fa fa-square mr-2 anc_colour_OTH"></i>Additional Diverse Ancestries</td><td>Includes individuals where an ancestry descriptor is known but insufficient information is available to allow assignment to one of the other categories.</td></tr>
+          <tr><td>Other admixed ancestry</td><td><i class="fa fa-square mr-2 anc_colour_OTH"></i>Additional Diverse Ancestries</td><td>Includes individuals who either self-report or have been described by authors as admixed and do not fit the definition of the other admixed categories already defined (“African American or Afro-Caribbean” or “Hispanic or Latin American”).</td></tr>
+          <tr><td>South Asian</td><td><i class="fa fa-square mr-2 anc_colour_SAS"></i>South Asian</td><td>Includes individuals who either self-report or have been described by authors as South Asian or one of the sub-populations from this region (e.g., Asian Indian). This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes and/or HapMap BEB, GIH, ITU, PJL, and STU populations.</td></tr>
+          <tr><td>South East Asian</td><td><i class="fa fa-square mr-2 anc_colour_ASN"></i>Additional Asian Ancestries<br/>(including Central, and South East Asian)</td><td>Includes individuals who either self-report or have been described by authors as South East Asian or one of the sub-populations from this region (e.g., Vietnamese). This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes KHV population. We note that East Asian and South East Asian populations are often conflated. However, recent studies indicate a unique genetic background for South East Asian populations.</td></tr>
+          <tr><td>Sub-Saharan African</td><td><i class="fa fa-square mr-2 anc_colour_AFR"></i>African</td><td>Includes individuals who either self-report or have been described by authors as Sub-Saharan African or one of the sub-populations from this region (e.g., Yoruban). This category also includes individuals who genetically cluster with reference populations from this region, for example, 1000 Genomes and/or HapMap ESN, LWK, GWD, MSL, MKK, and YRI populations.</td></tr>
+          <tr><td>Multi-Ancestry<br /><small>(including Europeans)</small></td><td><i class="fa fa-square mr-2 anc_colour_MAE"></i>Multi-Ancestry<br/>(including Europeans)</td><td>Combined sample of multiple ancestries (including European ancestry individuals)</td></tr>
+          <tr><td>Multi-Ancestry<br /><small>(excluding Europeans)</small></td><td><i class="fa fa-square mr-2 anc_colour_MAO"></i>Multi-Ancestry<br/>(excluding Europeans)</td><td>Multi-Ancestry (excluding Europeans)</td></tr>
+        </tbody>
+      </table>
+
+    </section>
+
+
+    <section>
+      <h3 id="anc_dist">Ancestry Distribution</h3>
+      <p>
+        The ancestry distribution provides a summary information about the ancestry of the individuals used to develop and evaluate each polygenic score. The distribution is calculated and reported for each stage of the Polygenic Score construction (variants association, development/training and evaluation).<br/>
+        The distribution calculation for each stydy stage is described in the following table:
+      </p>
+      <table class="table table-bordered table-left-col-filled">
+        <thead class="thead-light">
+          <tr><th style="width:15%">Study stage</th><th style="width:25%">Distribution calculation</th><th style="width:60%">Example</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Source of Variant Associations<br/>(GWAS)</b></td>
+            <td>
+              Count individuals ancestry for each associated sample and then group them per ancestry category.<br/>
+              The distribution is calculated by dividing each individuals ancestry category by the total number of individuals.
+            </td>
+            <td>
+              <ul>
+                <li>Sample A: 1500 individuals - European</li>
+                <li>Sample B: 2500 individuals - European</li>
+                <li>Sample C: 1000 individuals - East Asian</li>
+              </ul>
+              <div class="bordered_content mt-4">
+                <div class="mb-1">Distribution:</div>
+                <div><i class="fa fa-square mr-2 anc_colour_EUR"></i><b>European</b>: 80% (4000 individuals out of 5000 individuals)</div>
+                <div><i class="fa fa-square mr-2 anc_colour_EAS"></i><b>East Asian</b>: 20% (1000 individuals out of 5000 individuals)</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><b>Score Development</b></td>
+            <td colspan="2">Same distribution calculation as <b>Source of Variant Associations (GWAS)</b></td>
+          </tr>
+          <tr>
+            <td><b>Score Evaluation</b></td>
+            <td>
+              <p>
+                Assign one ancestry category per Sample Set. When a Sample Set contains more than one sample, the sample ancestries are combined.<br/>
+                The distribution is calculated by dividing the number of Sample Sets with a same ancestry category by the total number of Sample Sets.
+              </p>
+            </td>
+            <td>
+              <p>Example with 4 Sample Sets to evaluate the same polygenic score:</p>
+              <div style="display:flex;flex-wrap:wrap">
+                <div class="mr-2 mb-1" style="padding:10px;border:1px solid #CCC">
+                  <div class="mb-3" style="text-align:center;background-color:#E9ECEF">Sample Set A</div>
+                  <ul class="mb-1 pl-4" style="height:65px">
+                    <li>Sample A1: European</li>
+                    <li>Sample A2: European</li>
+                    <li>Sample A3: East Asian</li>
+                  </ul>
+                  <div class="pt-1" style="border-top:1px solid #CCC">Combined ancestry:</div>
+                  <i class="fa fa-square mr-2 anc_colour_MAE"></i><b>Multi-ancestry (including European)</b>
+                </div>
+                <div class="mr-2 mb-1" style="padding:10px;border:1px solid #CCC">
+                  <div class="mb-3" style="text-align:center;background-color:#E9ECEF">Sample Set B</div>
+                  <ul class="mb-1 pl-4" style="height:65px">
+                    <li>Sample B1: African</li>
+                    <li>Sample B2: African</li>
+                  </ul>
+                  <div class="pt-1" style="border-top:1px solid #CCC">Combined ancestry:</div>
+                  <i class="fa fa-square mr-2 anc_colour_AFR"></i><b>African</b>
+                </div>
+                <div class="mr-2 mb-1" style="padding:10px;border:1px solid #CCC">
+                  <div class="mb-3" style="text-align:center;background-color:#E9ECEF">Sample Set C</div>
+                  <ul class="mb-1 pl-4" style="height:65px">
+                    <li>Sample C1: East Asian</li>
+                  </ul>
+                  <div class="pt-1" style="border-top:1px solid #CCC">Combined ancestry:</div>
+                  <i class="fa fa-square mr-2 anc_colour_EAS"></i><b>East Asian</b>
+                </div>
+                <div class="mr-2 mb-1" style="padding:10px;border:1px solid #CCC;position: relative">
+                  <div class="mb-3" style="text-align:center;background-color:#E9ECEF">Sample Set D</div>
+                  <ul class="mb-1 pl-4" style="height:65px">
+                    <li>Sample D1: African</li>
+                  </ul>
+                  <div class="pt-1" style="border-top:1px solid #CCC">Combined ancestry:</div>
+                  <i class="fa fa-square mr-2 anc_colour_AFR"></i><b>African</b>
+                </div>
+              </div>
+              <div class="bordered_content mt-4">
+                <div class="mb-1">Distribution:</div>
+                <div><i class="fa fa-square mr-2 anc_colour_AFR"></i><b>African</b>: 50% (2 Sample Sets [B & D] out of 4 Sample Sets)</div>
+                <div><i class="fa fa-square mr-2 anc_colour_EAS"></i><b>East Asian</b>: 25% (1 Sample Set [C] out of 4 Sample Sets)</div>
+                <div><i class="fa fa-square mr-2 anc_colour_MAE"></i><b>Multi-ancestry (including European)</b>: 25% (1 Sample Set [A] out of 4 Sample Sets)</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h3 id="anc_filter">Ancestry Filters</h3>
+
+      <h5 class="mt-3">Study stages</h5>
+      <p>
+        First of all, you need to select on which PGS stage you want to filter the ancestries. Here are the different choices from the dropdown "Samples included in":
+      </p>
+      <table class="table table-bordered table-left-col-filled">
+        <tbody>
+          <tr>
+            <td><b>Development</b> [V, D]</td>
+            <td>Corresponds to the combination of the stages "Source of Variant Associations (GWAS)" and "Score Development"</td>
+          </tr>
+          <tr>
+            <td><b>GWAS</b> [V]</td>
+            <td>Corresponds to the stage "Source of Variant Associations (GWAS)".</td>
+          </tr>
+          <tr>
+            <td><b>Score Development</b> [D]</td>
+            <td>Corresponds to the stage "Score Development".</td>
+          </tr>
+          <tr>
+            <td><b>PGS Evaluation</b> [E]</td>
+            <td>Corresponds to the stage "Score Evaluation".</td>
+          </tr>
+          <tr>
+            <td><b>All Stages combined</b> [V, D, E]</td>
+            <td>Corresponds to the combination of the stages "Source of Variant Associations (GWAS)", "Score Development" and "Score Evaluation".</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h5 class="mt-5">Ancestry selection</h5>
+      <p class="mb-0">
+        Then you can filter the ancestries.
+      </p>
+      <div class="clearfix">
+        <div class="mt-2 mb-3 float_left pgs_note pgs_note_1">
+          <div><span>Note: </span>You can combine the different filters listed below.</div>
+        </div>
+      </div>
+
+      <table class="table table-bordered table-left-col-filled">
+        <tbody>
+          <tr>
+            <td><b>Multiple-Ancestries</b></td>
+            <td>Filter PGS that include data from multiple ancestry groups at the selected study stage.</td>
+          </tr>
+          <tr>
+            <td><b>Excluding Europeans</b></td>
+            <td>Filter PGS that do not include data from European ancestry individuals at the selected study stage.</td>
+          </tr>
+          <tr>
+            <td><b>Ancestry selection</b><br />("Select an ancestry" dropdown)</td>
+            <td>
+              Filter PGS that include data of individuals from the selected ancestry at the selected study stage.
+              This also filter the ancestries within the Multi-ancestry distributions.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+{% endblock %}

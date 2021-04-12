@@ -86,11 +86,11 @@ ANCESTRY_LABELS = {
     'AFR': 'African',
     'EAS': 'East Asian',
     'SAS': 'South Asian',
-    'ASN': 'Other Asian Ancestries',
+    'ASN': 'Additional Asian Ancestries',
     'EUR': 'European',
     'GME': 'Greater Middle Eastern',
     'AMR': 'Hispanic or Latin American',
-    'OTH': 'Other Diverse Ancestries',
+    'OTH': 'Additional Diverse Ancestries',
     'NR' : 'Not Reported'
 }
 
@@ -100,10 +100,10 @@ ANCESTRY_GROUP_LABELS = {
     'AFR': 'African Ancestry',
     'EAS': 'East Asian Ancestry',
     'SAS': 'South Asian Ancestry',
-    'ASN': 'Other Asian Ancestries',
+    'ASN': 'Additional Asian Ancestries',
     'EUR': 'European Ancestry',
     'GME': 'Greater Middle Eastern Ancestry',
     'AMR': 'Hispanic or Latin American Ancestry',
-    'OTH': 'Other Diverse Ancestries',
+    'OTH': 'Additional Diverse Ancestries',
     'NR' : 'Ancestry Not Reported'
 }

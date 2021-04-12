@@ -3,6 +3,7 @@ import django_tables2 as tables
 from django.utils.html import format_html
 from django.utils.crypto import get_random_string
 from pgs_web import constants
+from catalog import common
 from .models import *
 
 
@@ -31,6 +32,10 @@ def publication_format(value, is_external=False):
     if value.is_preprint:
         extra_html += format_html('<span class="only_export">|</span><span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
     return format_html(f'<a href="{publication_path}/{value.id}">{value.id}</a> {citation}{extra_html}')
+
+
+# def individuals_format(value):
+#     return '{:,} individuals'.format(value)
 
 
 class Column_joinlist(tables.Column):
@@ -367,7 +372,15 @@ class Browse_ScoreTable(tables.Table):
 
                 html_filter.append("data-anc-"+type+"='["+','.join(anc_list_stage)+"]'")
 
-                title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+'</div>'
+                title_count = ''
+                count = ancestries_data[type+'_count']
+                if count !=0:
+                    if type == 'eval':
+                        title_count = str(count)+' Sample Sets'
+                    else:
+                        title_count = common.individuals_format(count)
+                    title_count = f'<div>{title_count} (100%)</div>'
+                title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+title_count+'</div>'
                 html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
                 html_list.append(html_chart)
             else:
@@ -578,8 +591,8 @@ class PerformanceTable(tables.Table):
     def render_sampleset(self, value):
         ancestry_key = value.samples_combined_ancestry_key
         ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
-        count_ind = '{:,} individuals'.format(value.count_individuals)
-        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fa fa-circle-o anc_colour_{} font-bold"></i> {}</div><span class="only_export">|</span><div class="small"><i class="fa fa-user"></i> {}</div>', value, value, ancestry_key, ancestry,count_ind)
+        count_ind = common.individuals_format(value.count_individuals)
+        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fa fa-square anc_colour_{}"></i> {}</div><span class="only_export">|</span><div class="small"><i class="fa fa-user"></i> {}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
         return score_format(value)

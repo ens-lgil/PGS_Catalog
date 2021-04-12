@@ -65,7 +65,6 @@ class UpdateScoreAncestry:
             data_ancestry_total += sample_number
         # Simplify values
         if len(data_ancestry.keys())==1 and data_ancestry_total == 0:
-            data_ancestry_total = 1
             for key,value in data_ancestry.items():
                 data_ancestry[key] = 1
         return { 'data': data_ancestry, 'total': data_ancestry_total, 'multi': multi_ancestry }
@@ -169,9 +168,14 @@ class UpdateScoreAncestry:
                     print(f'\t#### '+type.upper())
                     count_total = score_ancestry_data[type]['total']
                     for key, value in score_ancestry_data[type]['data'].items():
-                        percent = "{:.1f}".format((value/count_total)*100)
+                        if count_total == 0:
+                            anc_number = len(score_ancestry_data[type]['data'].keys())
+                            percent = "{:.1f}".format((1/anc_number)*100)
+                        else:
+                            percent = "{:.1f}".format((value/count_total)*100)
                         print(f'\t>>>> PERCENT: {key} => {percent}%')
                         anc_data[type][key] = percent
+                    anc_data[type+'_count'] = count_total
                 if score_ancestry_data[type]['multi']:
                     anc_data['multi_'+type] = score_ancestry_data[type]['multi']
 

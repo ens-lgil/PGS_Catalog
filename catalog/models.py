@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.postgres.fields import DecimalRangeField
 from pgs_web import constants
+from catalog import common
 
 
 class Publication(models.Model):
@@ -483,7 +484,7 @@ class Sample(models.Model):
 
     @property
     def display_samples(self):
-        sinfo = ['{:,} individuals'.format(self.sample_number)]
+        sinfo = [common.individuals_format(self.sample_number)]
         if self.sample_cases != None:
             sstring = '[ {:,} cases'.format(self.sample_cases)
             if self.sample_controls != None:
@@ -499,7 +500,7 @@ class Sample(models.Model):
         div_id = "sample_"+str(self.pk)
         sstring = ''
         if self.sample_cases != None:
-            sstring += '<div><a class="toggle_table_btn pgs_helptip" id="'+div_id+'" title="Click to show/hide the details">{:,} individuals <i class="fa fa-plus-circle"></i></a></div>'.format(self.sample_number)
+            sstring += '<div><a class="toggle_table_btn pgs_helptip" id="{}" title="Click to show/hide the details">{} <i class="fa fa-plus-circle"></i></a></div>'.format(div_id,common.individuals_format(self.sample_number))
             sstring += '<div class="toggle_list" id="list_'+div_id+'">'
             sstring += '<span class="only_export">[</span>'
             sstring += '<ul>\n<li>{:,} cases</li>\n'.format(self.sample_cases)
@@ -518,7 +519,7 @@ class Sample(models.Model):
 
     @property
     def display_sample_number_total(self):
-        ssinfo = '{:,} individuals'.format(self.sample_number)
+        ssinfo = common.individuals_format(self.sample_number)
         return ssinfo
 
     @property
@@ -660,16 +661,26 @@ class Score(models.Model):
     def display_ancestry_html(self):
         ancestry_labels = constants.ANCESTRY_LABELS
         types = {
-            'gwas': 'Source of Variant<br />Associations (GWAS)',
-            'dev': 'Score Development',
-            'eval': 'Evaluation'
+            'gwas': {
+                'label': 'Source of Variant<br />Associations (GWAS)',
+                'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
+            },
+            'dev': {
+                'label': 'Score Development',
+                'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
+            },
+            'eval': {
+                'label': 'Evaluation',
+                'desc': 'Percentage based on the number of Sample Set with an ancestry category out of all the Sample Sets.'
+            }
         }
         if self.ancestries:
             html = ''
             for type in ('gwas','dev','eval'):
                 html_type = ''
                 if type in self.ancestries:
-                    html_type += f'<tr><td>{types[type]}:</td><td>'
+                    info = f'<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{types[type]["desc"]}"><i class="fa fa-info-circle"></i></span>'
+                    html_type += f'<tr><td>{types[type]["label"]}{info}</td><td>'
                     html_type += '<div style="display:flex">'
                     chart = []
                     legend = ''
@@ -692,8 +703,14 @@ class Score(models.Model):
                             multi_anc += f'<div class="toggle_list" id="list_{multi_type}"><ul>{"".join(multi_legend[ma])}</ul>'
                         legend += f'<div><span class="fa fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc}</div>'
 
+                    count = self.ancestries[type+"_count"]
+                    if type == 'eval':
+                        count_data = f'{count} Sample Sets'
+                    else:
+                        count_data = common.individuals_format(count,1)
+                    html_count = f'<div class="mt-1">{count_data} (100%)</div>'
                     html_type += f'<div class="ancestry_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
-                    html_type += '<div class="ancestry_legend">'+legend+'</div>'
+                    html_type += '<div class="ancestry_legend">'+legend+html_count+'</div>'
                     html_type += '</div></td></tr>'
                 html += html_type
             return html

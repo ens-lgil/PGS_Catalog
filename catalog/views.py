@@ -75,7 +75,7 @@ def ancestry_form():
     <div class="mb-3 pgs_form_container">
         <!-- Ancestry form -->
         <div id="ancestry_filter" class="filter_container mr-3 mb-3">
-            <div class="filter_header">Filter PGS by Participant Ancestry <a class="pgs_no_icon_link info-icon" target="_blank" href="/docs/#desc_anc" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see information about the Ancestry Distribution (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
+            <div class="filter_header">Filter PGS by Participant Ancestry <a class="pgs_no_icon_link info-icon" target="_blank" href="/ancestry/#anc_filter" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see information about the Ancestry Filters (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
             <div class="clearfix">
               <!-- Type of study -->
               <div style="float:left">
@@ -96,7 +96,7 @@ def ancestry_form():
                 </div>
                 <!-- Type of ancestry -->
                 <div class="filter_ancestry">
-                  <div class="filter_subheader mb-1">Ancestries Included:</div>
+                  <div class="filter_subheader mb-1">Ancestries selection:</div>
                   <div id="ancestry_filter_list">
                     <div class="custom-control custom-switch">
                       <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="MAO" id="anc_1">
@@ -104,7 +104,7 @@ def ancestry_form():
                     </div>
                     <div class="custom-control custom-switch">
                       <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="non-EUR" id="anc_0">
-                      <label class="custom-control-label" for="anc_0">Only Non-European</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that do not include data from European ancestry individuals at the selected study stage."><i class="fa fa-info-circle"></i></span>
+                      <label class="custom-control-label" for="anc_0">Excluding Europeans</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that do not include data from European ancestry individuals at the selected study stage."><i class="fa fa-info-circle"></i></span>
                     </div>
                     <div id="single_ancestry" class="filter_subheader mt-1 mb-1">Select an ancestry:</div>
                     <div>
@@ -118,7 +118,7 @@ def ancestry_form():
             </div>
         </div>
         <div id="ancestry_legend" class="filter_container mb-3">
-            <div class="filter_header">Ancestry legend</div>
+            <div class="filter_header">Ancestry legend <a class="pgs_no_icon_link info-icon" target="_blank" href="/ancestry/#anc_category" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see more information about the Ancestry Categories (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
             <div id="ancestry_legend_content" class="clearfix">{ancestry_legend}</div>
         </div>
     </div>'''.format(ancestry_option=option_html,ancestry_legend=legend_html)
