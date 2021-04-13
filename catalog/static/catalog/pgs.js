@@ -254,133 +254,6 @@ $(document).ready(function() {
     });
 
 
-    // Filter to include or not children traits
-    // $("#include_children").click(function() {
-    //   var trait_label = '';
-    //
-    //   // Filter by value - not filtering
-    //   if ($(this).prop('checked')) {
-    //     $('#scores_table').bootstrapTable('filterBy', {});
-    //     $('#performances_table').bootstrapTable('filterBy', {});
-    //     $('#samples_table').bootstrapTable('filterBy', {});
-    //   }
-    //   // Filter by value - filter out the children terms
-    //   else {
-    //     // Scores
-    //     trait_label = $(this).val();
-    //     var default_pagination = 15;
-    //     var tmp_pagination =  'All';
-    //     var pgs_ids_list = [];
-    //     var pgs_ids_list_link = [];
-    //     var scores_table_id = '#scores_table';
-    //
-    //     var score_data = $(scores_table_id).bootstrapTable('getData');
-    //     $.each(score_data,function(i, row) {
-    //       //console.log(row['list_traits']);
-    //       var traits_html = $(row['list_traits']);
-    //       var traits = traits_html.children('a');
-    //       for (var j = 0; j < traits.length; j++) {
-    //         if (traits[j].innerHTML == trait_label) {
-    //           var pgs_td = row['id'];
-    //           var pgs_id = $(pgs_td).text();
-    //           pgs_ids_list.push(pgs_id);
-    //           pgs_ids_list_link.push(pgs_td);
-    //         }
-    //       }
-    //     });
-    //
-    //     $(scores_table_id).bootstrapTable('filterBy', {
-    //       id: pgs_ids_list_link
-    //     });
-    //
-    //     // Performances & Samples
-    //     var perf_table_id = '#performances_table';
-    //     if ($(perf_table_id).length != 0) {
-    //       var ppm_ids_list = [];
-    //       var pss_ids_list = [];
-    //
-    //       var perf_data = $(perf_table_id).bootstrapTable('getData');
-    //       $.each(perf_data,function(i, row) {
-    //         //console.log(row);
-    //         var pgs_td = row['score'];
-    //         var pgs_id = $(pgs_td).html(); // Only take the <a> text
-    //         //console.log("PGS_ID: "+pgs_id);
-    //         if ($.inArray(pgs_id, pgs_ids_list) != -1) {
-    //           // PPM
-    //           var ppm_id = row['id'];
-    //           //console.log("PPM_ID: "+ppm_td);
-    //           ppm_ids_list.push(ppm_id);
-    //           // PSS
-    //           var pss_td = row['sampleset'];
-    //           var pss_id = $(pss_td).text();
-    //           pss_ids_list.push('<a id="'+pss_id+'" href="/sampleset/'+pss_id+'">'+pss_id+'</a>');
-    //         }
-    //       });
-    //       $(perf_table_id).bootstrapTable('filterBy', {
-    //          id: ppm_ids_list
-    //       });
-    //       $('#samples_table').bootstrapTable('filterBy', {
-    //          display_sampleset: pss_ids_list
-    //       });
-    //     }
-    //   }
-    //   shorten_displayed_content();
-    // });
-
-
-    // if($('#ancestry_legend_content').length) {
-    //   var count = 0;
-    //   var entry_per_col = Math.round(Object.keys(anc_labels).length / 2);
-    //
-    //   var div = $('<div>');
-    //   div.addClass('filter_legend');
-    //   div.css('float','left');
-    //
-    //   var opt = $('<option>');
-    //
-    //   var html = '';
-    //   for (key in anc_labels) {
-    //     if (count == entry_per_col) {
-    //       div.html(html);
-    //       div.css('margin-right','1rem');
-    //       $('#ancestry_legend_content').append(div);
-    //       div = $('<div>');
-    //       div.addClass('filter_legend');
-    //       div.css('float','left');
-    //       html = ''
-    //       count = 0;
-    //     }
-    //     var label = anc_labels[key];
-    //     var colour = anc_colours[key];
-    //     html += '<div><span class="filter_ancestry_box" style="background-color:'+colour+'"></span> '+label+'</div>';
-    //
-    //     if (key != 'MA' && key != 'MAE') {
-    //       var opt = $('<option>');
-    //       opt.attr('value', key);
-    //       opt.html(label);
-    //       $('#ancestry_filter_ind').append(opt);
-    //     }
-    //     count += 1;
-    //   }
-    //   div.html(html);
-    //   $('#ancestry_legend_content').append(div);
-    // }
-
-    // Filter to show/hide ancestry form
-    $("#ancestry_type_list").change(function() {
-      var anc = $("#ancestry_type_list option:selected").val();
-      if (anc != '') {
-        $("#ancestry_filter_list").parent().show();
-      }
-      else {
-        $("#ancestry_filter_list").parent().hide();
-      }
-      $('#scores_table').bootstrapTable('filterBy', {});
-      $('#performances_table').bootstrapTable('filterBy', {});
-      $('#samples_table').bootstrapTable('filterBy', {});
-    });
-
-
     // Include children filter
     $("#include_children").click(function() {
       filter_score_table();
@@ -399,7 +272,9 @@ $(document).ready(function() {
 
     function filter_score_table() {
 
-      // Traits
+      /** Get data from Ancestry Filters form **/
+
+      // Traits //
       var trait_filter = '';
       var include_children = $("#include_children");
       if (include_children.length) {
@@ -408,34 +283,11 @@ $(document).ready(function() {
         }
       }
 
-      // Ancestries
-      var stage;
+      // Ancestries //
+
+      // Setup variables
       var anc_filter = [];
       var anc_filter_length = 0;
-      if ($("#ancestry_type_list").length) {
-
-        stage = $("#ancestry_type_list option:selected").val();
-
-        if (!stage) {
-          reset_ancestry_form();
-        }
-        else {
-          $(".ancestry_filter_cb").each(function () {
-            if ($(this).prop("checked"))  {
-              anc_filter.push($(this).val());
-            }
-          });
-
-          var ind_anc = $("#ancestry_filter_ind option:selected").val();
-          if (ind_anc != '') {
-            anc_filter.push(ind_anc);
-          }
-          anc_filter_length = anc_filter.length;
-
-          // console.log("Filters: "+anc_filter);
-          // console.log("Filter length: "+anc_filter_length);
-        }
-      }
 
       var scores_table_id = '#scores_table';
       var scores_eval_table_id = '#scores_eval_table';
@@ -447,10 +299,49 @@ $(document).ready(function() {
       $(perf_table_id).bootstrapTable('filterBy', {});
       $(sample_table_id).bootstrapTable('filterBy', {});
 
+      var stage = $("#ancestry_type_list option:selected").val();
+      var anc_eur_cb = 'anc_cb_EUR';
+      var anc_eur = 'EUR';
+
+      // Single ancestry selection + show/hide European checkbox filter
+      var ind_anc = $("#ancestry_filter_ind option:selected").val();
+      if (ind_anc != '') {
+        // Hide European checkbox if European selected in the dropdown
+        if (ind_anc == anc_eur) {
+          var default_val = $('#'+anc_eur_cb).data('default');
+          $('#'+anc_eur_cb).prop('checked', default_val);
+          $('#'+anc_eur_cb).parent().hide();
+        }
+        anc_filter.push(ind_anc);
+      }
+      // Show European checkbox if European is not selected in the dropdown
+      if (ind_anc != anc_eur) {
+        $('#'+anc_eur_cb).parent().show();
+      }
+
+      // Fetch checkboxes selection
+      $(".ancestry_filter_cb").each(function () {
+        // Add filter when "European" checkbox is NOT checked
+        if ($(this).attr('id') == anc_eur_cb) {
+          if (!$(this).prop('checked')) {
+            anc_filter.push('non-'+anc_eur);
+          }
+        }
+        // For the other checkboxes: Add filter when checkbox is checked
+        else if ($(this).prop("checked"))  {
+          anc_filter.push($(this).val());
+        }
+      });
+
+      anc_filter_length = anc_filter.length;
+
+      // console.log("Filters: "+anc_filter);
+      // console.log("Filter length: "+anc_filter_length);
       console.log("Selection: "+anc_filter);
 
 
-      // Filter by value
+      /** Filter the PGS Scores table **/
+
       if ((anc_filter_length != 0 && stage) || trait_filter != '') {
 
         if (trait_filter != '') {
@@ -620,8 +511,9 @@ function pgs_toggle_btn(el) {
 
 
 function reset_ancestry_form() {
-  $(".ancestry_filter_cb").each(function () {
-    $(this).prop('checked', false);
+  $('.ancestry_filter_cb').each(function () {
+    var default_val = $(this).data('default');
+    $(this).prop('checked', default_val);
   });
   $('#ancestry_filter_ind option:eq(0)').prop('selected', true);
 }

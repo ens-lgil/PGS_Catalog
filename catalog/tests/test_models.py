@@ -828,7 +828,10 @@ class ScoreTest(TestCase):
             "EUR": "40.3",
             "MAE": "53.3",
             "SAS": "6.4"
-        }
+        },
+        "eval_count": 12,
+        "dev_count": 1,
+        "gwas_count": 365042
     }
 
     def create_score(self, num, name=name, var_number=v_number, build=v_build, m_name=m_name, m_params=m_params):

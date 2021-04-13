@@ -2117,7 +2117,6 @@ footer {
   margin-left:1rem;
   padding-left:1rem;
   border-left:1px solid #CCC;
-  display:none;
 }
 
 .ancestry_legend {
@@ -2165,6 +2164,9 @@ footer {
     margin-top: 8px;
     border-top:1px solid #CCC;
     padding-top: 4px;
+    &:after {
+      content: " (100%)";
+    }
   }
   ul {
     font-size: 90%;

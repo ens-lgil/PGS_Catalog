@@ -71,22 +71,24 @@ def ancestry_form():
     div_html += '">'+div_content+'</div>'
     legend_html += div_html
 
+    checkbox_title_eur = 'By default we display all PGS. This button can be used to hide PGS with European ancestry and only show scores with data from non-European ancestry groups.'
+    checkbox_title_multi = 'Shows scores that include data from multiple ancestry groups at the selected study stage. Hides scores with data from a single ancestry group.'
+
     return '''
     <div class="mb-3 pgs_form_container">
         <!-- Ancestry form -->
         <div id="ancestry_filter" class="filter_container mr-3 mb-3">
-            <div class="filter_header">Filter PGS by Participant Ancestry <a class="pgs_no_icon_link info-icon" target="_blank" href="/ancestry/#anc_filter" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see information about the Ancestry Filters (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
+            <div class="filter_header">Filter PGS by Participant Ancestry <a class="pgs_no_icon_link info-icon" target="_blank" href="/docs/ancestry/#anc_filter" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see information about the Ancestry Filters (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
             <div class="clearfix">
               <!-- Type of study -->
               <div style="float:left">
-                <div class="filter_subheader mb-1">Samples included in:</div>
+                <div class="filter_subheader mb-1">Individuals included in:</div>
                   <select id="ancestry_type_list">
-                    <option value="">--</option>
-                     <option value="dev_all">Development [V, D]</option>
-                     <option value="gwas">&nbsp;&nbsp;- GWAS [V]</option>
-                      <option value="dev">&nbsp;&nbsp;- Score development [D]</option>
-                     <option value="eval">PGS Evaluation [E]</option>
-                     <option value="all">All Stages combined [V, D, E]</option>
+                    <option value="all" selected>All Stages combined [V, D, E]</option>
+                    <option value="dev_all">Development [V, D]</option>
+                    <option value="gwas">&nbsp;&nbsp;- GWAS [V]</option>
+                    <option value="dev">&nbsp;&nbsp;- Score development [D]</option>
+                    <option value="eval">PGS Evaluation [E]</option>
                   </select>
                   <div class="ancestry_legend pl-1 mt-2">
                     <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
@@ -96,32 +98,32 @@ def ancestry_form():
                 </div>
                 <!-- Type of ancestry -->
                 <div class="filter_ancestry">
-                  <div class="filter_subheader mb-1">Ancestries selection:</div>
+                <div id="single_ancestry" class="filter_subheader mb-1">List of ancestries includes:</div>
+                  <div>
+                    <select id="ancestry_filter_ind">
+                      <option value="">--</option>
+                      {ancestry_option}
+                    </select>
+                  </div>
+                  <div class="filter_subheader mt-2">Display options:</div>
                   <div id="ancestry_filter_list">
                     <div class="custom-control custom-switch">
-                      <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="MAO" id="anc_1">
-                      <label class="custom-control-label" for="anc_1">Multiple-Ancestries</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that include data from multiple ancestry groups at the selected study stage."><i class="fa fa-info-circle"></i></span>
+                      <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="" data-default="true" id="anc_cb_EUR" checked>
+                      <label class="custom-control-label" for="anc_cb_EUR">Show European ancestry data</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{title_eur}"><i class="fa fa-info-circle"></i></span>
                     </div>
                     <div class="custom-control custom-switch">
-                      <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="non-EUR" id="anc_0">
-                      <label class="custom-control-label" for="anc_0">Excluding Europeans</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="PGS that do not include data from European ancestry individuals at the selected study stage."><i class="fa fa-info-circle"></i></span>
-                    </div>
-                    <div id="single_ancestry" class="filter_subheader mt-1 mb-1">Select an ancestry:</div>
-                    <div>
-                      <select id="ancestry_filter_ind">
-                        <option value="">--</option>
-                        {ancestry_option}
-                      </select>
+                      <input type="checkbox" class="custom-control-input ancestry_filter_cb" value="MAO" data-default="false" id="anc_cb_multi">
+                      <label class="custom-control-label" for="anc_cb_multi">Show <u>only</u> Multi-ancestry data</label><span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{title_multi}"><i class="fa fa-info-circle"></i></span>
                     </div>
                   </div>
                 </div>
             </div>
         </div>
         <div id="ancestry_legend" class="filter_container mb-3">
-            <div class="filter_header">Ancestry legend <a class="pgs_no_icon_link info-icon" target="_blank" href="/ancestry/#anc_category" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see more information about the Ancestry Categories (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
+            <div class="filter_header">Ancestry legend <a class="pgs_no_icon_link info-icon" target="_blank" href="/docs/ancestry/#anc_category" data-toggle="tooltip" data-placement="bottom" title="Click on this icon to see more information about the Ancestry Categories (open in a new tab)"><i class="fa fa-info-circle"></i></a></div>
             <div id="ancestry_legend_content" class="clearfix">{ancestry_legend}</div>
         </div>
-    </div>'''.format(ancestry_option=option_html,ancestry_legend=legend_html)
+    </div>'''.format(ancestry_option=option_html, ancestry_legend=legend_html, title_eur=checkbox_title_eur, title_multi=checkbox_title_multi)
 
 
 def get_efo_traits_data():
@@ -529,13 +531,13 @@ def pss(request, pss_id):
 
 
 class AboutView(TemplateView):
-    template_name = "catalog/about.html"
+    template_name = "catalog/docs/about.html"
 
 class AncestryView(TemplateView):
-    template_name = "catalog/ancestry.html"
+    template_name = "catalog/docs/ancestry.html"
 
 class DocsView(TemplateView):
-    template_name = "catalog/docs.html"
+    template_name = "catalog/docs/docs.html"
 
 class DownloadView(TemplateView):
     template_name = "catalog/download.html"

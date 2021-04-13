@@ -379,7 +379,7 @@ class Browse_ScoreTable(tables.Table):
                         title_count = str(count)+' Sample Sets'
                     else:
                         title_count = common.individuals_format(count)
-                    title_count = f'<div>{title_count} (100%)</div>'
+                    title_count = f'<div>{title_count}</div>'
                 title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+title_count+'</div>'
                 html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
                 html_list.append(html_chart)
