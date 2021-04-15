@@ -225,6 +225,31 @@ $(document).ready(function() {
       }
     })
 
+    // Buttons in the Search page results
+    $('.search_facet').click(function(){
+      console.log("CLICKED!");
+      if ($(this).find('i.fa-circle')) {
+        id = $(this).attr('id');
+        type = id.replace('_facet', '');
+        if (type == 'all') {
+          $('.pgs_result').show();
+        }
+        else {
+          entry_class = type+'_entry';
+          $('.'+entry_class).show();
+          $('.pgs_result').not('.'+entry_class).hide();
+        }
+        title = type.charAt(0).toUpperCase() + type.slice(1);
+
+        $('.search_facet.selected').find('i').removeClass("fas fa-check-circle").addClass("far fa-circle");
+        $('.search_facet.selected').removeClass("selected");
+
+
+        $(this).find('i').removeClass("far fa-circle").addClass("fas fa-check-circle");
+        $(this).addClass("selected");
+      }
+    });
+
     // Load google from iframe
     $('#g_iframe').on("load", function () {
       $('#iframe_loading').removeClass('d-flex');
@@ -640,7 +665,7 @@ function showhide_trait(id, term) {
   $('a.trait_item').mouseover(function() {
     trait_link = $(this).find('.trait_link');
     if (trait_link.length == 0) {
-      $(this).append('<i class="trait_link fa fa-link"></i>');
+      $(this).append('<i class="trait_link fas fa-link"></i>');
     }
     else {
       trait_link.show();
@@ -669,30 +694,6 @@ function add_search_term(term) {
 }
 
 
-// Buttons in the Search page results
-$('.search_facet').click(function(){
-  if ($(this).find('i.fa-circle-o')) {
-    id = $(this).attr('id');
-    type = id.replace('_facet', '');
-    if (type == 'all') {
-      $('.pgs_result').show();
-    }
-    else {
-      entry_class = type+'_entry';
-      $('.'+entry_class).show();
-      $('.pgs_result').not('.'+entry_class).hide();
-    }
-    title = type.charAt(0).toUpperCase() + type.slice(1);
-
-    $('.search_facet.selected').find('i').removeClass("fa-check-circle").addClass("fa-circle-o");
-    $('.search_facet.selected').removeClass("selected");
-
-    $(this).find('i').removeClass("fa-circle-o").addClass("fa-check-circle");
-    $(this).addClass("selected");
-  }
-});
-
-
 function display_category_list(data_json) {
   var trait_elem = document.getElementById("trait_cat");
   var subtrait_elem = document.getElementById("trait_subcat");
@@ -708,7 +709,7 @@ function display_category_list(data_json) {
   colour_box = '<span class="trait_colour" style="background-color:'+colour_to_replace+'"></span>';
   count_to_replace = '##COUNT##';
   count_badge = '<span class="badge badge-pill badge-pgs float_right">'+count_to_replace+' <span>PGS</span></span>';
-  category_arrow = '<i class="fa fa-arrow-circle-right"></i>';
+  category_arrow = '<i class="fas fa-arrow-circle-right"></i>';
 
   for (cat_index in data_json) {
     cat_index = parseInt(cat_index);

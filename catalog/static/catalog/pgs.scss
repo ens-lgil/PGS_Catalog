@@ -227,12 +227,9 @@ h2 {
 }
 
 .nav-item {
-  //border-left: 1px solid #FFF;
-  font-size: 0.9em;
-  border-left: 1px solid $pgs_colour_1;
+  border-left: 1px solid #FFF;
   &:last-child {
-    //border-right:1px solid #FFF;
-    border-right: 1px solid $pgs_colour_1;
+    border-right:1px solid #FFF;
   }
   &:hover {
     background-color: $pgs_colour_1;
@@ -261,7 +258,7 @@ h2 {
   background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
 }
 .navbar-collapse {
-  max-width: 550px;
+  max-width: 500px;
 }
 .navbar-nav {
   margin-right: 2rem;
@@ -273,9 +270,6 @@ h2 {
     &:hover, &:active, &:focus {
       color: #FFF;
       border-bottom: none;
-      span {
-        color: #FFF !important;
-      }
     }
   }
 }
@@ -296,7 +290,7 @@ h2 {
   flex-wrap: wrap;
 }
 .search_facet {
-  height:31px;
+  height:32px;
   padding: 0.4rem 0.6rem;
   background-color: #FFF;
   color: $pgs_colour_1;
@@ -480,8 +474,7 @@ h2 {
 }
 .dropdown-menu-right {
   .dropdown-item  {
-    //font-size: 14px;
-    font-size: 12px;
+    font-size: 14px;
   }
 }
 .dropdown-item {
@@ -743,6 +736,12 @@ td > ul {
   }
 }
 
+.table_pgs_small_desc {
+  td:last-child {
+    font-size: 0.9em;
+  }
+}
+
 .table_pgs_h {
   width:auto;
   td {
@@ -783,11 +782,14 @@ td > ul {
 
 /* Icons related CSS */
 .external-link:after {
-  font-family: 'FontAwesome';
-  content:"\f08e";
-  font-size: 0.7rem;
-  vertical-align: top;
+  font-family: "Font Awesome 5 Free";
+  //content:"\f08e";
+  content: "\f35d";
+  display: inline-block;
+  font-size: 0.6rem;
+  vertical-align: top !important;
   padding-left:4px;
+  font-weight:900;
 }
 
 .info-icon {
@@ -818,18 +820,20 @@ td > ul {
 }
 
 .pgs-info-icon:before {
-  font-family: 'FontAwesome';
+  font-family: 'Font Awesome 5 Free';
   content:"\f05a";
   color: $pgs_colour_1;
+  font-weight: 900;
 }
 
 .pgs_pub_details {
   display: block;
   font-size: 80%;
   &:before {
-    font-family: 'FontAwesome';
+    font-family: 'Font Awesome 5 Free';
     content:"\f101";
     padding-right:4px;
+    font-weight: 900;
   }
 }
 
@@ -854,8 +858,9 @@ td > ul {
   padding-left: 0.1rem;
   padding-right: 0.25rem;
   &:before {
-    font-family: 'FontAwesome';
+    font-family: 'Font Awesome 5 Free';
     content:"\f15c";
+    font-weight: 900;
   }
   &:hover {
     color: $pgs_colour_1_lighter;
@@ -1041,6 +1046,10 @@ td > ul {
   color: $pgs_colour_green !important;
 }
 
+.pgs_bg_light_grey {
+  background-color: $pgs_light_grey;
+}
+
 .btn-pgs, .btn-pgs-small {
   color: #FFF;
   background-color: $pgs_colour_1 !important;
@@ -1152,18 +1161,20 @@ a.link-with-btn {
   }
 }
 .link_more:after {
-    font-family: 'FontAwesome';
+    font-family: 'Font Awesome 5 Free';
     content:"\f054";
     vertical-align: baseline;
     padding-left:4px;
     font-size: 0.75rem;
+    font-weight: 900;
 }
 .link_less:before {
-    font-family: 'FontAwesome';
+    font-family: 'Font Awesome 5 Free';
     content:"\f053";
     vertical-align: baseline;
     padding-right:4px;
     font-size: 0.75rem;
+    font-weight: 900;
 }
 
 .error_msg_container {
@@ -1724,9 +1735,11 @@ footer {
     margin-bottom: 4px;
     margin-right: 0.5rem;
     padding: 0.2rem 0.3rem;
-    height:27px;
+    height:25px;
     i {
       padding-right: 0px;
+      font-size: 16px;
+      height:16px;
     }
     div {
       padding-right: 2px;
@@ -1883,6 +1896,7 @@ footer {
 }
 
 @media screen and (max-width: 991px) {
+
   .navbar {
     justify-content:flex-start;
     display: flex;
@@ -1955,39 +1969,12 @@ footer {
     padding-right: 2.5rem;
   }
 }
-@media screen and (min-width: 992px) and (max-width: 1060px) {
-  .navbar-brand, .navbar-nav {
-    margin-right: 1rem !important;
-  }
-  .extra_example {
-    display: none;
-  }
-}
-@media screen and (min-width: 992px) and (max-width: 1099px) {
-  .search_box{
-    width:18vw;
-  }
-  .navbar {
-    .nav-link {
-      padding: 0.3rem 0.4rem !important;
-    }
-  }
-  /*.nav-item {
-    //padding: 0.3rem 0.4rem !important;
-    padding:4px 4px;
-  }*/
-}
-@media screen and (min-width: 1100px) {
-  .search_box{
-    width:18vw;
-  }
-}
-@media screen and (min-width: 1136px) {
+@media screen and (min-width: 992px) and (max-width: 1075px) {
   .search_box{
     width:20vw;
   }
 }
-@media screen and (min-width: 1205px) {
+@media screen and (min-width: 1076px) {
   .search_box{
     width:25vw;
   }
@@ -2143,6 +2130,7 @@ footer {
 }
 
 
+/* Ancestry styling */
 .anc_box {
   font-size: 12px;
   div:first-child {
@@ -2219,5 +2207,25 @@ $ancestry_colours: (
   .anc_bd_#{$anc_key} {
     border-left: 8px solid $anc_colour;
     padding-left:5px;
+  }
+}
+
+
+.ancestry_example_container {
+  display:flex;
+  flex-wrap:wrap;
+  > div {
+    padding:10px;
+    border:1px solid $pgs_darkC;
+    div:first-child {
+      text-align:center;
+      background-color: $pgs_light_grey;
+    }
+    div.ancestry_example_combined {
+      border-top:1px solid $pgs_darkC;
+    }
+    ul {
+      min-height: 65px;
+    }
   }
 }

@@ -8,7 +8,7 @@
   <section>
     <div class="release_label">
       <span data-toggle="tooltip" data-placement="bottom" data-html="true" title="New Polygenic Scores: <b>{{ release.score_count }}</b><br />New Publications: <b>{{ release.publication_count }}</b>">
-        <i class="fa fa-calendar pgs_color_1"></i> Latest release: <b>{{ release.date }}</b>
+        <i class="fas fa-calendar-alt pgs_color_1"></i> Latest release: <b>{{ release.date }}</b>
       </span>
     </div>
     <div class="pgs_centered mb-5">
@@ -38,7 +38,7 @@
           </div>
           {% if num_pgs_not_released %}
             <div style="color:#FFF">
-              <i class="fa fa-asterisk" style="color:#FFF"></i> <b>{{ num_pgs_not_released }}</b> not yet released
+              <i class="fas fa-asterisk" style="color:#FFF"></i> <b>{{ num_pgs_not_released }}</b> not yet released
             </div>
           {% endif %}
         </a>
@@ -49,7 +49,7 @@
           <div class="icon icon-species" data-icon="H"> {{ num_traits }}{% if num_traits_not_released %}*{% endif %}</div>
           {% if num_traits_not_released %}
             <div style="color:#FFF">
-              <i class="fa fa-asterisk" style="color:#FFF"></i> <b>{{ num_traits_not_released }}</b> not yet released
+              <i class="fas fa-asterisk" style="color:#FFF"></i> <b>{{ num_traits_not_released }}</b> not yet released
             </div>
           {% endif %}
         </a>
@@ -60,7 +60,7 @@
           <div class="icon icon-common" data-icon="&#xf2ec;"> {{ num_pubs }}{% if num_pubs_not_released %}*{% endif %}</div>
           {% if num_pubs_not_released %}
             <div style="color:#FFF">
-              <i class="fa fa-asterisk" style="color:#FFF"></i> <b>{{ num_pubs_not_released }}</b> not yet released
+              <i class="fas fa-asterisk" style="color:#FFF"></i> <b>{{ num_pubs_not_released }}</b> not yet released
             </div>
           {% endif %}
         </a>
@@ -71,7 +71,7 @@
     <div class="row no-gutters pgs_section mb-5">
       <div class="col">
         <a class="btn btn-pgs-2 pgs_no_icon_link" href="/submit/">
-          <span class="fa fa-upload pr-2"></span>Submit a PGS
+          <span class="fas fa-upload pr-2"></span>Submit a PGS
         </a>
       </div>
     </div>
@@ -108,12 +108,12 @@
         </p>
         <p class="mb-2">
           <a class="link-with-btn" href="/downloads/">
-            <i class="fa fa-download"></i><span>View available PGS Catalog <b>downloads</b>.</span>
+            <i class="fas fa-download"></i><span>View available PGS Catalog <b>downloads</b>.</span>
           </a>
         </p>
         <p class="mb-0">
           <a class="link-with-btn" href="/rest/">
-            <i class="fa fa-code"></i><span>Programmatic access to the Catalog data through our <b>REST API</b>.</span>
+            <i class="fas fa-code"></i><span>Programmatic access to the Catalog data through our <b>REST API</b>.</span>
           </a>
         </p>
       </div>
@@ -123,7 +123,7 @@
           To <b>submit a PGS to the catalog</b>, <b>provide feedback</b>, or <b>ask questions</b>: contact the PGS Catalog team at <a href="mailto:{{ pgs_contact }}">{{ pgs_contact }}</a>!
         </p>
         <p class="mb-0">
-          <b>Recommend missing PGS publications and scores</b> for inclusion in the Catalog using this <a href="/report_study"><b><i class="fa fa-wpforms"></i> form</b></a>.
+          <b>Recommend missing PGS publications and scores</b> for inclusion in the Catalog using this <a href="/report_study"><b><i class="fas fa-clipboard-list"></i> form</b></a>.
         </p>
       </div>
     </div>

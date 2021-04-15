@@ -8,7 +8,7 @@ info:
   description: |
     Programmatic access to the PGS Catalog metadata. More information about the metadata and its structure can be found [here](/docs/).
 
-    <i class="fa fa-exclamation-circle pgs_color_1"></i> Each PGS is provided as a scoring file (containing the variants, alleles, effect weights) on our <a href="http://ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/" target="_blank">FTP site</a>.
+    <i class="fas fa-exclamation-circle pgs_color_1"></i> Each PGS is provided as a scoring file (containing the variants, alleles, effect weights) on our <a href="http://ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/" target="_blank">FTP site</a>.
     The variants are not distributed within this API; however, a link to the scoring file is provided in the<code>ftp_scoring_file</code>field for each result of the<code>/rest/score/</code>endpoints for ease of download.
 
     ---
@@ -16,7 +16,7 @@ info:
     ###### REST API settings
 
     * `pagination`: This REST API is using pagination for the endpoints returning more than 1 results. It is currently set to **50** results per page.
-      <a class="toggle_btn" id="pagination">More information <i class="fa fa-plus-circle"></i></a>
+      <a class="toggle_btn" id="pagination">More information <i class="fas fa-plus-circle"></i></a>
       <div class="toggle_content" id="content_pagination" style="display:none">
 
         ###### **Pagination structure**
@@ -55,7 +55,7 @@ info:
 
 
     * `rate limit`: The limit number of queries is set to **100** queries per minute.
-      <a class="toggle_btn" id="rate_limit">More information <i class="fa fa-plus-circle"></i></a>
+      <a class="toggle_btn" id="rate_limit">More information <i class="fas fa-plus-circle"></i></a>
       <div class="toggle_content" id="content_rate_limit" style="display:none">
         Here is an example of the JSON message returned if the rate limit is reached:
 
@@ -71,7 +71,7 @@ info:
 
     ---
 
-    <a class="toggle_btn" id="changelog">REST API version changelog <i class="fa fa-plus-circle"></i></a>
+    <a class="toggle_btn" id="changelog">REST API version changelog <i class="fas fa-plus-circle"></i></a>
     <div class="toggle_content" id="content_changelog" style="display:none">
 
       * <span class="badge badge-pill badge-pgs">1.6</span> - March 2021:

@@ -500,7 +500,7 @@ class Sample(models.Model):
         div_id = "sample_"+str(self.pk)
         sstring = ''
         if self.sample_cases != None:
-            sstring += '<div><a class="toggle_table_btn pgs_helptip" id="{}" title="Click to show/hide the details">{} <i class="fa fa-plus-circle"></i></a></div>'.format(div_id,common.individuals_format(self.sample_number))
+            sstring += '<div><a class="toggle_table_btn pgs_helptip" id="{}" title="Click to show/hide the details">{} <i class="fas fa-plus-circle"></i></a></div>'.format(div_id,common.individuals_format(self.sample_number))
             sstring += '<div class="toggle_list" id="list_'+div_id+'">'
             sstring += '<span class="only_export">[</span>'
             sstring += '<ul>\n<li>{:,} cases</li>\n'.format(self.sample_cases)
@@ -568,14 +568,14 @@ class Sample(models.Model):
         if self.ancestry_free in ['NR', '', None]:
             return self.ancestry_broad
         else:
-            return '{}<br/>({})'.format(self.ancestry_broad, self.ancestry_free)
+            return '{}<br/><small>({})</small>'.format(self.ancestry_broad, self.ancestry_free)
 
     @property
     def display_ancestry_inline(self):
         if self.ancestry_free in ['NR', '', None]:
             return self.ancestry_broad
         else:
-            return '{} ({})'.format(self.ancestry_broad, self.ancestry_free)
+            return '{} <small>({})</small>'.format(self.ancestry_broad, self.ancestry_free)
 
 
 class Score(models.Model):
@@ -679,7 +679,7 @@ class Score(models.Model):
             for type in ('gwas','dev','eval'):
                 html_type = ''
                 if type in self.ancestries:
-                    info = f'<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{types[type]["desc"]}"><i class="fa fa-info-circle"></i></span>'
+                    info = f'<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{types[type]["desc"]}"><i class="fas fa-info-circle"></i></span>'
                     html_type += f'<tr><td>{types[type]["label"]}{info}</td><td>'
                     html_type += '<div style="display:flex">'
                     chart = []
@@ -699,9 +699,9 @@ class Score(models.Model):
                         label = ancestry_labels[key]
                         multi_anc = ''
                         if key in multi_legend:
-                            multi_anc += f' <a class="toggle_btn" data-toggle="tooltip" data-placement="right" data-delay="500" id="{multi_type}" title="" data-original-title="Click to show/hide the list of ancestries"><i class="fa fa-plus-circle"></i></a></div>'
+                            multi_anc += f' <a class="toggle_btn" data-toggle="tooltip" data-placement="right" data-delay="500" id="{multi_type}" title="" data-original-title="Click to show/hide the list of ancestries"><i class="fas fa-plus-circle"></i></a></div>'
                             multi_anc += f'<div class="toggle_list" id="list_{multi_type}"><ul>{"".join(multi_legend[ma])}</ul>'
-                        legend += f'<div><span class="fa fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc}</div>'
+                        legend += f'<div><span class="fas fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc}</div>'
 
                     count = self.ancestries[type+"_count"]
                     if type == 'eval':

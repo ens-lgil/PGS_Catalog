@@ -127,7 +127,7 @@ class Column_cohorts(tables.Column):
             qlist.append(qdict[k])
         if len(qlist) > 5:
             div_id = get_random_string(10)
-            html_list = '<a class="toggle_table_btn" id="'+div_id+'" title="Click to expand/collapse the list">'+str(len(qlist))+' cohorts <i class="fa fa-plus-circle"></i></a>'
+            html_list = '<a class="toggle_table_btn" id="'+div_id+'" title="Click to expand/collapse the list">'+str(len(qlist))+' cohorts <i class="fas fa-plus-circle"></i></a>'
             html_list = html_list+'<div class="toggle_list" id="list_'+div_id+'">'
             html_list = html_list+"<ul><li>"+'</li><li><span class="only_export">,</span>'.join(qlist)+'</li></ul></div>'
             return format_html(html_list)
@@ -238,7 +238,7 @@ class Browse_TraitTable(tables.Table):
 
 class Browse_ScoreTable(tables.Table):
     '''Table to browse Scores (PGS) in the PGS Catalog'''
-    id = tables.Column(accessor='id', verbose_name='Polygenic Score (PGS) ID & Name', orderable=True)
+    id = tables.Column(accessor='id', verbose_name=format_html('Polygenic Score (PGS) ID & Name'), orderable=True)
     trait_efo = tables.Column(accessor='trait_efo', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
     ancestries =  Column_format_html(accessor='ancestries', verbose_name='Ancestry distribution', orderable=False)
@@ -412,6 +412,17 @@ class Browse_ScoreTableEval(Browse_ScoreTable):
     class Meta:
         attrs = {
             "id": "scores_eval_table"
+        }
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+class Browse_ScoreTableExample(Browse_ScoreTable):
+    class Meta:
+        attrs = {
+            "id": "scores_eg_table",
+            "data-show-columns" : "false",
+            "data-show-export" : "false",
+            "data-pagination" : "false",
+            "data-search" : "false"
         }
         template_name = 'catalog/pgs_catalog_django_table.html'
 
@@ -592,7 +603,7 @@ class PerformanceTable(tables.Table):
         ancestry_key = value.samples_combined_ancestry_key
         ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
         count_ind = common.individuals_format(value.count_individuals)
-        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fa fa-square anc_colour_{}"></i> {}</div><span class="only_export">|</span><div class="small"><i class="fa fa-user"></i> {}</div>', value, value, ancestry_key, ancestry,count_ind)
+        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fas fa-square anc_colour_{}"></i> {}</div><span class="only_export">|</span><div class="small"><i class="far fa-user"></i> {}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
         return score_format(value)

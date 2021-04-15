@@ -56,7 +56,7 @@
             </tr>
             <tr>
               <td>Sample Ancestry</td>
-              <td><b>{{ sample.display_ancestry_inline }}</b></td>
+              <td><b>{{ sample.display_ancestry_inline|safe }}</b></td>
             </tr>
             {% if sample.ancestry_additional %}
               <tr>
@@ -115,7 +115,7 @@
                     <td>
                       <b>{{ sample.list_cohortids|length }}</b>
                       {% if sample_count|length > 1 %}
-                        <a class="toggle_btn pgs_no_icon_link" data-toggle="tooltip" data-placement="bottom" id="cohort_{{ forloop.counter }}" title="Click to show/hide the cohort table"><i class="fa fa-plus-circle"></i></a>
+                        <a class="toggle_btn pgs_no_icon_link" data-toggle="tooltip" data-placement="bottom" id="cohort_{{ forloop.counter }}" title="Click to show/hide the cohort table"><i class="fas fa-plus-circle"></i></a>
                       {% endif %}
                     </td>
                   </tr>
