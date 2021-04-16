@@ -702,8 +702,8 @@ class SampleTest(TestCase):
         self.assertEqual(sample_3.display_ancestry, self.a_broad)
         self.assertEqual(sample_3.display_ancestry_inline, self.a_broad)
         sample_3.ancestry_free = self.a_free_2
-        self.assertEqual(sample_3.display_ancestry, '{}<br/>({})'.format(self.a_broad, self.a_free_2))
-        self.assertEqual(sample_3.display_ancestry_inline, '{} ({})'.format(self.a_broad, self.a_free_2))
+        self.assertEqual(sample_3.display_ancestry, '{}<br/><small>({})</small>'.format(self.a_broad, self.a_free_2))
+        self.assertEqual(sample_3.display_ancestry_inline, '{} <small>({})</small>'.format(self.a_broad, self.a_free_2))
 
         ## Sample with cohorts
         sample_4 = self.create_sample_cohorts()
