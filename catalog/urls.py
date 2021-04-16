@@ -35,7 +35,7 @@ urlpatterns = [
     path('about/', views.AboutView.as_view(), name='About'),
 
     # e.g.: /docs/ancestry/
-    path('docs/ancestry/', views.AncestryView.as_view(), name='Ancestry'),
+    path('docs/ancestry/', views.ancestry_doc, name='Ancestry'),
 
     # e.g.: /docs/
     path('docs/', views.DocsView.as_view(), name='Documentation'),
