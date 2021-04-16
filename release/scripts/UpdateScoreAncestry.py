@@ -24,7 +24,7 @@ class UpdateScoreAncestry:
     def __init__(self):
         self.scores = Score.objects.all().order_by('num')
         #self.scores = Score.objects.filter(num=739)
-        #self.scores = Score.objects.filter(num=12)
+        #self.scores = Score.objects.filter(num=39)
 
 
     def get_ancestry_code(self,anc,type):
@@ -168,12 +168,22 @@ class UpdateScoreAncestry:
                     print(f'\t#### '+type.upper())
                     count_total = score_ancestry_data[type]['total']
                     for key, value in score_ancestry_data[type]['data'].items():
+                        # Calculate percentage
                         if count_total == 0:
                             anc_number = len(score_ancestry_data[type]['data'].keys())
-                            percent = "{:.1f}".format((1/anc_number)*100)
+                            percent = (1/anc_number)*100
                         else:
-                            percent = "{:.1f}".format((value/count_total)*100)
+                            percent = (value/count_total)*100
+
+                        # Round and remove extra 0 for percentage
+                        if percent < 0.1:
+                            percent = "{:.2f}".format(percent)
+                            percent = percent.replace('.00','')
+                        else:
+                            percent = "{:.1f}".format(percent)
+                            percent = percent.replace('.0','')
                         print(f'\t>>>> PERCENT: {key} => {percent}%')
+
                         anc_data[type][key] = percent
                     anc_data[type+'_count'] = count_total
                 if score_ancestry_data[type]['multi']:

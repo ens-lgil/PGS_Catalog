@@ -287,18 +287,13 @@ class Browse_ScoreTable(tables.Table):
 
     def render_ancestries(self, value, record):
         if not value:
-            return None
+            return '-'
 
         anc_labels = constants.ANCESTRY_LABELS
         stages = ('gwas','dev','eval')
 
-        tooltip_headers = {
-            'gwas': 'Source of Variant Associations (GWAS)',
-            'dev':  'Score Development',
-            'eval': 'Evaluation'
-        }
         ancestries_data = value
-        pgs_id = record.id.lower()
+        pgs_id = record.num
         chart_id = f'ac_{pgs_id}'
         data_type = {}
         data_title = {}
@@ -323,15 +318,15 @@ class Browse_ScoreTable(tables.Table):
                             multi_title[ma] = []
                         multi_title[ma].append(f'<li>{anc_labels[anc]}</li>')
 
+                        if anc == 'MAE':
+                            continue
                         # Add to the unique list of ancestries
                         anc_list[type].add(anc)
-
-                        if anc != 'MAE':
-                            # Add to the unique list of ALL ancestries
-                            anc_all_list['all'].add(anc)
-                            if type != 'eval':
-                                # Add to the unique list of DEV ancestries
-                                anc_all_list['dev_all'].add(anc)
+                        # Add to the unique list of ALL ancestries
+                        anc_all_list['all'].add(anc)
+                        # Add to the unique list of DEV ancestries
+                        if type != 'eval':
+                            anc_all_list['dev_all'].add(anc)
 
                 # Ancestry data for the stage (type): distribution, list of ancestries and content of the chart tootlip
                 data_type[type] = []
@@ -344,11 +339,15 @@ class Browse_ScoreTable(tables.Table):
                         extra_title += '<ul>'+''.join(multi_title[key])+'</ul>'
                     data_title[type].append(f'<div class=\'anc_bd_{key}\'>{label}: {val}%{extra_title}</div>')
 
-                    if key != 'MAE':
-                        anc_list[type].add(key)
-                        if type != 'eval':
-                            anc_all_list['dev_all'].add(key)
-                        anc_all_list['all'].add(key)
+                    if key == 'MAE':
+                        continue
+                    # Add to the unique list of ancestries
+                    anc_list[type].add(key)
+                    # Add to the unique list of ALL ancestries
+                    anc_all_list['all'].add(key)
+                    # Add to the unique list of DEV ancestries
+                    if type != 'eval':
+                        anc_all_list['dev_all'].add(key)
 
 
         # Skip if no expecting data type available
@@ -374,14 +373,11 @@ class Browse_ScoreTable(tables.Table):
 
                 title_count = ''
                 count = ancestries_data[type+'_count']
-                if count !=0:
-                    if type == 'eval':
-                        title_count = str(count)+' Sample Sets'
-                    else:
-                        title_count = common.individuals_format(count)
-                    title_count = f'<div>{title_count}</div>'
-                title = '<div class=\'anc_box\'><div>'+tooltip_headers[type]+'</div>'+''.join(data_title[type])+title_count+'</div>'
-                html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
+                if count != 0:
+                    title_count = '<div>{:,}</div>'.format(count)
+                title = '<div class=\'anc_box_'+type+'\'><div></div>'+''.join(data_title[type])+title_count+'</div>'
+                #html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
+                html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" title="'+title+'" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
                 html_list.append(html_chart)
             else:
                 html_list.append('<div>-</div>')
@@ -393,7 +389,7 @@ class Browse_ScoreTable(tables.Table):
                 anc_all_data = anc_all_list[all_type]
 
                 if len(anc_all_data) > 1:
-                        anc_all_data.add('MAO')
+                    anc_all_data.add('MAO')
                 if 'EUR' not in anc_all_data:
                     anc_all_data.add('non-EUR')
 

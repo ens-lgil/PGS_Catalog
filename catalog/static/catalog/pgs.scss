@@ -2131,7 +2131,7 @@ footer {
 
 
 /* Ancestry styling */
-.anc_box {
+.anc_box_gwas, .anc_box_dev, .anc_box_eval {
   font-size: 12px;
   div:first-child {
     font-weight: bold;
@@ -2152,14 +2152,35 @@ footer {
     margin-top: 8px;
     border-top:1px solid #CCC;
     padding-top: 4px;
-    &:after {
-      content: " (100%)";
-    }
   }
   ul {
     font-size: 90%;
     margin-bottom: 0.4rem;
     padding-left:30px;
+  }
+}
+.anc_box_gwas {
+  div:first-child:before {
+    content: "Source of Variant Associations (GWAS)";
+  }
+  div:last-child:after {
+    content: " individuals (100%)"
+  }
+}
+.anc_box_dev {
+  div:first-child:before {
+    content: "Score Development";
+  }
+  div:last-child:after {
+    content: " individuals (100%)"
+  }
+}
+.anc_box_eval {
+  div:first-child:before {
+    content: "Evaluation";
+  }
+  div:last-child:after {
+    content: " Sample Sets (100%)"
   }
 }
 

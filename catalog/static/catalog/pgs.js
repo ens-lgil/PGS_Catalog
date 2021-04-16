@@ -1,40 +1,11 @@
-// Trait Category pie chart settings
-// var tc_height = 260;
-// var tc_width = 300;
-// var tc_margin = 10;
-// var tc_radius = Math.min(tc_width, tc_height - tc_margin) / 2;
-// var tc_arc = get_d3_arc(tc_radius, 0.55);
-// var tc_arcOver = get_d3_arc(tc_radius, 0.53, 1.02);
 
-// var anc_colours = {
-//   'AFR': '#FFFF33', // yellow
-//   'AMR': '#E41A1C', // red
-//   'EAS': '#4DAF4A', // green
-//   'EUR': '#377EB8', // blue
-//   'SAS': '#984EA3', // purple
-//   'MA' : '#FF7F00', // orange
-//   'MAE': '#A6CEE3', // light blue   '#1f4869',//'#F781BF', // pink
-//   'OTH': '#999', // grey
-//   'NR' : '#BBB' // lighter grey
-// };
-// var anc_labels = {
-//   'AFR': 'African',
-//   'AMR': 'American',
-//   'EAS': 'East Asian',
-//   'EUR': 'European',
-//   'SAS': 'South Asian',
-//   'MA' : 'Multi-ancestry (excluding European)',
-//   'MAE': 'Multi-ancestry (including European)',
-//   'OTH': 'Other',
-//   'NR' : 'Not Reported'
-// };
 var anc_types = {
   'gwas': 'V',
   'dev' : 'D',
   'eval': 'E'
 };
 
-var single_anc_svg = '<g transform="translate(20,20)"><path fill="####COLOUR####" d="M1.2246467991473533e-15,-20A20,20,0,1,1,-1.2246467991473533e-15,20A20,20,0,1,1,1.2246467991473533e-15,-20M-1.1790629835294509e-14,-11A11,11,0,1,0,1.1790629835294509e-14,11A11,11,0,1,0,-1.1790629835294509e-14,-11Z"></path><text class="pie_text" dy=".35em">####TYPE####</text></g>';
+// var single_anc_svg = '<g transform="translate(20,20)"><path fill="####COLOUR####" d="M1.2246467991473533e-15,-20A20,20,0,1,1,-1.2246467991473533e-15,20A20,20,0,1,1,1.2246467991473533e-15,-20M-1.1790629835294509e-14,-11A11,11,0,1,0,1.1790629835294509e-14,11A11,11,0,1,0,-1.1790629835294509e-14,-11Z"></path><text class="pie_text" dy=".35em">####TYPE####</text></g>';
 
 var data_toggle_table = 'table[data-toggle="table"]';
 
@@ -90,20 +61,6 @@ $(document).ready(function() {
         anc_colours[key] = colour;
       });
 
-      // // Pre-generate chart SVG code for single ancestry category
-      // single_anc_svgs = {};
-      // for (anc_sym in anc_colours) {
-      //   var colour = anc_colours[anc_sym];
-      //   for (type in anc_types) {
-      //     var type_letter = anc_types[type];
-      //     var key = anc_sym+"_"+type;
-      //     var svg = single_anc_svg;
-      //     svg = svg.replace('####COLOUR####',colour);
-      //     svg = svg.replace('####TYPE####',type_letter);
-      //     single_anc_svgs[key] = svg;
-      //   }
-      // }
-
       var anc_svgs = {};
       var type_placeholder = '####TYPE####';
       $('.ancestry_chart').each(function() {
@@ -113,16 +70,10 @@ $(document).ready(function() {
         var data_chart_string = $(this).attr('data-chart');
         var data_chart = JSON.parse(data_chart_string);
 
-        // // Copy generated
-        // if (data_chart.length == 1){
-        //   var key = data_chart[0][0]+'_'+type;
-        //   if (single_anc_svgs[key]) {
-        //     $('#'+id).attr("width",anc_width);
-        //     $('#'+id).attr("height",anc_height);
-        //     $('#'+id).html(single_anc_svgs[key]);
-        //     return;
-        //   }
-        // }
+        // Add tooltip attributes
+        $(this).attr('data-toggle','tooltip');
+        $(this).attr('data-html','true');
+        $(this).attr('data-placement','right');
 
         // Check if similar piechart has already been generated
         if (anc_svgs[data_chart_string]) {
@@ -133,7 +84,7 @@ $(document).ready(function() {
           var svg_type = anc_svgs[data_chart_string]['type'];
           // Change the type (i.e. the letter in the center of the chart)
           if (svg_type != type_letter) {
-            svg_code =  svg_code.replace('>'+svg_type+'<', '>'+type_letter+'<');
+            svg_code = svg_code.replace('>'+svg_type+'<', '>'+type_letter+'<');
           }
           $('#'+id).html(svg_code);
         }
@@ -227,7 +178,6 @@ $(document).ready(function() {
 
     // Buttons in the Search page results
     $('.search_facet').click(function(){
-      console.log("CLICKED!");
       if ($(this).find('i.fa-circle')) {
         id = $(this).attr('id');
         type = id.replace('_facet', '');
