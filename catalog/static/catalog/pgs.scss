@@ -2184,7 +2184,7 @@ footer {
   }
 }
 
-.ancestry_chart_container {
+.anc_chart_container {
   display:flex;
   > div {
     width:50px;
@@ -2218,6 +2218,20 @@ $ancestry_colours: (
   "OTH": #999     // grey
 );
 
+$ancestry_labels: (
+  'MAE': 'Multi-ancestry (including European)',
+  'MAO': 'Multi-ancestry (excluding European)',
+  'AFR': 'African',
+  'EAS': 'East Asian',
+  'SAS': 'South Asian',
+  'ASN': 'Additional Asian Ancestries',
+  'EUR': 'European',
+  'GME': 'Greater Middle Eastern',
+  'AMR': 'Hispanic or Latin American',
+  'OTH': 'Additional Diverse Ancestries',
+  'NR' : 'Not Reported'
+);
+
 @each $anc_key, $anc_colour in $ancestry_colours {
   .anc_#{$anc_key} {
     background-color: $anc_colour;
@@ -2228,6 +2242,12 @@ $ancestry_colours: (
   .anc_bd_#{$anc_key} {
     border-left: 8px solid $anc_colour;
     padding-left:5px;
+  }
+}
+// Fill yup the ancestry chart tooltips
+@each $anc_key, $anc_label in $ancestry_labels {
+  .anc_bd_#{$anc_key}:before {
+    content: $anc_label+": ";
   }
 }
 

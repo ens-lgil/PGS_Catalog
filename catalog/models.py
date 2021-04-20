@@ -674,8 +674,8 @@ class Score(models.Model):
                 'desc': 'Percentage based on the number of Sample Set with an ancestry category out of all the Sample Sets.'
             }
         }
+        html = ''
         if self.ancestries:
-            html = ''
             for type in ('gwas','dev','eval'):
                 html_type = ''
                 if type in self.ancestries:
@@ -709,107 +709,11 @@ class Score(models.Model):
                     else:
                         count_data = common.individuals_format(count,1)
                     html_count = f'<div class="mt-1">{count_data} (100%)</div>'
-                    html_type += f'<div class="ancestry_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
+                    html_type += f'<div class="anc_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
                     html_type += '<div class="ancestry_legend">'+legend+html_count+'</div>'
                     html_type += '</div></td></tr>'
                 html += html_type
-            return html
-        else:
-            return None
-
-
-    # @property
-    # def display_ancestry_bar(self):
-    #     if self.ancestries:
-    #         pgs_id = self.id.lower()
-    #         bar_id = f'anc_barchart_{pgs_id}'
-    #         data = {}
-    #         data_gwas = []
-    #         data_dev = []
-    #         data_eval = []
-    #         anc_gwas = []
-    #         anc_dev = []
-    #         anc_eval = []
-    #         anc_all_dev = set()
-    #         anc_all = set()
-    #         if 'gwas' in self.ancestries:
-    #             for key,val in self.ancestries['gwas'].items():
-    #                 data_gwas.append(f'"{key}",{val}')
-    #                 anc_gwas.append(f'"{key}"')
-    #                 anc_all_dev.add(f'"{key}"')
-    #
-    #         if 'dev' in self.ancestries:
-    #             for key,val in self.ancestries['dev'].items():
-    #                 data_dev.append(f'"{key}",{val}')
-    #                 anc_dev.append(f'"{key}"')
-    #                 anc_all_dev.add(f'"{key}"')
-    #
-    #         anc_all = anc_all_dev.copy()
-    #         for key,val in self.ancestries['eval'].items():
-    #             data_eval.append(f'"{key}",{val}')
-    #             anc_eval.append(f'"{key}"')
-    #             anc_all.add(f'"{key}"')
-    #
-    #         if data_gwas or data_dev or data_eval:
-    #             html_list = []
-    #             if data_gwas:
-    #                 html_list.append("data-gwas='[["+"],[".join(data_gwas)+"]]'")
-    #                 if len(anc_gwas) > 1:
-    #                     if '"MA"' not in anc_gwas and '"MAE"' not in anc_gwas:
-    #                         if '"EUR"' in anc_gwas:
-    #                             anc_gwas.append('"MAE"')
-    #                         else:
-    #                             anc_gwas.append('"MA"')
-    #                 html_list.append("data-anc-gwas='["+','.join(anc_gwas)+"]'")
-    #             if data_dev:
-    #                 html_list.append("data-dev='[["+"],[".join(data_dev)+"]]'")
-    #                 if len(anc_dev) > 1:
-    #                     if '"MA"' not in anc_dev and '"MAE"' not in anc_dev:
-    #                         if '"EUR"' in anc_dev:
-    #                             anc_dev.append('"MAE"')
-    #                         else:
-    #                             anc_dev.append('"MA"')
-    #                 html_list.append("data-anc-dev='["+','.join(anc_dev)+"]'")
-    #             if data_eval:
-    #                 html_list.append("data-eval='[["+"],[".join(data_eval)+"]]'")
-    #                 html_list.append("data-anc-eval='["+','.join(anc_eval)+"]'")
-    #
-    #             if html_list:
-    #                 # Dev all
-    #                 if anc_all_dev:
-    #                     anc_all_dev = list(anc_all_dev)
-    #                     if len(anc_all_dev) > 1:
-    #                         if '"MA"' not in anc_all_dev and '"MAE"' not in anc_all_dev:
-    #                             if '"EUR"' in anc_all_dev:
-    #                                 anc_all_dev.append('"MAE"')
-    #                             else:
-    #                                 anc_all_dev.append('"MA"')
-    #                         elif '"EUR"' in anc_all_dev and '"MA"' in anc_all_dev:
-    #                             anc_all_dev.remove('"MA"')
-    #                             if '"MAE"' not in anc_all_dev:
-    #                                 anc_all_dev.append('"MAE"')
-    #                     html_list.append("data-anc-dev_all='["+','.join(anc_all_dev)+"]'")
-    #                 # All
-    #                 if anc_all:
-    #                     anc_all = list(anc_all)
-    #                     if len(anc_all) > 1:
-    #                         if '"MA"' not in anc_all and '"MAE"' not in anc_all:
-    #                             if '"EUR"' in anc_all:
-    #                                 anc_all.append('"MAE"')
-    #                             else:
-    #                                 anc_all.append('"MA"')
-    #                         elif '"EUR"' in anc_all and '"MA"' in anc_all:
-    #                             anc_all.remove('"MA"')
-    #                             if '"MAE"' not in anc_all:
-    #                                 anc_all.append('"MAE"')
-    #                     html_list.append("data-anc-all='["+','.join(anc_all)+"]'")
-    #                 return '<div class="ancestry_barchart" data-id="'+bar_id+'" '+' '.join(html_list)+'><svg id="'+bar_id+'"></svg></div>'
-    #             else:
-    #                 return None
-    #     else:
-    #         return None
-
-
+        return html
 
 
 class SampleSet(models.Model):

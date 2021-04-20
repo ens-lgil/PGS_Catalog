@@ -280,7 +280,8 @@ class Browse_ScoreTable(tables.Table):
         license_icon = ''
         if record.has_default_license == False:
             license_icon = f'<span class="pgs-info-icon pgs_helpover ml-2" title="Terms and Licenses" data-content="{record.license}" data-placement="left"> <span class="only_export"> - Check </span>Terms/Licenses</span>'
-        return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" data-toggle="tooltip" data-placement="bottom" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
+        return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" data-toggle="tooltip" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
+
 
     def render_variants_number(self, value):
         return '{:,}'.format(value)
@@ -337,7 +338,8 @@ class Browse_ScoreTable(tables.Table):
                     extra_title = ''
                     if key in multi_title:
                         extra_title += '<ul>'+''.join(multi_title[key])+'</ul>'
-                    data_title[type].append(f'<div class=\'anc_bd_{key}\'>{label}: {val}%{extra_title}</div>')
+                    #data_title[type].append(f'<div class=\'anc_bd_{key}\'>{label}: {val}%{extra_title}</div>')
+                    data_title[type].append(f'<div class=\'anc_bd_{key}\'>{val}%{extra_title}</div>')
 
                     if key == 'MAE':
                         continue
@@ -376,8 +378,7 @@ class Browse_ScoreTable(tables.Table):
                 if count != 0:
                     title_count = '<div>{:,}</div>'.format(count)
                 title = '<div class=\'anc_box_'+type+'\'><div></div>'+''.join(data_title[type])+title_count+'</div>'
-                #html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" data-html="true" title="'+title+'" data-placement="right" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
-                html_chart = f'<div class="ancestry_chart" data-toggle="tooltip" title="'+title+'" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
+                html_chart = f'<div class="anc_chart" data-toggle="tooltip" title="'+title+'" data-id="'+id+'" data-type="'+type+'" data-chart=\'[['+'],['.join(data_type[type])+']]\'><svg id="'+id+'"></svg></div>'
                 html_list.append(html_chart)
             else:
                 html_list.append('<div>-</div>')
@@ -398,7 +399,7 @@ class Browse_ScoreTable(tables.Table):
                 html_filter.append("data-anc-"+all_type+"='["+','.join(anc_all_data)+"]'")
 
         # Wrap up the HTML
-        html = '<div class="ancestry_chart_container" '+' '.join(html_filter)+'>'
+        html = '<div class="anc_chart_container" '+' '.join(html_filter)+'>'
         html += ''.join(html_list)
         html += '</div>'
         return format_html(html)

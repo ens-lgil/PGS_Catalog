@@ -50,7 +50,7 @@ $(document).ready(function() {
 
 
     // Draw ancestry charts
-    if ($('.ancestry_chart').length) {
+    if ($('.anc_chart').length) {
       var anc_width = 40;
       var anc_height = 40;
 
@@ -63,7 +63,7 @@ $(document).ready(function() {
 
       var anc_svgs = {};
       var type_placeholder = '####TYPE####';
-      $('.ancestry_chart').each(function() {
+      $('.anc_chart').each(function() {
         var id = $(this).attr('data-id');
         var type = $(this).attr('data-type');
         var type_letter = anc_types[type];
