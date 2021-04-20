@@ -938,7 +938,7 @@ class ScoreTest(TestCase):
         # Score 2
         score_2 = self.get_score(default_num+1)
         self.assertIsNone(score_2.ancestries)
-        self.assertIsNone(score_2.display_ancestry_html)
+        self.assertEqual(score_2.display_ancestry_html,'')
 
 
 class TraitCategoryTest(TestCase):
