@@ -816,22 +816,28 @@ class ScoreTest(TestCase):
     trait_count = 2
     s_ancestries = {
         "eval": {
-            "AFR": "16.7",
-            "AMR": "16.7",
-            "EUR": "58.3",
-            "MAE": "8.3"
+            "dist": {
+                "AFR": 16.7,
+                "AMR": 16.7,
+                "EUR": 58.3,
+                "MAE": 8.3
+            },
+            "count": 12
         },
         "dev": {
-            "EUR": "100"
+            "dist": {
+                "EUR": 100
+            },
+            "count": 1
         },
         "gwas": {
-            "EUR": "40.3",
-            "MAE": "53.3",
-            "SAS": "6.4"
-        },
-        "eval_count": 12,
-        "dev_count": 1,
-        "gwas_count": 365042
+            "dist": {
+                "EUR": 40.3,
+                "MAE": 53.3,
+                "SAS": 6.4
+            },
+            "count": 365042
+        }
     }
 
     def create_score(self, num, name=name, var_number=v_number, build=v_build, m_name=m_name, m_params=m_params):

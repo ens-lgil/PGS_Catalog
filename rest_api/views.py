@@ -549,3 +549,15 @@ class RestInfo(generics.RetrieveAPIView):
         }
 
         return Response(data)
+
+
+class RestAncestryCategories(generics.RetrieveAPIView):
+    """
+    Return the list of ancestry categories
+    """
+
+    def get(self, request):
+
+        data = constants.ANCESTRY_LABELS
+
+        return Response(data)

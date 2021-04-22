@@ -78,7 +78,7 @@
     <section>
       <h3 id="anc_dist">Displaying Ancestry Distributions</h3>
       <p>
-        We provide visual summaries of participant ancestry within each stage of PGS development (source of variant associations [GWAS], and score development) and evaluation. Here, we outline how the ancestry distribution is calculated in each stage:
+        We provide visual summaries of participant ancestry within each stage of PGS development (source of variant associations [GWAS], and score development/training) and evaluation. Here, we outline how the ancestry distribution is calculated in each stage:
       </p>
 
       <h5>PGS Development</h5>
@@ -112,23 +112,23 @@
               </div>
             </td>
           </tr>
-          <!-- Score Development -->
+          <!-- Score Development/Training -->
           <tr>
-            <td class="pgs_bg_light_grey"><b>Score <span class="pgs_color_1">D</span>evelopment</b></td>
-            <td colspan="2">Calculated the same as above, except for samples used for <b>Score Development</b>.</td>
+            <td class="pgs_bg_light_grey"><b>Score <span class="pgs_color_1">D</span>evelopment/Training</b></td>
+            <td colspan="2">Calculated the same as above, except for samples used for <b>Score Development/Training</b>.</td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Score Evaluation -->
-      <h5 class="mt-4">Score Evaluation</h5>
+      <!-- PGS Evaluation -->
+      <h5 class="mt-4">PGS Evaluation</h5>
       <table class="table table-bordered table-left-col-filled">
         <thead class="thead-light">
           <tr><th style="width:15%">Study stage</th><th style="width:25%">Distribution calculation</th><th style="width:60%">Example</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><b>Score <span class="pgs_color_1">E</span>valuation</b></td>
+            <td><b>PGS <span class="pgs_color_1">E</span>valuation</b></td>
             <td>
               <p>
                 The calculation of the ancestry distribution for samples used in PGS Evaluation is different from those in development, to highlight the diversity of ancestries represented in this stage instead of their relative sample sizes. To calculate the ancestry distribution for PGS Evaluation we first assign an ancestry label to each unique Sample Set the PGS has been applied to. Samples are labelled Multi-ancestry (including or excluding Europeans) if more than one ancestry is present in the combined Sample Set (<i>see example</i>).
@@ -213,23 +213,23 @@
         <tbody>
           <tr>
             <td><b>All Stages combined</b> <span class="text-nowrap">[<span class="pgs_color_1">V</span>, <span class="pgs_color_1">D</span>, <span class="pgs_color_1">E</span>]</span></td>
-            <td>Corresponds to the combination of the stages "Source of <span class="pgs_color_1">V</span>ariant Associations (GWAS)", "Score <span class="pgs_color_1">D</span>evelopment" and "Score <span class="pgs_color_1">E</span>valuation".</td>
+            <td>Corresponds to the combination of the stages "Source of <span class="pgs_color_1">V</span>ariant Associations (GWAS)", "Score <span class="pgs_color_1">D</span>evelopment/Training" and "Score <span class="pgs_color_1">E</span>valuation".</td>
           </tr>
           <tr>
             <td><b>Development</b> <span class="text-nowrap">[<span class="pgs_color_1">V</span>, <span class="pgs_color_1">D</span>]</span></td>
-            <td>Corresponds to the combination of the stages "Source of <span class="pgs_color_1">V</span>ariant Associations (GWAS)" and "Score <span class="pgs_color_1">D</span>evelopment"</td>
+            <td>Corresponds to the combination of the stages "Source of <span class="pgs_color_1">V</span>ariant Associations (GWAS)" and "Score <span class="pgs_color_1">D</span>evelopment/Training"</td>
           </tr>
           <tr>
             <td><b>GWAS</b> <span class="text-nowrap">[<span class="pgs_color_1">V</span>]</span></td>
             <td>Corresponds to the stage "Source of <span class="pgs_color_1">V</span>ariant Associations (GWAS)".</td>
           </tr>
           <tr>
-            <td><b>Score Development</b> <span class="text-nowrap">[<span class="pgs_color_1">D</span>]</span></td>
-            <td>Corresponds to the stage "Score <span class="pgs_color_1">D</span>evelopment".</td>
+            <td><b>Score Development/Training</b> <span class="text-nowrap">[<span class="pgs_color_1">D</span>]</span></td>
+            <td>Corresponds to the stage "Score <span class="pgs_color_1">D</span>evelopment/Training".</td>
           </tr>
           <tr>
             <td><b>PGS Evaluation</b> <span class="text-nowrap">[<span class="pgs_color_1">E</span>]</span></td>
-            <td>Corresponds to the stage "Score <span class="pgs_color_1">E</span>valuation".</td>
+            <td>Corresponds to the stage "PGS <span class="pgs_color_1">E</span>valuation".</td>
           </tr>
         </tbody>
       </table>

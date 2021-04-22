@@ -1,11 +1,10 @@
 # Module storing constants used across the website
 
 PGS_REST_API = {
-    'version': 1.6,
+    'version': 1.7,
     'changelog': [
-        "New endpoint 'rest/info' with data such as the REST API version, latest release date and counts, PGS citation, ...",
-        "New endpoint '/rest/cohort/all' returning all the Cohorts and their associated PGS.",
-        "New endpoint '/rest/sample_set/all' returning all the Sample Set data."
+        "New data 'ancestries' in the `/rest/score` endpoints, providing information about ancestry distribution",
+        "New endpoint `/rest/ancestry_categories` providing the list of ancestry symbols and names."
     ]
 }
 
@@ -57,6 +56,8 @@ TABLE_HELPER = {
 }
 
 ANNOUNCEMENT = ''
+
+PGS_STAGES = ('gwas','dev','eval')
 
 ANCESTRY_MAPPINGS = {
     'Aboriginal Australian': 'OTH',

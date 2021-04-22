@@ -2169,7 +2169,7 @@ footer {
 }
 .anc_box_dev {
   div:first-child:before {
-    content: "Score Development";
+    content: "Score Development/Training";
   }
   div:last-child:after {
     content: " individuals (100%)"
@@ -2177,7 +2177,7 @@ footer {
 }
 .anc_box_eval {
   div:first-child:before {
-    content: "Evaluation";
+    content: "PGS Evaluation";
   }
   div:last-child:after {
     content: " Sample Sets (100%)"

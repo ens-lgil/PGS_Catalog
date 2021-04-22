@@ -24,10 +24,10 @@ class UpdateScoreAncestry:
     def __init__(self):
         self.scores = Score.objects.all().order_by('num')
         #self.scores = Score.objects.filter(num=739)
-        #self.scores = Score.objects.filter(num=39)
+        #self.scores = Score.objects.filter(num=11)
 
 
-    def get_ancestry_code(self,anc,type):
+    def get_ancestry_code(self,anc,stage):
         ''' Retrieve the ancestry 3 letters code from the ancestry label '''
         if anc == '':
             a_code = self.ancestry_cat['Not reported']
@@ -41,11 +41,11 @@ class UpdateScoreAncestry:
             else:
                 a_code = self.extra_ancestry_cat["Multi-Ancestry (excluding European)"]
         else:
-            self.anc_not_found.append(f'- {self.score_id} -> {type}: "{anc}" not found in the list of allowed ancestries!')
+            self.anc_not_found.append(f'- {self.score_id} -> {stage}: "{anc}" not found in the list of allowed ancestries!')
         return a_code
 
 
-    def get_samples_ancestry_data(self,samples,type):
+    def get_samples_ancestry_data(self,samples,stage):
         ''' Build the data structure for the ancesyry distribution '''
         data_ancestry = {}
         multi_ancestry = []
@@ -53,12 +53,12 @@ class UpdateScoreAncestry:
         for sample in samples:
             ancestry = sample.ancestry_broad.strip()
             sample_number = sample.sample_number
-            anc_code = self.get_ancestry_code(ancestry,type)
+            anc_code = self.get_ancestry_code(ancestry,stage)
             print(f'\t\t- {ancestry} ({anc_code}): {sample_number}')
             if not anc_code in data_ancestry:
                 data_ancestry[anc_code] = sample_number
                 # Fetch multi ancestry data
-                multi_ancestry = self.update_multi_ancestry_details(anc_code,ancestry,multi_ancestry,type)
+                multi_ancestry = self.update_multi_ancestry_details(anc_code,ancestry,multi_ancestry,stage)
             else:
                 data_ancestry[anc_code] += sample_number
 
@@ -70,7 +70,7 @@ class UpdateScoreAncestry:
         return { 'data': data_ancestry, 'total': data_ancestry_total, 'multi': multi_ancestry }
 
 
-    def update_multi_ancestry_details(self,anc_key,ancestry,multi_ancestry_array,type):
+    def update_multi_ancestry_details(self,anc_key,ancestry,multi_ancestry_array,stage):
         ''' Retrieve the list of ancestries from the multi-ancestry data '''
         if anc_key in self.multi_keys:
             # Extract each ancestry from the comma-separated list
@@ -80,7 +80,7 @@ class UpdateScoreAncestry:
                 anc_key = 'MAE'
             # Generate the list of 3 letters code
             for m_anc in ancestries:
-                new_anc_code = self.get_ancestry_code(m_anc,type)
+                new_anc_code = self.get_ancestry_code(m_anc,stage)
                 if new_anc_code not in self.multi_keys:
                     new_anc_code = anc_key+'_'+new_anc_code
                     if new_anc_code not in multi_ancestry_array:
@@ -162,15 +162,15 @@ class UpdateScoreAncestry:
 
             # Generate a dictionary and convert it into JSON for the database.
             anc_data = {}
-            for type in ['gwas','dev','eval']:
-                if score_ancestry_data[type]['data']:
-                    anc_data[type] = {}
-                    print(f'\t#### '+type.upper())
-                    count_total = score_ancestry_data[type]['total']
-                    for key, value in score_ancestry_data[type]['data'].items():
+            for stage in constants.PGS_STAGES:
+                if score_ancestry_data[stage]['data']:
+                    anc_data[stage] = { 'dist': {} }
+                    print(f'\t#### '+stage.upper())
+                    count_total = score_ancestry_data[stage]['total']
+                    for key, value in score_ancestry_data[stage]['data'].items():
                         # Calculate percentage
                         if count_total == 0:
-                            anc_number = len(score_ancestry_data[type]['data'].keys())
+                            anc_number = len(score_ancestry_data[stage]['data'].keys())
                             percent = (1/anc_number)*100
                         else:
                             percent = (value/count_total)*100
@@ -184,10 +184,10 @@ class UpdateScoreAncestry:
                             percent = percent.replace('.0','')
                         print(f'\t>>>> PERCENT: {key} => {percent}%')
 
-                        anc_data[type][key] = percent
-                    anc_data[type+'_count'] = count_total
-                if score_ancestry_data[type]['multi']:
-                    anc_data['multi_'+type] = score_ancestry_data[type]['multi']
+                        anc_data[stage]['dist'][key] = percent
+                    anc_data[stage]['count'] = count_total
+                if score_ancestry_data[stage]['multi']:
+                    anc_data[stage]['multi'] = score_ancestry_data[stage]['multi']
 
             score.ancestries = anc_data
             score.save()

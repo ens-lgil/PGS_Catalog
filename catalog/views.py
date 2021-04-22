@@ -107,8 +107,8 @@ def ancestry_form():
                   </select>
                   <div class="ancestry_legend pl-1 mt-2">
                     <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
-                    <div><b>D</b> - Score <b>D</b>evelopment</div>
-                    <div><b>E</b> - Score <b>E</b>valuation</div>
+                    <div><b>D</b> - Score <b>D</b>evelopment/Training</div>
+                    <div><b>E</b> - PGS <b>E</b>valuation</div>
                   </div>
                 </div>
                 <!-- Type of ancestry -->

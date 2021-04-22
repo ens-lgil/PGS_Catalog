@@ -526,11 +526,11 @@ class Sample(models.Model):
     def display_sample_number_detail(self):
         sinfo = []
         if self.sample_cases != None:
-            sinfo.append('{:,} cases ({}%)'.format(self.sample_cases, self.sample_cases_percent))
+            sinfo.append('<i class="far fa-user mr-2" style="color:#3E95CD"></i>{:,} cases ({}%)'.format(self.sample_cases, self.sample_cases_percent))
             if self.sample_controls != None:
-                sinfo.append('{:,} controls'.format(self.sample_controls))
+                sinfo.append('<i class="far fa-user mr-2" style="color:#8E5EA2"></i>{:,} controls'.format(self.sample_controls))
         if self.sample_percent_male != None:
-            sinfo.append('%s %% Male samples'%str(round(self.sample_percent_male,2)))
+            sinfo.append('<i class="far fa-user mr-2" style="color:#F18F2B"></i>%s%% Male samples'%str(round(self.sample_percent_male,2)))
         return sinfo
 
     @property
@@ -660,59 +660,60 @@ class Score(models.Model):
     @property
     def display_ancestry_html(self):
         ancestry_labels = constants.ANCESTRY_LABELS
-        types = {
+        anc_stages = {
             'gwas': {
                 'label': 'Source of Variant<br />Associations (GWAS)',
                 'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
             },
             'dev': {
-                'label': 'Score Development',
+                'label': 'Score Development/Training',
                 'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
             },
             'eval': {
-                'label': 'Evaluation',
+                'label': 'PGS Evaluation',
                 'desc': 'Percentage based on the number of Sample Set with an ancestry category out of all the Sample Sets.'
             }
         }
         html = ''
         if self.ancestries:
-            for type in ('gwas','dev','eval'):
-                html_type = ''
-                if type in self.ancestries:
-                    info = f'<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{types[type]["desc"]}"><i class="fas fa-info-circle"></i></span>'
-                    html_type += f'<tr><td>{types[type]["label"]}{info}</td><td>'
-                    html_type += '<div style="display:flex">'
+            for stage in constants.PGS_STAGES:
+                html_stage = ''
+                if stage in self.ancestries:
+                    ancestry_data = self.ancestries[stage]
+                    info = f'<span class="info-icon-small" data-toggle="tooltip" data-placement="right" title="{anc_stages[stage]["desc"]}"><i class="fas fa-info-circle"></i></span>'
+                    html_stage += f'<tr><td>{anc_stages[stage]["label"]}{info}</td><td>'
+                    html_stage += '<div style="display:flex">'
                     chart = []
                     legend = ''
-                    id = "score_anc_"+type
+                    id = "score_anc_"+stage
                     multi_legend = {}
-                    multi_type = 'multi_'+type
-                    if multi_type in self.ancestries:
-                        for mt in self.ancestries[multi_type]:
+                    multi_anc = 'multi'
+                    if multi_anc in ancestry_data:
+                        for mt in ancestry_data[multi_anc]:
                             (ma,anc) = mt.split('_')
                             if ma not in multi_legend:
                                 multi_legend[ma] = []
                             multi_legend[ma].append(f'<li>{ancestry_labels[anc]}</li>')
 
-                    for key,val in sorted(self.ancestries[type].items(), key=lambda item: float(item[1]), reverse=True):
+                    for key,val in sorted(ancestry_data['dist'].items(), key=lambda item: float(item[1]), reverse=True):
                         chart.append(f'"{key}",{val}')
                         label = ancestry_labels[key]
-                        multi_anc = ''
+                        multi_anc_html = ''
                         if key in multi_legend:
-                            multi_anc += f' <a class="toggle_btn" data-toggle="tooltip" data-placement="right" data-delay="500" id="{multi_type}" title="" data-original-title="Click to show/hide the list of ancestries"><i class="fas fa-plus-circle"></i></a></div>'
-                            multi_anc += f'<div class="toggle_list" id="list_{multi_type}"><ul>{"".join(multi_legend[ma])}</ul>'
-                        legend += f'<div><span class="fas fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc}</div>'
+                            multi_anc_html += f' <a class="toggle_btn" data-toggle="tooltip" data-placement="right" data-delay="500" id="{key}_{stage}" title="" data-original-title="Click to show/hide the list of ancestries"><i class="fas fa-plus-circle"></i></a></div>'
+                            multi_anc_html += f'<div class="toggle_list" id="list_{key}_{stage}"><ul>{"".join(multi_legend[ma])}</ul>'
+                        legend += f'<div><span class="fas fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc_html}</div>'
 
-                    count = self.ancestries[type+"_count"]
-                    if type == 'eval':
+                    count = ancestry_data['count']
+                    if stage == 'eval':
                         count_data = f'{count} Sample Sets'
                     else:
                         count_data = common.individuals_format(count,1)
                     html_count = f'<div class="mt-1">{count_data} (100%)</div>'
-                    html_type += f'<div class="anc_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
-                    html_type += '<div class="ancestry_legend">'+legend+html_count+'</div>'
-                    html_type += '</div></td></tr>'
-                html += html_type
+                    html_stage += f'<div class="anc_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
+                    html_stage += '<div class="ancestry_legend">'+legend+html_count+'</div>'
+                    html_stage += '</div></td></tr>'
+                html += html_stage
         return html
 
 

@@ -5,8 +5,6 @@ var anc_types = {
   'eval': 'E'
 };
 
-// var single_anc_svg = '<g transform="translate(20,20)"><path fill="####COLOUR####" d="M1.2246467991473533e-15,-20A20,20,0,1,1,-1.2246467991473533e-15,20A20,20,0,1,1,1.2246467991473533e-15,-20M-1.1790629835294509e-14,-11A11,11,0,1,0,1.1790629835294509e-14,11A11,11,0,1,0,-1.1790629835294509e-14,-11Z"></path><text class="pie_text" dy=".35em">####TYPE####</text></g>';
-
 var data_toggle_table = 'table[data-toggle="table"]';
 
 $(document).ready(function() {
@@ -14,7 +12,7 @@ $(document).ready(function() {
     // Fix issue with internal links because of the sticky header
     function offsetAnchor() {
       if(location.hash.length !== 0) {
-        window.scrollTo(window.scrollX, window.scrollY - 95);
+        window.scrollTo(window.scrollX, window.scrollY - 100);
       }
     }
     // This will capture hash changes while on the page
@@ -62,7 +60,6 @@ $(document).ready(function() {
       });
 
       var anc_svgs = {};
-      var type_placeholder = '####TYPE####';
       $('.anc_chart').each(function() {
         var id = $(this).attr('data-id');
         var type = $(this).attr('data-type');
@@ -433,7 +430,6 @@ $(window).on('load', function() {
 
     // Add even listener
     var input = document.querySelectorAll(".form-control");
-    console.log("inputs: "+input.length);
     for (var i=0; i < input.length; i++ ) {
       input[i].addEventListener('input', format_table_event);
     }
@@ -985,7 +981,7 @@ class PGSPieChartSmall extends PGSPieChart {
   }
 
   set_colours() {
-    this.colours_list = (this.type == 'sample') ? ["#3e95cd", "#8e5ea2"] : ["#F18F2B", "#4F78A7"];
+    this.colours_list = (this.type == 'sample') ? ["#3E95CD", "#8E5EA2"] : ["#F18F2B", "#4F78A7"];
     this.colours = d3.scaleOrdinal()
       .domain(this.data.map(d => d.name))
       .range(this.colours_list);
