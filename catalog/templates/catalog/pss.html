@@ -79,17 +79,15 @@
               <tbody>
                 <tr>
                   <td>Total number</td>
-                  <td><b> {{ sample.display_sample_number_total }}</b></td>
+                  <td><div class="sample_individuals"><b>{{ sample.display_sample_number_total }}</b></div></td>
                 </tr>
                 {% if sample.display_sample_number_detail|length > 0 %}
                   <tr>
                     <td>Detailed numbers</td>
                     <td>
-                      <ul>
-                        {% for numbers in sample.display_sample_number_detail %}
-                          <li>{{ numbers }}</li>
-                        {% endfor %}
-                      </ul>
+                      {% for numbers in sample.display_sample_number_detail %}
+                        {{ numbers|safe }}
+                      {% endfor %}
                     </td>
                   </tr>
                 {% endif %}

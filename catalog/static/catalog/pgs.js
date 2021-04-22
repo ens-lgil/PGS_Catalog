@@ -1,6 +1,6 @@
 
 var anc_types = {
-  'gwas': 'V',
+  'gwas': 'G',
   'dev' : 'D',
   'eval': 'E'
 };
@@ -52,11 +52,15 @@ $(document).ready(function() {
       var anc_width = 40;
       var anc_height = 40;
 
+      // Magic formula to convert RGB colours to HEX
+      const rgb2hex = (rgb) => `#${rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('')}`
+
       anc_colours = {};
       $('.ancestry_box_legend').each(function() {
         var key = $(this).data('key');
         var colour = $(this).css('color');
-        anc_colours[key] = colour;
+        var hex_colour = rgb2hex(colour);
+        anc_colours[key] = hex_colour;
       });
 
       var anc_svgs = {};

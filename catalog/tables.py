@@ -419,6 +419,7 @@ class Browse_ScoreTableExample(Browse_ScoreTable):
             "data-show-columns" : "false",
             "data-show-export" : "false",
             "data-pagination" : "false",
+            "data-show-fullscreen" : "false",
             "data-search" : "false"
         }
         template_name = 'catalog/pgs_catalog_django_table.html'
@@ -543,6 +544,7 @@ class SampleTable_performance(tables.Table):
         attrs = {
             "id": "samples_table",
             "data-show-columns" : "true",
+            "data-show-toggle" : "true",
             "data-sort-name" : "display_sampleset",
             "data-export-options" : '{"fileName": "pgs_sample_evaluation_data"}'
         }
@@ -585,6 +587,7 @@ class PerformanceTable(tables.Table):
         attrs = {
             "id": "performances_table",
             "data-show-columns" : "true",
+            "data-show-toggle" : "true",
             "data-sort-name" : "id",
             "data-export-options" : '{"fileName": "pgs_performance_metrics_data"}'
         }
@@ -599,8 +602,8 @@ class PerformanceTable(tables.Table):
     def render_sampleset(self, value):
         ancestry_key = value.samples_combined_ancestry_key
         ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
-        count_ind = common.individuals_format(value.count_individuals)
-        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fas fa-square anc_colour_{}"></i> {}</div><span class="only_export">|</span><div class="small"><i class="far fa-user"></i> {}</div>', value, value, ancestry_key, ancestry,count_ind)
+        count_ind = common.individuals_format(value.count_individuals,True)
+        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fas fa-square anc_colour_{} mr-1"></i>{}<span class="only_export">|</span>{}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
         return score_format(value)

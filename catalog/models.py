@@ -526,11 +526,11 @@ class Sample(models.Model):
     def display_sample_number_detail(self):
         sinfo = []
         if self.sample_cases != None:
-            sinfo.append('<i class="far fa-user mr-2" style="color:#3E95CD"></i>{:,} cases ({}%)'.format(self.sample_cases, self.sample_cases_percent))
+            sinfo.append('<div class="sample_cases">{:,} cases ({}%)</div>'.format(self.sample_cases, self.sample_cases_percent))
             if self.sample_controls != None:
-                sinfo.append('<i class="far fa-user mr-2" style="color:#8E5EA2"></i>{:,} controls'.format(self.sample_controls))
+                sinfo.append('<div class="sample_controls">{:,} controls</div>'.format(self.sample_controls))
         if self.sample_percent_male != None:
-            sinfo.append('<i class="far fa-user mr-2" style="color:#F18F2B"></i>%s%% Male samples'%str(round(self.sample_percent_male,2)))
+            sinfo.append('<div class="sample_male">%s%% Male samples</div>'%str(round(self.sample_percent_male,2)))
         return sinfo
 
     @property

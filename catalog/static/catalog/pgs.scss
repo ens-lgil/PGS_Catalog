@@ -18,10 +18,12 @@ $pgs_light_grey2: #FAFAFA;
 $pgs_note_title_1: $pgs_colour_1;
 $pgs_note_title_2: #F00;
 $pgs_note_title_3: $pgs_colour_2;
-$pgs_dev: #577284;
 $pgs_facet_1: $pgs_colour_2;
-$pgs_facet_2: #f58f22;
+$pgs_facet_2: #F58F22;
 $pgs_facet_3: $pgs_dark2;
+$pgs_cases: #3E95CD;
+$pgs_controls: #8E5EA2;
+$pgs_male: #F18F2B;
 
 $pgs_colour_red: #E00;
 $pgs_colour_amber: #FFA500;
@@ -783,7 +785,6 @@ td > ul {
 /* Icons related CSS */
 .external-link:after {
   font-family: "Font Awesome 5 Free";
-  //content:"\f08e";
   content: "\f35d";
   display: inline-block;
   font-size: 0.6rem;
@@ -1190,6 +1191,30 @@ a.link-with-btn {
   div {
     padding: 15px 0px;
   }
+}
+
+.individuals_count:before,
+.sample_individuals:before,
+.sample_cases:before,
+.sample_controls:before,
+.sample_male:before
+ {
+  font-family: "Font Awesome 5 Free";
+  content: "\f007";
+  font-weight: 400;
+  padding-right: 8px;
+}
+.individuals_count:before {
+  padding-right: 4px !important;
+}
+.sample_cases:before {
+  color: $pgs_cases;
+}
+.sample_controls:before {
+  color: $pgs_controls;
+}
+.sample_male:before {
+  color: $pgs_male;
 }
 
 .sample_sub_section {
@@ -1669,15 +1694,15 @@ footer {
     margin-bottom:$footer_height_mobile;
   }
   .container-fluid {
-    padding-left: 1rem;
-    padding-right:1rem;
+    padding-left: 0.5rem;
+    padding-right:0.5rem;
   }
   .release_label {
     top: -25px;
   }
 
   .feedback {
-    width: 53px;
+    width: 60px;
     height:auto;
     #feedback-btn {
       height: 25px;

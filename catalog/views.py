@@ -99,14 +99,14 @@ def ancestry_form():
               <div style="float:left">
                 <div class="filter_subheader mb-1">Individuals included in:</div>
                   <select id="ancestry_type_list">
-                    <option value="all" selected>All Stages combined [V, D, E]</option>
-                    <option value="dev_all">Development [V, D]</option>
-                    <option value="gwas">&nbsp;&nbsp;- GWAS [V]</option>
+                    <option value="all" selected>All Stages combined [G, D, E]</option>
+                    <option value="dev_all">Development [G, D]</option>
+                    <option value="gwas">&nbsp;&nbsp;- GWAS [G]</option>
                     <option value="dev">&nbsp;&nbsp;- Score development [D]</option>
                     <option value="eval">PGS Evaluation [E]</option>
                   </select>
                   <div class="ancestry_legend pl-1 mt-2">
-                    <div><b>V</b> - Source of <b>V</b>ariant Associations (GWAS)</div>
+                    <div><b>G</b> - Source of Variant Associations (<b>G</b>WAS)</div>
                     <div><b>D</b> - Score <b>D</b>evelopment/Training</div>
                     <div><b>E</b> - PGS <b>E</b>valuation</div>
                   </div>
