@@ -60,7 +60,7 @@ def ancestry_legend():
             count = 0
 
         label = ancestry_labels[key]
-        div_content += '<div><span class="fas fa-square ancestry_box_legend anc_colour_'+key+'" data-key="'+key+'"></span>'+label+'</div>'
+        div_content += '<div><span class="ancestry_box_legend anc_colour_'+key+'" data-key="'+key+'"></span>'+label+'</div>'
         count += 1
     div_html += '">'+div_content+'</div>'
     legend_html += div_html

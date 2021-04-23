@@ -709,7 +709,8 @@ class Score(models.Model):
                         count_data = f'{count} Sample Sets'
                     else:
                         count_data = common.individuals_format(count,1)
-                    html_count = f'<div class="mt-1">{count_data} (100%)</div>'
+                        count_data = count_data.replace('</div>',' (100%)</div>')
+                    html_count = f'<div class="mt-1">{count_data}</div>'
                     html_stage += f'<div class="anc_chart mr-4" data-id="'+id+'" data-chart=\'[['+'],['.join(chart)+']]\'><svg id="'+id+'"></svg></div>'
                     html_stage += '<div class="ancestry_legend">'+legend+html_count+'</div>'
                     html_stage += '</div></td></tr>'

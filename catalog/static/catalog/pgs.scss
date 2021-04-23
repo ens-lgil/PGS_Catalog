@@ -2136,10 +2136,14 @@ footer {
   ul {
     margin-left: 1rem;
   }
+  > div {
+    line-height: 18px;
+  }
 }
 .ancestry_box_legend {
   margin-right:8px;
   font-size: 14px;
+  vertical-align: middle;
 }
 
 
@@ -2263,6 +2267,12 @@ $ancestry_labels: (
   }
   .anc_colour_#{$anc_key} {
     color: $anc_colour;
+    &:before {
+      color: $anc_colour;
+      font-family: "Font Awesome 5 Free";
+      content: "\f0c8";
+      font-weight:900;
+    }
   }
   .anc_bd_#{$anc_key} {
     border-left: 8px solid $anc_colour;

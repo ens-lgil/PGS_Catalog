@@ -603,7 +603,7 @@ class PerformanceTable(tables.Table):
         ancestry_key = value.samples_combined_ancestry_key
         ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
         count_ind = common.individuals_format(value.count_individuals,True)
-        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><i class="fas fa-square anc_colour_{} mr-1"></i>{}<span class="only_export">|</span>{}</div>', value, value, ancestry_key, ancestry,count_ind)
+        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><span class="anc_colour_{} mr-1"></span>{}<span class="only_export">|</span>{}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
         return score_format(value)
