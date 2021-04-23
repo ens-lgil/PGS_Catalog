@@ -3,6 +3,7 @@
     {% block table %}
         <table
           data-toggle="table"
+          {% render_attrs table.attrs %}
           data-search="true"
           data-sortable="true"
           data-sort-order="asc"
@@ -12,10 +13,10 @@
           data-minimum-count-columns="1"
           data-pagination="true"
           data-page-size="15"
-          data-page-list="[15, 25, 50, 100, All]"
+          data-page-list="[15, 25, 50, 100, 200, All]"
+          data-show-fullscreen="true"
           data-export-data-type="all"
-          data-export-types="['json', 'xml', 'csv', 'txt', 'excel']"
-          {% render_attrs table.attrs %}>
+          data-export-types="['json', 'xml', 'csv', 'txt', 'excel']">
             {% block table.thead %}
             {% if table.show_header %}
                 <thead class="thead-light">
@@ -97,6 +98,18 @@
                 }
               }
               // Numeric value with strings before it (e.g. EFO_, HP_)
+              else if (aa.match(/^(PG\w)0+(\d+)$/)) {
+                aa_num = aa.match(/^(PG\w)0+(\d+)$/);
+                bb_num = bb.match(/^(PG\w)0+(\d+)$/);
+
+                if (aa_num && aa_num.length > 1) {
+                  aa = parseFloat(aa_num[2]);
+                }
+                if (bb_num && bb_num.length > 1) {
+                  bb = parseFloat(bb_num[2]);
+                }
+              }
+              // Numeric value with strings before it (e.g. PGS, PGP)
               else if (aa.match(/^(EFO|HP)_\d+$/)) {
                 aa_num = aa.match(/^(EFO|HP)_(\d+)$/);
                 bb_num = bb.match(/^(EFO|HP)_(\d+)$/);

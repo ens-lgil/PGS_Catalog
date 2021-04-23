@@ -10,41 +10,44 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
-import json
 import os
-from django.core.exceptions import ImproperlyConfigured
 
-with open(os.path.join('../pgs_config/', 'pgs_vars.json')) as secrets_file:
-    secrets = json.load(secrets_file)
-
-def get_secret(setting, secrets=secrets):
-    """Get secret setting or fail with ImproperlyConfigured"""
-    try:
-        return secrets[setting]
-    except KeyError:
-        raise ImproperlyConfigured("Set the {} setting".format(setting))
+if not os.getenv('GAE_APPLICATION', None):
+    app_settings = os.path.join('./', 'app.yaml')
+    if os.path.exists(app_settings):
+        import yaml
+        with open(app_settings) as secrets_file:
+            secrets = yaml.load(secrets_file, Loader=yaml.FullLoader)
+            for keyword in secrets['env_variables']:
+                os.environ[keyword] = secrets['env_variables'][keyword]
+    elif not os.environ['SECRET_KEY']:
+        print("Error: missing secret key")
+        exit(1)
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_secret('SECRET_KEY')
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+if os.environ['DEBUG'] == 'True':
+    DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
 
 # Application definition
 
 INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
+    'rest_api.apps.RestApiConfig',
+    'search.apps.SearchConfig',
     'release.apps.ReleaseConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -54,7 +57,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_tables2',
     'django_extensions',
-    'compressor'
+    'compressor',
+    'rest_framework',
+    'django_elasticsearch_dsl'
 ]
 
 MIDDLEWARE = [
@@ -69,54 +74,136 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'pgs_web.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'catalog.context_processors.pgs_urls'
-            ],
-        },
-    },
+CONTEXT_PROCESSORS = [
+    'django.template.context_processors.debug',
+    'django.template.context_processors.request',
+    'django.contrib.auth.context_processors.auth',
+    'django.contrib.messages.context_processors.messages',
+    'catalog.context_processors.pgs_urls',
+    'catalog.context_processors.pgs_settings',
+    'catalog.context_processors.pgs_search_examples',
+    'catalog.context_processors.pgs_info'
 ]
 
+if os.getenv('GAE_APPLICATION', None) and DEBUG==False:
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': [os.path.join(BASE_DIR, 'templates')],
+            'OPTIONS': {
+                'context_processors': CONTEXT_PROCESSORS,
+                'loaders': [
+                    ('django.template.loaders.cached.Loader', [
+                        'django.template.loaders.filesystem.Loader',
+                        'django.template.loaders.app_directories.Loader'
+                    ])
+                ]
+            },
+        },
+    ]
+else:
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': [],
+            'APP_DIRS': True,
+            'OPTIONS': {
+                'context_processors': CONTEXT_PROCESSORS
+            },
+        },
+    ]
+
+
+# Flags
+
+if os.getenv('GAE_APPLICATION', None):
+    PGS_ON_GAE = 1
+else:
+    PGS_ON_GAE = 0
+
+if 'PGS_LIVE_SITE' in os.environ:
+    PGS_ON_LIVE_SITE = os.environ['PGS_LIVE_SITE']
+else:
+    PGS_ON_LIVE_SITE = False
+
+if 'PGS_CURATION_SITE' in os.environ:
+    PGS_ON_CURATION_SITE = os.environ['PGS_CURATION_SITE']
+else:
+    PGS_ON_CURATION_SITE = False
+
+
+# Variables
+
 USEFUL_URLS = {
-    'BAKER_URL'      : 'https://baker.edu.au',
-    'EBI_URL'        : 'https://www.ebi.ac.uk',
-    'HDR_UK_CAM_URL' : 'https://www.hdruk.ac.uk/about/structure/hdr-uk-cambridge/',
-    'PGS_CONTACT'    : 'pgs-info@ebi.ac.uk',
-    'PGS_FTP_ROOT'   : 'ftp://ftp.ebi.ac.uk/pub/databases/spot/pgs',
-    'PGS_TWITTER_URL': 'https://www.twitter.com/pgscatalog',
-    'UOC_URL'        : 'https://www.phpc.cam.ac.uk/'
+    'BAKER_URL'         : 'https://baker.edu.au',
+    'EBI_URL'           : 'https://www.ebi.ac.uk',
+    'HDR_UK_CAM_URL'    : 'https://www.hdruk.ac.uk/about/structure/hdr-uk-cambridge/',
+    'PGS_CONTACT'       : 'pgs-info@ebi.ac.uk',
+    'PGS_FTP_ROOT'      : 'ftp://ftp.ebi.ac.uk/pub/databases/spot/pgs',
+    'PGS_FTP_HTTP_ROOT' : 'http://ftp.ebi.ac.uk/pub/databases/spot/pgs',
+    'PGS_TWITTER_URL'   : 'https://www.twitter.com/pgscatalog',
+    'UOC_URL'           : 'https://www.phpc.cam.ac.uk/',
+    'TERMS_OF_USE'      : 'https://www.ebi.ac.uk/about/terms-of-use',
+    'TEMPLATEGoogleDoc_URL' : 'https://docs.google.com/spreadsheets/d/1CGZUhxRraztW4k7p_6blfBmFndYTcmghn3iNnzJu1_0/edit?usp=sharing',
+    'CurationGoogleDoc_URL' : 'https://drive.google.com/file/d/1iYoa0R3um7PtyfVO37itlGbK1emoZmD-/view',
+    'CATALOG_PUBLICATION_URL' : 'https://doi.org/10.1101/2020.05.20.20108217'
 }
 
-WSGI_APPLICATION = 'pgs_web.wsgi.application'
+PGS_REST_API = {
+    'version': 1.6,
+    'changelog': [
+        "New endpoint 'rest/info' with data such as the REST API version, latest release date and counts, PGS citation, ...",
+        "New endpoint '/rest/cohort/all' returning all the Cohorts and their associated PGS.",
+        "New endpoint '/rest/sample_set/all' returning all the Sample Set data."
+    ]
+}
 
-COMPRESS_PRECOMPILERS = (
-    ('text/x-scss', 'django_libsass.SassCompiler'),
-)
-COMPRESS_ROOT = os.path.join(BASE_DIR, "static/")
+PGS_CITATION = {
+    'title': 'The Polygenic Score Catalog as an open database for reproducibility and systematic evaluation',
+    'doi': '10.1038/s41588-021-00783-5',
+    'authors': 'Samuel A. Lambert, Laurent Gil, Simon Jupp, Scott C. Ritchie, Yu Xu, Annalisa Buniello, Gad Abraham, Michael Chapman, Helen Parkinson, John Danesh, Jacqueline A.L. MacArthur, and Michael Inouye.',
+    'journal': 'Nature Genetics',
+    'year': 2021
+}
+
+SEARCH_EXAMPLES = ['breast cancer', 'glaucoma', 'EFO_0001645']
+
+
+WSGI_APPLICATION = 'pgs_web.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'pgs_db',
-        'USER': 'myprojectuser',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '5432',
+# [START db_setup]
+if os.getenv('GAE_APPLICATION', None):
+    # Running on production App Engine, so connect to Google Cloud SQL using
+    # the unix socket at /cloudsql/<your-cloudsql-connection string>
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['DATABASE_NAME'],
+            'USER': os.environ['DATABASE_USER'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'HOST': os.environ['DATABASE_HOST'],
+            'PORT': os.environ['DATABASE_PORT']
+        }
     }
-}
-
+else:
+    # Running locally so connect to either a local PostgreSQL instance or connect
+    # to Cloud SQL via the proxy.  To start the proxy via command line:
+    # $ cloud_sql_proxy -instances=pgs-catalog:europe-west2:pgs-*******=tcp:5430
+    # See https://cloud.google.com/sql/docs/postgres/connect-admin-proxy
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['DATABASE_NAME'],
+            'USER': os.environ['DATABASE_USER'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'HOST': 'localhost',
+            'PORT': os.environ['DATABASE_PORT']
+        }
+    }
+# [END db_setup]
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -160,6 +247,66 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 STATICFILES_FINDERS = [
 	'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'compressor.finders.CompressorFinder'
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder'
 ]
+if not os.getenv('GAE_APPLICATION', None):
+    STATICFILES_FINDERS.append('compressor.finders.CompressorFinder')
+
+COMPRESS_PRECOMPILERS = ''
+COMPRESS_ROOT = os.path.join(BASE_DIR, "static/")
+
+COMPRESS_PRECOMPILERS = (
+    ('text/x-scss', 'django_libsass.SassCompiler'),
+)
+
+
+#---------------------#
+#  REST API Settings  #
+#---------------------#
+
+#REST_SAFELIST_IPS = [
+#    '127.0.0.1'
+#]
+REST_BLACKLIST_IPS = [
+    #'127.0.0.1'
+]
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_api.rest_permissions.BlacklistPermission', # see REST_BLACKLIST_IPS
+        #'rest_api.rest_permissions.SafelistPermission', # see REST_SAFELIST_IPS
+        #'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_api.pagination.CustomPagination',
+    'PAGE_SIZE': 50,
+    'EXCEPTION_HANDLER': 'rest_api.views.custom_exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES' : {
+        'anon': '100/min',
+        'user': '100/min'
+    }
+}
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': os.environ['ELASTICSEARCH_URL_ROOT']
+    }
+}
+
+# Name of the Elasticsearch index
+ELASTICSEARCH_INDEX_NAMES = {
+    'search.documents.score': 'score',
+    'search.documents.efo_trait': 'efo_trait',
+    'search.documents.publication': 'publication'
+}

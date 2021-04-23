@@ -7,26 +7,37 @@
 {% block content %}
     <nav aria-label="You are here:">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="../../">PGS Catalog</a></li>
-        <li class="breadcrumb-item"><a href="../../browse/studies/">Publications</a></li>
+        <li class="breadcrumb-item"><a href="/">PGS Catalog</a></li>
+        <li class="breadcrumb-item"><a href="/browse/studies/">Publications</a></li>
         <li class="breadcrumb-item">{{ publication.id }}</li>
       </ol>
     </nav>
 
     <section>
-      <h2>PGS Publication: <b>{{ publication.id }}</b></h2>
-      <table class="table table-bordered table_pgs_h">
+      <h2>PGS
+        {% if publication.is_preprint %}
+          Preprint:
+        {% else %}
+          Publication:
+        {% endif %}
+        <span class="pgs_title">{{ publication.id }}</span></h2>
+      <table class="table table-bordered table_pgs_h mt-4">
         <tbody>
+          <tr>
+            <td class="table_title table_title_c" colspan="2">Publication Information (EuropePMC)</td>
+          </tr>
           <tr>
             <td>Title</td>
             <td><b>{{ publication.title }}</b></td>
           </tr>
-          <tr>
-            <td>PubMed ID</td>
-            <td>
-              <a href="https://www.ncbi.nlm.nih.gov/pubmed/{{ publication.PMID }}" class="mr-3">{{ publication.PMID }}</a>(<a href="http://europepmc.org/abstract/MED/{{ publication.PMID }}">Europe PMC</a>)
-            </td>
-          </tr>
+          {% if publication.PMID %}
+            <tr>
+              <td>PubMed ID</td>
+              <td>
+                <a href="https://www.ncbi.nlm.nih.gov/pubmed/{{ publication.PMID }}" class="mr-3">{{ publication.PMID }}</a>(<a href="https://europepmc.org/abstract/MED/{{ publication.PMID }}">Europe PMC</a>)
+              </td>
+            </tr>
+          {% endif %}
           <tr>
             <td>doi</td>
             <td><a href=https://doi.org/{{ publication.doi }}>{{ publication.doi }}</a></td>
@@ -38,37 +49,54 @@
           </tr>
           <tr>
             <td>Journal</td>
-            <td><b><i>{{ publication.journal }}</i></b></td>
+            <td>
+              <b><i>{{ publication.journal }}</i></b>
+              {% if publication.is_preprint %}
+                <span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Preprint</span>
+              {% endif %}
+            </td>
           </tr>
           <tr>
-            <td>Authors</td>
+            <td>Author(s)</td>
             <td><span class="more">{{ publication.authors }}</span></td>
           </tr>
         </tbody>
       </table>
-
+      {% if publication.date_released %}
+        <div><i class="fas fa-calendar pgs_color_1"></i> Released in PGS Catalog: <b>{{ publication.date_released }}</b></div>
+      {% endif %}
     </section>
 
     <section>
     {% if table_scores or table_evaluated %}
-        <h3>PGS Associated with {{ publication.id }}</h3>
+        <h3>Associated Polygenic Score(s)</h3>
+        {% if ancestry_form %}
+          {{ ancestry_form|safe }}
+        {% endif %}
         {% if table_scores %}
-            <h4>PGS Developed By This Study</h4>
+            <h4>
+              <span>PGS Developed By This Publication</span><span class="info-icon-title" data-toggle="tooltip" data-placement="right" title="{{ pgs_table_helper.pgs_eval }}"><i class="fas fa-info-circle"></i></span>
+            </h4>
             {% render_table table_scores %}
         {% endif %}
         {% if table_evaluated %}
-            <h4>External PGS Evaluated By This Study</h4>
+            <h4>
+              <span>External PGS Evaluated By This Publication</span><span class="info-icon-title" data-toggle="tooltip" data-placement="right" title="{{ pgs_table_helper.pgs_eval_ext }}"><i class="fas fa-info-circle"></i></span>
+            </h4>
             {% render_table table_evaluated %}
         {% endif %}
     {% endif %}
     </section>
 
     <section>
-    <h3>PGS Performance Metrics</h3>
-    <p>{{ performance_disclaimer|safe }}</p>
-
-    {% render_table table_performance %}
-    <h4>Evaluated Samples</h4>
-    {% render_table table_performance_samples %}
+      <h3 class="mb-0">
+        <span>Performance Metrics</span><span class="info-icon-title" data-toggle="tooltip" data-placement="right" title="{{ pgs_table_helper.perf_metrics }}"><i class="fas fa-info-circle"></i></span>
+      </h3>
+      <p>{{ performance_disclaimer|safe }}</p>
+      {% render_table table_performance %}
+      <h4>
+        <span>Evaluated Samples</span><span class="info-icon-title" data-toggle="tooltip" data-placement="right" title="{{ pgs_table_helper.sample_sets }}"><i class="fas fa-info-circle"></i></span>
+      </h4>
+      {% render_table table_performance_samples %}
     </section>
 {% endblock %}

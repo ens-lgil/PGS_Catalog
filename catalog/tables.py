@@ -1,23 +1,51 @@
+import re
 import django_tables2 as tables
 from django.utils.html import format_html
-from .models import *
 from django.utils.crypto import get_random_string
+from pgs_web import constants
+from catalog import common
+from .models import *
 
-relative_path = '../..'
-publication_path = relative_path+'/publication'
-trait_path = relative_path+'/trait'
+
+publication_path = '/publication'
+trait_path = '/trait'
+page_size = "50"
 
 def smaller_in_bracket(value):
     bracket_left = '['
     value = value.replace(' '+bracket_left, bracket_left)
-    value = value.replace(bracket_left,'<span class="smaller_90 pl-2"><span class="pgs_colour_2">[</span>')
-    value = value.replace(']','<span class="pgs_colour_2">]</span></span>')
+    value = value.replace(bracket_left,'<span class="smaller_90 pgs_bracket pl-2"><span class="only_export"> [</span>')
+    value = value.replace(']','<span class="only_export">]</span></span>')
     return value
+
+
+def score_format(value):
+    return format_html(f'<a href="/score/{value.id}">{value.id}</a> <div class="small">({value.name})</div>')
+
+
+def publication_format(value, is_external=False):
+    pub_date = value.date_publication.strftime('%Y')
+    citation = format_html(f'<span class="only_export">|</span><div class="pgs_pub_details">{value.firstauthor} <i>et al.</i> {value.journal} ({pub_date})</div>')
+    extra_html = ''
+    if is_external:
+        extra_html += format_html('<span class="only_export">|</span><span class="badge badge-pgs-small" data-toggle="tooltip" title="External PGS evaluation">Ext.</span>')
+    if value.is_preprint:
+        extra_html += format_html('<span class="only_export">|</span><span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
+    return format_html(f'<a href="{publication_path}/{value.id}">{value.id}</a> {citation}{extra_html}')
+
+
+# def individuals_format(value):
+#     return '{:,} individuals'.format(value)
+
 
 class Column_joinlist(tables.Column):
     def render(self, value):
         values = smaller_in_bracket('<br/>'.join(value))
         return format_html(values)
+
+class Column_shorten_text_content(tables.Column):
+    def render(self, value):
+        return format_html('<span class="more">{}</span>', value)
 
 class Column_metriclist(tables.Column):
     def render(self, value):
@@ -25,13 +53,38 @@ class Column_metriclist(tables.Column):
         for x in value:
             name, val = x
             if len(name) == 2:
-                name_html = format_html('<span title="{}" class="pgs_helptip">{}</span>', name[0], name[1])
+                label = name[1]
             else:
-                name_html = format_html('<span title="{}" class="pgs_helptip">{}</span>', name[0], name[0])
-            l.append((name_html, '<span class="pgs_nowrap">'+str(val)+'</span>'))
+                label = name[0]
+            label = smaller_in_bracket(label)
+            name_html = f'<span title="{name[0]}" class="pgs_helptip">{label}</span>'
+            l.append((name_html, '<span class="pgs_nowrap">'+smaller_in_bracket(str(val))+'</span>'))
 
-        values = smaller_in_bracket('<br>'.join([': '.join(x) for x in l]))
+        values = '<br>'.join([': '.join(x) for x in l])
         return format_html(values)
+
+class Column_demographic(tables.Column):
+    def render(self, value):
+        l = []
+
+        #Estimate
+        e = ''
+        if value.estimate != None:
+            e = '{} = {} {}'.format(value.estimate_type.title(), value.estimate, value.unit)
+            l.append(e)
+
+        #Variability
+        if value.variability != None:
+            v = '{} = {} {}'.format(value.variability_type.title(), value.variability, value.unit)
+            l.append(v)
+
+        #Range
+        if '[' not in e:
+            if value.range != None:
+                r = '{} = {} {}'.format(value.range_type.title(), smaller_in_bracket(str(value.range)), value.unit)
+                l.append(r)
+
+        return format_html('<br>'.join(l))
 
 class Column_sample_merged(tables.Column):
     def render(self, value):
@@ -56,22 +109,11 @@ class Column_ancestry(tables.Column):
         return format_html(value)
 
 class Column_pubexternality(tables.Column):
-    def render(self, value):
-        citation, pgp, externality = value.split('|')
-        if externality == 'E':
-            return format_html('<a href="'+publication_path+'/{}">{}</a> <sup class="pgs_sup" title="External PGS evaluation">Ext.</sup>', pgp, format_html(citation))
-        else:
-            return format_html('<a href="'+publication_path+'/{}">{}</a>', pgp, format_html(citation))
-
-class Column_pubexternality_PGS(tables.Column):
-    def render(self, value):
-        citation, pgp, externality = value.split('|')
-        if externality == 'E':
-            return format_html('<a href="'+publication_path+'/{}">{}</a> <sup class="pgs_sup" title="External PGS evaluation">Ext.</sup>', pgp, format_html(citation))
-        elif externality == 'D':
-            return format_html('<a href="'+publication_path+'/{}">Original Report</a>', pgp)
-        else:
-            return format_html('<a href="'+publication_path+'/{}">{}</a>', pgp, format_html(citation))
+    def render(self, value, record):
+        is_ext = False
+        if value == 'E':
+            is_ext = True
+        return publication_format(record.publication, is_ext)
 
 class Column_cohorts(tables.Column):
     def render(self, value):
@@ -85,7 +127,7 @@ class Column_cohorts(tables.Column):
             qlist.append(qdict[k])
         if len(qlist) > 5:
             div_id = get_random_string(10)
-            html_list = '<a class="toggle_table_btn" id="'+div_id+'" title="Click to expand/collapse the list">'+str(len(qlist))+' cohorts <i class="fa fa-plus-circle"></i></a>'
+            html_list = '<a class="toggle_table_btn" id="'+div_id+'" title="Click to expand/collapse the list">'+str(len(qlist))+' cohorts <i class="fas fa-plus-circle"></i></a>'
             html_list = html_list+'<div class="toggle_list" id="list_'+div_id+'">'
             html_list = html_list+"<ul><li>"+'</li><li><span class="only_export">,</span>'.join(qlist)+'</li></ul></div>'
             return format_html(html_list)
@@ -98,14 +140,17 @@ class Column_format_html(tables.Column):
 
 
 class Browse_PublicationTable(tables.Table):
+    '''Table to browse Publications in the PGS Catalog'''
     scores_count = tables.Column(accessor='scores_count', verbose_name='PGS Developed', orderable=False)
-    scores_evaluated = tables.Column(accessor='scores_evaluated', verbose_name='PGS Evaluated', orderable=False)
+    scores_evaluated = tables.Column(accessor='scores_evaluated_count', verbose_name='PGS Evaluated', orderable=False)
 
     class Meta:
         model = Publication
         attrs = {
             "data-show-columns" : "true",
-            "data-sort-name" : "id"
+            "data-sort-name" : "id",
+            "data-page-size" : page_size,
+            "data-export-options" : '{"fileName": "pgs_publications_data"}'
         }
         fields  = [
             'id',
@@ -124,7 +169,10 @@ class Browse_PublicationTable(tables.Table):
         return format_html('<a href="'+publication_path+'/{}">{}</a>', value, value)
 
     def render_journal(self, value):
-        return format_html('<i>{}</i>', value)
+        is_preprint = ''
+        if 'bioRxiv' in value or 'medRxiv' in value:
+            is_preprint = format_html('<span class="badge badge-pgs-small-2 ml-1" data-toggle="tooltip" title="Preprint (manuscript has not undergone peer review)">Pre</span>')
+        return format_html('<i>{}</i>{}', value, is_preprint)
 
     def render_doi(self, value):
         return format_html('<a class="pgs_nowrap" href=https://doi.org/{}>{}</a>', value, value)
@@ -133,84 +181,265 @@ class Browse_PublicationTable(tables.Table):
         return format_html('<a href="https://www.ncbi.nlm.nih.gov/pubmed/{}">{}</a>', value, value)
 
 
+class Browse_PendingPublicationTable(Browse_PublicationTable):
+    # Make some headers shorter
+    id = tables.Column(accessor='id', verbose_name='PGS Publication ID', orderable=True)
+    journal = tables.Column(accessor='journal', verbose_name='Journal', orderable=True)
+    PMID = tables.Column(accessor='PMID', verbose_name='PubMed ID', orderable=True)
+
+    class Meta:
+        model = Publication
+        attrs = {
+            "data-show-columns" : "true",
+            "data-sort-name" : "id",
+            "data-page-size" : page_size,
+            "data-export-options" : '{"fileName": "pgs_pending_publications_data"}'
+        }
+        fields  = [
+            'id',
+            'scores_count',
+            'scores_evaluated',
+            'firstauthor',
+            'title',
+            'journal',
+            'date_publication',
+            'doi',
+            'PMID',
+            'curation_status'
+        ]
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
 
 class Browse_TraitTable(tables.Table):
-    label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term)', orderable=True)
-    scores_count = tables.Column(accessor='scores_count', verbose_name='Number of PGS Developed')
-    id_url = Column_format_html(accessor='display_id_url', verbose_name='Trait identifier (ontology ID)')
-    category_labels = tables.Column(accessor='category_labels', verbose_name='Trait category')
+    '''Table to browse Traits in the PGS Catalog'''
+    label_link = Column_format_html(accessor='display_label', verbose_name='Trait (ontology term label)', orderable=True)
+    scores_count = tables.Column(accessor='scores_count', verbose_name='Number of Related PGS')
+    category_labels = Column_format_html(accessor='display_category_labels', verbose_name='Trait Category')
 
     class Meta:
         model = EFOTrait
         attrs = {
             "data-show-columns" : "true",
-            "data-sort-name" : "display_label"
+            "data-sort-name" : "display_label",
+            "data-page-size" : page_size,
+            "data-export-options" : '{"fileName": "pgs_traits_data"}'
         }
         fields = [
             'label_link',
-            'id_url',
+            'display_ext_url',
             'category_labels',
             'scores_count'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
 
+    def render_display_ext_url(self, value, record):
+        return format_html(f'{value}<span class="only_export">: {record.url}</span>')
+
 
 class Browse_ScoreTable(tables.Table):
-    list_traits = tables.Column(accessor='list_traits', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
-    ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Variants data files '), orderable=False)
-
-    relative_path = '../..'
+    '''Table to browse Scores (PGS) in the PGS Catalog'''
+    id = tables.Column(accessor='id', verbose_name=format_html('Polygenic Score (PGS) ID & Name'), orderable=True)
+    trait_efo = tables.Column(accessor='trait_efo', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
+    ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
+    ancestries =  Column_format_html(accessor='ancestries', verbose_name='Ancestry distribution', orderable=False)
 
     class Meta:
         model = Score
         attrs = {
+            "id": "scores_table",
             "data-show-columns" : "true",
-            "data-sort-name" : "id"
+            "data-sort-name" : "id",
+            "data-page-size" : page_size,
+            "data-export-options" : '{"fileName": "pgs_scores_data"}'
         }
         fields = [
             'id',
-            'name',
             'publication',
             'trait_reported',
-            'list_traits',
+            'trait_efo',
             'variants_number',
+            'ancestries',
             'ftp_link'
         ]
         template_name = 'catalog/pgs_catalog_django_table.html'
 
-    def render_id(self, value):
-        global relative_path
-        return format_html('<a href='+relative_path+'/pgs/{}>{}</a>', value, value)
+    def render_id(self, value, record):
+        return score_format(record)
 
     def render_publication(self, value):
-        citation = format_html(' '.join([value.id, '<br/><small><i class="fa fa-angle-double-right"></i>', value.firstauthor, '<i>et al.</i>', value.journal, '(%s)'%value.date_publication.strftime('%Y'), '</small>']))
-        return format_html('<a href="'+publication_path+'/{}">{}</a>', value.id, citation)
+        return publication_format(value)
 
-    def render_list_traits(self, value):
-        l = []
-        for x in value:
-            l.append('<a href=../../trait/{}>{}</a>'.format(x[0], x[1]))
-        return format_html('<br>'.join(l))
+    def render_trait_efo(self,value):
+        traits_list = [ t.display_label for t in value.all() ]
+        return format_html(',<br />'.join(traits_list))
 
-    def render_ftp_link(self, value):
-        ftp_link = 'ftp://ftp.ebi.ac.uk/pub/databases/spot/pgs/ScoringFiles_formatted/'+value
-        return format_html('<a class="pgs_no_icon_link" style="font-size:34px" href="{}" title="Download PGS Variants and weights data file" download><i class="icon icon-conceptual" data-icon="&#x6c;"></i></a><span class="only_export">{}</span>', ftp_link, ftp_link)
+    def render_ftp_link(self, value, record):
+        id = value.split('.')[0]
+        ftp_link = '{}/scores/{}/ScoringFiles/'.format(constants.USEFUL_URLS['PGS_FTP_HTTP_ROOT'], id)
+        ftp_file_link = ftp_link+value
+        license_icon = ''
+        if record.has_default_license == False:
+            license_icon = f'<span class="pgs-info-icon pgs_helpover ml-2" title="Terms and Licenses" data-content="{record.license}" data-placement="left"> <span class="only_export"> - Check </span>Terms/Licenses</span>'
+        return format_html(f'<a class="pgs_no_icon_link file_link" href="{ftp_link}" data-toggle="tooltip" title="Download PGS Scoring File (variants, weights)"></a> <span class="only_export">{ftp_file_link}</span>{license_icon}')
+
 
     def render_variants_number(self, value):
         return '{:,}'.format(value)
 
+    def render_ancestries(self, value, record):
+        if not value:
+            return '-'
+
+        anc_labels = constants.ANCESTRY_LABELS
+        stages = constants.PGS_STAGES
+
+        ancestries_data = value
+        pgs_id = record.num
+        chart_id = f'ac_{pgs_id}'
+        data_stage = {}
+        data_title = {}
+        anc_list = {}
+        multi_list = {}
+        anc_all_list = {
+            'dev_all': set(),
+            'all': set()
+        }
+
+        # Fetch the data for each stage
+        for stage in stages:
+            if stage in ancestries_data:
+                ancestries_data_stage = ancestries_data[stage]
+                anc_list[stage] = set()
+                # Details of the multi ancestry data
+                multi_title = {}
+                multi_anc = 'multi'
+                if multi_anc in ancestries_data_stage:
+                    for mt in ancestries_data_stage[multi_anc]:
+                        (ma,anc) = mt.split('_')
+                        if ma not in multi_title:
+                            multi_title[ma] = []
+                        multi_title[ma].append(f'<li>{anc_labels[anc]}</li>')
+
+                        if anc == 'MAE':
+                            continue
+                        # Add to the unique list of ancestries
+                        anc_list[stage].add(anc)
+                        # Add to the unique list of ALL ancestries
+                        anc_all_list['all'].add(anc)
+                        # Add to the unique list of DEV ancestries
+                        if stage != 'eval':
+                            anc_all_list['dev_all'].add(anc)
+
+                # Ancestry data for the stage: distribution, list of ancestries and content of the chart tootlip
+                data_stage[stage] = []
+                data_title[stage] = []
+                for key,val in sorted(ancestries_data_stage['dist'].items(), key=lambda item: float(item[1]), reverse=True):
+                    label = anc_labels[key]
+                    data_stage[stage].append(f'"{key}",{val}')
+                    extra_title = ''
+                    if key in multi_title:
+                        extra_title += '<ul>'+''.join(multi_title[key])+'</ul>'
+                    data_title[stage].append(f'<div class=\'anc_bd_{key}\'>{val}%{extra_title}</div>')
+
+                    if key == 'MAE':
+                        continue
+                    # Add to the unique list of ancestries
+                    anc_list[stage].add(key)
+                    # Add to the unique list of ALL ancestries
+                    anc_all_list['all'].add(key)
+                    # Add to the unique list of DEV ancestries
+                    if stage != 'eval':
+                        anc_all_list['dev_all'].add(key)
+
+
+        # Skip if no expected data "stage" available
+        if data_stage.keys() == 0:
+            return None
+
+        # Format the data for each stage: build the HTML
+        html_list = []
+        html_filter = []
+        for stage in stages:
+            if stage in data_stage:
+                id = chart_id+'_'+stage
+                anc_list_stage = anc_list[stage]
+
+                if len(anc_list_stage) > 1:
+                    anc_list_stage.add('MAO')
+                if 'EUR' not in anc_list_stage:
+                    anc_list_stage.add('non-EUR')
+
+                anc_list_stage = [f'"{x}"' for x in list(anc_list_stage)]
+
+                html_filter.append("data-anc-"+stage+"='["+','.join(anc_list_stage)+"]'")
+
+                title_count = ''
+                count = ancestries_data[stage]['count']
+                if count != 0:
+                    title_count = '<div>{:,}</div>'.format(count)
+                title = '<div class=\'anc_box_'+stage+'\'><div></div>'+''.join(data_title[stage])+title_count+'</div>'
+                html_chart = f'<div class="anc_chart" data-toggle="tooltip" title="'+title+'" data-id="'+id+'" data-type="'+stage+'" data-chart=\'[['+'],['.join(data_stage[stage])+']]\'><svg id="'+id+'"></svg></div>'
+                html_list.append(html_chart)
+            else:
+                html_list.append('<div>-</div>')
+
+
+        # All dev and all data
+        for all_stages in anc_all_list.keys():
+            if len(anc_all_list[all_stages]):
+                anc_all_data = anc_all_list[all_stages]
+
+                if len(anc_all_data) > 1:
+                    anc_all_data.add('MAO')
+                if 'EUR' not in anc_all_data:
+                    anc_all_data.add('non-EUR')
+
+                anc_all_data = [f'"{x}"' for x in list(anc_all_data)]
+
+                html_filter.append("data-anc-"+all_stages+"='["+','.join(anc_all_data)+"]'")
+
+        # Wrap up the HTML
+        html = '<div class="anc_chart_container" '+' '.join(html_filter)+'>'
+        html += ''.join(html_list)
+        html += '</div>'
+        return format_html(html)
+
+
+class Browse_ScoreTableEval(Browse_ScoreTable):
+    class Meta:
+        attrs = {
+            "id": "scores_eval_table"
+        }
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+class Browse_ScoreTableExample(Browse_ScoreTable):
+    class Meta:
+        attrs = {
+            "id": "scores_eg_table",
+            "data-show-columns" : "false",
+            "data-show-export" : "false",
+            "data-pagination" : "false",
+            "data-show-fullscreen" : "false",
+            "data-search" : "false"
+        }
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
 
 class Browse_SampleSetTable(tables.Table):
+    '''Table to browse SampleSets (PSS; used in PGS evaluations) in the PGS Catalog'''
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
-    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Detailed Phenotype Description')
+    phenotyping_free = Column_shorten_text_content(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
     class Meta:
         model = Sample
         attrs = {
-            "data-show-columns" : "true"
+            "id": "sampleset_table",
+            "data-show-columns" : "true",
+            "data-page-size" : page_size,
+            "data-export-options" : '{"fileName": "pgs_samplesets_data"}'
         }
         fields = [
             'sampleset',
@@ -223,41 +452,14 @@ class Browse_SampleSetTable(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-         return format_html('<a href="../../sampleset/{}">{}</span>', value, value)
-
-    def render_phenotyping_free(self, value):
-        return format_html('<span class="more">{}</span>', value)
+         return format_html('<a href="/sampleset/{}">{}</span>', value, value)
 
     def render_cohorts_additional(self, value):
         return format_html('<span class="more">{}</span>', value)
 
 
-class SampleTable_variants_details(tables.Table):
-    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
-    sources = Column_joinlist(accessor='display_sources', verbose_name='PubMed ID', orderable=False)
-    sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
-
-    class Meta:
-        model = Sample
-        attrs = {
-            "data-show-columns" : "true",
-            "data-sort-name" : "display_ancestry"
-        }
-        fields = [
-            'sources',
-            'sample_merged', 'sample_ancestry', 'ancestry_country'
-        ]
-        template_name = 'catalog/pgs_catalog_django_table.html'
-
-
-    def render_sources(self, value):
-        pmid = ''
-        if 'PMID' in value and value['PMID']:
-            pmid = '<a href="https://www.ncbi.nlm.nih.gov/pubmed/{}">{}</a>'.format(value['PMID'], value['PMID'])
-        return format_html(pmid)
-
-
 class SampleTable_variants(tables.Table):
+    '''Table on PGS page - displays information about the GWAS samples used'''
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sources = Column_joinlist(accessor='display_sources', verbose_name='Study Identifiers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
@@ -265,7 +467,11 @@ class SampleTable_variants(tables.Table):
     class Meta:
         model = Sample
         attrs = {
-            "data-show-columns" : "true"
+            "data-show-columns" : "false",
+            "data-sort-name" : "display_sources",
+            #'data-search' : "false",
+            #'data-filter-control': "false",
+            "data-export-options" : '{"fileName": "pgs_sample_source_data"}'
         }
         fields = [
             'sources',
@@ -277,60 +483,77 @@ class SampleTable_variants(tables.Table):
     def render_sources(self, value):
         l = []
         if 'GCST' in value:
-            l.append('GWAS Catalog: <a href="https://www.ebi.ac.uk/gwas/studies/{}">{}</a>'.format(value['GCST'], value['GCST']))
+            l.append('<div class="gwas_source"><span>GWAS Catalog: <a href="{}/gwas/studies/{}">{}</a></span></div>'.format(constants.USEFUL_URLS['EBI_URL'],value['GCST'], value['GCST']))
         if 'PMID' in value and value['PMID']:
-            l.append('PubMed: <a href="https://www.ncbi.nlm.nih.gov/pubmed/{}">{}</a>'.format(value['PMID'], value['PMID']))
-        return format_html('<br>'.join(l))
-
-    def render_source_GWAS_catalog(self, value):
-        if value.startswith('GCST'):
-            return format_html('<a href="https://www.ebi.ac.uk/gwas/studies/{}">{}</a>', value, value)
-        else:
-            return value
-
-    def render_source_PMID(self, value):
-        return format_html('<a href="https://www.ncbi.nlm.nih.gov/pubmed/{}">{}</a>', value, value)
+            publication_id = value['PMID']
+            url = ""
+            # PubMed ID
+            if re.match(r'^\d+$', publication_id):
+                url = "https://europepmc.org/article/MED/{}".format(publication_id)
+            # DOI or other
+            else:
+                if re.match(r'^10\.',publication_id):
+                    publication_id = "DOI:"+publication_id
+                url = "https://europepmc.org/search?query={}".format(publication_id)
+            l.append('<div>Europe PMC: <a href="{}">{}</a></div>'.format(url, value['PMID']))
+        return format_html(''.join(l))
 
 
 class SampleTable_training(tables.Table):
+    '''Table on PGS page - displays information about the samples used in Score Development/Training'''
+    phenotyping_free = Column_shorten_text_content(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
-    class Meta:
-        model = Sample
-        attrs = {
-            "data-show-columns" : "true"
-        }
-        fields = [
-            'phenotyping_free',
-            'sample_merged',
-            'sample_ancestry','ancestry_additional',
-            'cohorts', 'cohorts_additional'
-        ]
-        template_name = 'catalog/pgs_catalog_django_table.html'
-
-    def render_phenotyping_free(self, value):
-        return format_html('<span class="more">{}</span>', value)
-
-
-class SampleTable_performance(tables.Table):
-    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
-    sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
-    sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
-    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Detailed Phenotype Description')
-    cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
+    # Demographics (Column_demographic)
+    followup_time = Column_demographic(accessor='followup_time', verbose_name='Participant Follow-up Time', orderable=False)
+    sample_age = Column_demographic(accessor='sample_age', verbose_name='Age of Study Participants', orderable=False)
 
     class Meta:
         model = Sample
         attrs = {
             "data-show-columns" : "true",
-            "data-sort-name" : "display_sampleset"
+            "data-export-options" : '{"fileName": "pgs_sample_development_data"}'
+        }
+        fields = [
+            'phenotyping_free',
+            'followup_time',
+            'sample_merged',
+            'sample_age',
+            'sample_ancestry','ancestry_additional',
+            'cohorts', 'cohorts_additional'
+        ]
+        template_name = 'catalog/pgs_catalog_django_table.html'
+
+
+class SampleTable_performance(tables.Table):
+    '''Table on PGS page - displays information about the samples used in for PGS evaluation (accessed by PSS)'''
+    sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
+    sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
+    sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
+    phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
+    cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
+
+    # Demographics (Column_demographic)
+    followup_time = Column_demographic(accessor='followup_time', verbose_name='Participant Follow-up Time', orderable=False)
+    sample_age = Column_demographic(accessor='sample_age', verbose_name='Age of Study Participants', orderable=False)
+
+    class Meta:
+        model = Sample
+        attrs = {
+            "id": "samples_table",
+            "data-show-columns" : "true",
+            "data-show-toggle" : "true",
+            "data-sort-name" : "display_sampleset",
+            "data-export-options" : '{"fileName": "pgs_sample_evaluation_data"}'
         }
         fields = [
             'sampleset',
             'phenotyping_free',
+            'followup_time',
             'sample_merged',
+            'sample_age',
             'sample_ancestry','ancestry_additional',
             'cohorts', 'cohorts_additional',
         ]
@@ -338,7 +561,7 @@ class SampleTable_performance(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-         return format_html('<a id="{}" href="../../sampleset/{}">{}</span>', value, value, value)
+         return format_html('<a id="{}" href="/sampleset/{}">{}</span>', value, value, value)
 
     def render_phenotyping_free(self, value):
         return format_html('<span class="more">{}</span>', value)
@@ -348,22 +571,28 @@ class SampleTable_performance(tables.Table):
 
 
 class PerformanceTable(tables.Table):
-    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance Metric ID<br />(PPM ID)'))
+    '''Displays PGS Performance metrics'''
+    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance<br />Metric ID (PPM ID)'))
     sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'))
     trait_info = Column_trait(accessor='display_trait', verbose_name='Trait', orderable=False)
-    effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br>(per SD change)'), orderable=False)
-    class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='PGS Classification Metrics', orderable=False)
+    effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br />(per SD change)'), orderable=False)
+    class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='Classification Metrics', orderable=False)
     othermetrics = Column_metriclist(accessor='othermetrics_list', verbose_name='Other Metrics', orderable=False)
     pub_withexternality = Column_pubexternality(accessor='publication_withexternality', verbose_name='Performance Source', orderable=False)
+    covariates = Column_shorten_text_content(accessor='covariates')
+    performance_comments = tables.Column(accessor='performance_comments', verbose_name=format_html('PGS Performance:<br />Other Relevant Information'))
 
     class Meta:
         model = Performance
         attrs = {
+            "id": "performances_table",
             "data-show-columns" : "true",
-            "data-sort-name" : "id"
+            "data-show-toggle" : "true",
+            "data-sort-name" : "id",
+            "data-export-options" : '{"fileName": "pgs_performance_metrics_data"}'
         }
         fields = [
-            'id', 'sampleset', 'pub_withexternality',
+            'id', 'score', 'sampleset', 'pub_withexternality',
             'trait_info',
             'effect_sizes', 'class_accuracy', 'othermetrics',
             'covariates', 'performance_comments'
@@ -371,46 +600,37 @@ class PerformanceTable(tables.Table):
         template_name = 'catalog/pgs_catalog_django_table.html'
 
     def render_sampleset(self, value):
-        return format_html('<a href="#{}">{}</a>', value, value)
-
-
-class PerformanceTable_PubTrait(tables.Table):
-    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance Metric ID<br />(PPM ID)'))
-    trait_info = Column_trait(accessor='display_trait', verbose_name='Trait', orderable=False)
-    sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br/>(PSS ID)'), orderable=False)
-    effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br/>(per SD change)'), orderable=False)
-    class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='PGS Classification Metrics', orderable=False)
-    othermetrics = Column_metriclist(accessor='othermetrics_list', verbose_name='Other Metrics', orderable=False)
-    pub_withexternality = Column_pubexternality(accessor='publication_withexternality', verbose_name='Performance Source',orderable=False)
-
-    class Meta:
-        model = Performance
-        attrs = {
-            "data-show-columns" : "true",
-            "data-sort-name" : "id"
-        }
-        fields = [
-            'id','score', 'sampleset', 'pub_withexternality',
-            'trait_info',
-            'effect_sizes', 'class_accuracy', 'othermetrics',
-            'covariates', 'performance_comments'
-        ]
-        template_name = 'catalog/pgs_catalog_django_table.html'
-
-    def render_sampleset(self, value):
-        return format_html('<a href="#{}">{}</a>', value, value)
+        ancestry_key = value.samples_combined_ancestry_key
+        ancestry = constants.ANCESTRY_GROUP_LABELS[ancestry_key]
+        count_ind = common.individuals_format(value.count_individuals,True)
+        return format_html('<a href="#{}">{}</a><span class="only_export">|</span><div class="small"><span class="anc_colour_{} mr-1"></span>{}<span class="only_export">|</span>{}</div>', value, value, ancestry_key, ancestry,count_ind)
 
     def render_score(self, value):
-        return format_html('<a href="../../pgs/{}">{}</a> (<i>{}</i>)', value.id, value.id, value.name)
+        return score_format(value)
+
+    def render_performance_comments(self, value):
+        comments = value
+        has_link = 0
+        matches = re.findall('\[([^\]]+)\]\(([^\)]+)\)',value)
+        for match in matches:
+            has_link = 1
+            label = match[0]
+            url = match[1]
+            html = f'<a href="{url}">{label}</a>'
+            comments = comments.replace(f'[{label}]({url})', html)
+        if not has_link:
+            comments = f'<span class="more">{comments}</span>'
+        return format_html(comments)
 
 
 class CohortTable(tables.Table):
-    name_short = tables.Column(accessor='name_short', verbose_name='Cohort short name', orderable=True)
-    name_full  = tables.Column(accessor='name_full', verbose_name='Cohort long name', orderable=False)
+    '''Displays information about Cohorts that have been cited by PGS'''
 
     class Meta:
         attrs = {
-            "data-show-columns" : "false"
+            "data-show-columns" : "false",
+            "data-sort-name" : "name_short",
+            "data-export-options" : '{"fileName": "pgs_sample_cohorts_data"}'
         }
         model = Cohort
         fields = [

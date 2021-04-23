@@ -37,7 +37,7 @@ class CurationTemplate():
     def extract_publication(self):
         '''parse_pub takes a curation dictionary as input and extracts the relevant info from the sheet and EuropePMC'''
         #current_schema = self.table_mapschema.loc['Publication Information'].set_index('Column')
-        pinfo = self.table_publictation.loc['Publication']
+        pinfo = self.table_publictation.iloc[0]
         c_doi = pinfo['doi']
         c_PMID = pinfo[0]
 
@@ -78,6 +78,8 @@ class CurationTemplate():
                                                  date_publication = r['firstPublicationDate']
                                             )
             parsed_publication.set_publication_ids(next_scorenumber(Publication))
+            if self.table_publictation.shape[0] > 1:
+                parsed_publication.curation_notes = self.table_publictation.iloc[1,0]
             parsed_publication.save()
         self.parsed_publication = parsed_publication
 
@@ -86,8 +88,16 @@ class CurationTemplate():
         for score_name, score_info in self.table_scores.iterrows():
             parsed_score = {'name' : score_name, 'publication' : self.parsed_publication.id}
             for col, val in score_info.iteritems():
-                if (col[1] in current_schema.index) and (pd.isnull(val) == False):
-                    m, f, _ = current_schema.loc[col[1]]
+                if pd.isnull(val) == False:
+                    # Map to schema
+                    if col[1] in current_schema.index:
+                        m, f, _ = current_schema.loc[col[1]]
+                    elif col[0] in current_schema.index:
+                        m, f, _ = current_schema.loc[col[0]]
+                    else:
+                        m = None
+
+                    # Add to extract if it's the same model
                     if m == 'Score':
                         if f == 'trait_efo':
                             efo_list = val.split(',')
@@ -110,6 +120,8 @@ class CurationTemplate():
 
     def extract_samples(self, gwas):
         current_schema = self.table_mapschema.loc['Sample Descriptions'].set_index('Column')
+
+        # Extract data for training (GWAS + Score Development) sample
         for sample_ids, sample_info in self.table_samples_scores.iterrows():
             sample_remapped = {}
             for c, val in sample_info.to_dict().items():
@@ -119,7 +131,7 @@ class CurationTemplate():
                         if f == 'cohorts':
                             val = self.cohort_to_tuples(val)
                         elif f in ['sample_age', 'followup_time']:
-                            val = str2demographic(f, val)
+                            val = str2demographic(val)
 
                         sample_remapped[f] = val
             # Parse from GWAS Catalog
@@ -137,6 +149,7 @@ class CurationTemplate():
                     sample_remapped = gwas_results
             self.parsed_samples_scores.append((sample_ids, sample_remapped))
 
+        # Extract data Testing samples
         for testset_name, testsets in self.table_samples_testing.groupby(level=0):
             results = []
             for sample_ids, sample_info in testsets.iterrows():
@@ -163,21 +176,24 @@ class CurationTemplate():
             }
             for col, val in performance_info.iteritems():
                 if pd.isnull(val) == False:
-                    l = col[0]
+                    m = None
                     if col[1] in current_schema.index:
-                        l = col[1]
-                    m, f, _ = current_schema.loc[l]
-                    if f.startswith('metric'):
-                        try:
-                            parsed_performance['metrics'].append(str2metric(f, val))
-                        except:
-                            if ';' in val:
-                                for x in val.split(';'):
-                                    parsed_performance['metrics'].append(str2metric(f, x))
-                            else:
-                                print('Error parsing:', f, val)
-                    else:
-                        parsed_performance[f] = val
+                        m, f, _ = current_schema.loc[col[1]]
+                    elif col[0] in current_schema.index:
+                        m, f, _ = current_schema.loc[col[0]]
+
+                    if m is not None:
+                        if f.startswith('metric'):
+                            try:
+                                parsed_performance['metrics'].append(str2metric(f, val))
+                            except:
+                                if ';' in val:
+                                    for x in val.split(';'):
+                                        parsed_performance['metrics'].append(str2metric(f, x))
+                                else:
+                                    print('Error parsing:', f, val)
+                        else:
+                            parsed_performance[f] = val
             self.parsed_performances.append((p_key,parsed_performance))
 
 
@@ -288,23 +304,50 @@ def str2metric(field, val):
 
     return current_metric
 
-def str2demographic(field, val):
+def str2demographic(val):
     current_demographic = {}
     if type(val) == float:
         current_demographic['estimate'] = val
     else:
-        matches = insquarebrackets.findall(val)
-        if len(matches) == 1:
-            current_demographic['mean'] = float(val.split('[')[0])
+        #Split by ; in case of multiple sub-fields
+        l = val.split(';')
+        for x in l:
+            name, value = x.split('=')
+            name = name.strip()
+            value = value.strip()
 
-            ci_match = tuple(map(float, matches[0].split(' - ')))
-            current_demographic['ci'] = NumericRange(lower=ci_match[0], upper=ci_match[1], bounds='[]')
-        else:
-            current_demographic['mean'] = float(val.split('[')[0])
+            # Check if it contains a range item
+            matches = insquarebrackets.findall(value)
+            if len(matches) == 1:
+                range_match = tuple(map(float, matches[0].split(' - ')))
+                current_demographic['range'] = NumericRange(lower=range_match[0], upper=range_match[1], bounds='[]')
+                current_demographic['range_type'] = name.strip()
+            else:
+                if name.lower().startswith('m'):
+                    current_demographic['estimate_type'] = name.strip()
+                    with_units = re.match("([-+]?\d*\.\d+|\d+) ([a-zA-Z]+)", value, re.I)
+                    if with_units:
+                        items = with_units.groups()
+                        current_demographic['estimate'] = items[0]
+                        current_demographic['unit'] = items[1]
+                    else:
+                        current_demographic['estimate'] = value
+
+                elif name.lower().startswith('s'):
+                    current_demographic['variability_type'] = name.strip()
+                    with_units = re.match("([-+]?\d*\.\d+|\d+) ([a-zA-Z]+)", value, re.I)
+                    if with_units:
+                        items = with_units.groups()
+                        current_demographic['variability']  = items[0]
+                        current_demographic['unit'] = items[1]
+                    else:
+                        current_demographic['variability'] = value
+    #print(val, current_demographic)
     return current_demographic
 
+
 def create_scoringfileheader(cscore):
-    '''Function to extract the information to put in the commented header of a PGS Catalog Scoring File'''
+    """Function to extract score & publication information for the PGS Catalog Scoring File commented header"""
     pub = cscore.publication
     lines = [
         '### PGS CATALOG SCORING FILE - see www.pgscatalog.org/downloads/#dl_ftp for additional information',
@@ -317,4 +360,7 @@ def create_scoringfileheader(cscore):
         '# PGP ID = {}'.format(pub.id),
         '# Citation = {} et al. {} ({}). doi:{}'.format(pub.firstauthor, pub.journal, pub.date_publication.strftime('%Y'), pub.doi)
     ]
+    if cscore.license != Score._meta.get_field('license')._get_default():
+        ltext = cscore.license.replace('\n', ' ')  # Make sure there are no new-lines that would screw up the commenting
+        lines.append('# LICENSE = {}'.format(ltext))  # Append to header
     return lines
