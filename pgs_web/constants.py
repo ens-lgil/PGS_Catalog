@@ -3,7 +3,7 @@
 PGS_REST_API = {
     'version': 1.7,
     'changelog': [
-        "New data 'ancestries' in the `/rest/score` endpoints, providing information about ancestry distribution",
+        "New data 'ancestry_distribution' in the `/rest/score` endpoints, providing information about ancestry distribution on each stage of the PGS",
         "New endpoint `/rest/ancestry_categories` providing the list of ancestry symbols and names."
     ]
 }
@@ -50,7 +50,7 @@ TABLE_HELPER = {
     'score_training': 'Describes the samples used to develop or train the score (e.g. not used for variant discovery, and non-overlapping with the samples used to evaluate the PGS predictive ability)',
     'score_perf_metrics': 'An index of performance metrics from cataloged evaluations of this PGS',
     'perf_metrics': 'An index of performance metrics from cataloged evaluations of the associated PGS(s)',
-    'sample_sets': 'Information about the samples used in PGS performance evaluation. These samples have an PGS Catalog Sample Set (PSS) ID to link them to their associated performance metrics (and across different PGS)',
+    'sample_sets': 'Information about the samples used in PGS performance evaluation. These samples have a PGS Catalog Sample Set (PSS) ID to link them to their associated performance metrics (and across different PGS)',
     'pgs_eval': 'A list of PGS that were developed and evaluated in this publication/study',
     'pgs_eval_ext': 'A list of PGS that were developed in other publications and re-evaluated in the current study'
 }
@@ -58,6 +58,21 @@ TABLE_HELPER = {
 ANNOUNCEMENT = ''
 
 PGS_STAGES = ('gwas','dev','eval')
+
+PGS_STAGES_HELPER = {
+    'gwas': {
+        'label': 'Source of Variant<br />Associations (GWAS)',
+        'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
+    },
+    'dev': {
+        'label': 'Score Development/Training',
+        'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
+    },
+    'eval': {
+        'label': 'PGS Evaluation',
+        'desc': 'Percentage based on the number of Sample Set with an ancestry category out of all the Sample Sets.'
+    }
+}
 
 ANCESTRY_MAPPINGS = {
     'Aboriginal Australian': 'OTH',

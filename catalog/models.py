@@ -660,20 +660,7 @@ class Score(models.Model):
     @property
     def display_ancestry_html(self):
         ancestry_labels = constants.ANCESTRY_LABELS
-        anc_stages = {
-            'gwas': {
-                'label': 'Source of Variant<br />Associations (GWAS)',
-                'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
-            },
-            'dev': {
-                'label': 'Score Development/Training',
-                'desc': 'Percentage based on the number of individuals associated with an ancestry category out of all the individuals.'
-            },
-            'eval': {
-                'label': 'PGS Evaluation',
-                'desc': 'Percentage based on the number of Sample Set with an ancestry category out of all the Sample Sets.'
-            }
-        }
+        anc_stages = constants.PGS_STAGES_HELPER
         html = ''
         if self.ancestries:
             for stage in constants.PGS_STAGES:

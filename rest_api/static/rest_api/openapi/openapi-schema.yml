@@ -75,7 +75,7 @@ info:
     <div class="toggle_content" id="content_changelog" style="display:none">
 
       * <span class="badge badge-pill badge-pgs">1.7</span> - April 2021:
-        * New data **ancestries** in the `/rest/score` endpoints, providing information about ancestry distribution."
+        * New data **ancestry_distribution** in the `/rest/score` endpoints, providing information about ancestry distribution on each stage of the PGS."
         * New endpoint `/rest/ancestry_categories` providing the list of ancestry symbols and names.
 
       * <span class="badge badge-pill badge-pgs">1.6</span> - March 2021:
@@ -182,7 +182,7 @@ tags:
   - name: "Release endpoints"
     description: PGS Release information (release date, number of new scores/publication/performance and their IDs)
   - name: "Other endpoints"
-    description: "PGS extra endpoints: **/rest/info** (REST API version, data counts, PGS citation, ...) and specific queries from collaborators"
+    description: "PGS extra endpoints: **/rest/info** (REST API version, data counts, PGS citation, ...), **/rest/ancestry_categories** (ancestry symbols and names) and specific queries from collaborators"
 
 components:
   schemas:
@@ -723,7 +723,7 @@ components:
           type: string
           description: "The version of the genome assembly that the variants present in the PGS are associated with. Listed as NR (Not Reported) if unknown."
           example: "GRCh38"
-        ancestries:
+        ancestry_distribution:
           type: object
           description: "Ancestry distribution on each PGS stage. For more information about Ancestry, please go to [Ancestry documentation](/docs/ancestry). To get the full name of the Ancestry categories (e.g. 'European' for 'EUR'), please look at the endpoint **/rest/ancestry_categories**"
           properties:
@@ -737,7 +737,8 @@ components:
                   additionalProperties:
                     type: integer
                   example:
-                    EUR: 100
+                    EUR: 75
+                    MAE: 25
                 count:
                   type: integer
                   description: "Total number of individuals from this stage."
@@ -758,7 +759,7 @@ components:
                   additionalProperties:
                     type: integer
                   example:
-                    EUR: 88.7
+                    MAE: 88.7
                     AFR: 7.9
                     AMR: 3.4
                 count:
@@ -781,8 +782,8 @@ components:
                   additionalProperties:
                     type: integer
                   example:
-                    EUR: 75
-                    AFR: 25
+                    MAE: 60
+                    AFR: 40
                 count:
                   type: integer
                   description: "Number of distinct Sample Sets."
