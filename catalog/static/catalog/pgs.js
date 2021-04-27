@@ -78,8 +78,6 @@ $(document).ready(function() {
 
         // Check if similar piechart has already been generated
         if (anc_svgs[data_chart_string]) {
-          $('#'+id).attr("width",anc_width);
-          $('#'+id).attr("height",anc_height);
           // Change the type (i.e. the letter in the center of the chart) and copy SVG code
           var svg_code = anc_svgs[data_chart_string]['html'];
           var svg_type = anc_svgs[data_chart_string]['type'];
@@ -450,8 +448,11 @@ $(window).on('load', function() {
         var list = ['ancestries','link_filename'];
         for (var i=0; i < list.length; i++) {
           var field = $(this).find(`[data-field='${list[i]}']`);
-          field.find(`div.fht-cell`).hide();
           field.css({"vertical-align": "top"});
+          // Remove sortable property
+          field.find(`div.th-inner`).removeClass('th-inner sortable both').addClass('th-inner-not-sortable');
+          // Remove filter field
+          field.find(`div.fht-cell`).hide();
         }
       }
     });

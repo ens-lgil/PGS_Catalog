@@ -8,8 +8,8 @@ from catalog import common
 class Publication(models.Model):
     """Class for publications with PGS"""
     # Stable identifiers
-    num = models.IntegerField('PGS Publication/Study (PGP) Number', primary_key=True)
-    id = models.CharField('PGS Publication/Study (PGP) ID', max_length=30, db_index=True)
+    num = models.IntegerField('PGS Publication/Study Number (PGP)', primary_key=True)
+    id = models.CharField('PGS Publication/Study ID (PGP)', max_length=30, db_index=True)
 
     date_released = models.DateField('PGS Release Date', null=True, db_index=True)
 
@@ -595,7 +595,7 @@ class Score(models.Model):
     flag_asis = models.BooleanField('Score and results match the original publication', default=True)
 
     # Links to related models
-    publication = models.ForeignKey(Publication, on_delete=models.PROTECT, related_name='publication_score', verbose_name='PGS Publication (PGP) ID')
+    publication = models.ForeignKey(Publication, on_delete=models.PROTECT, related_name='publication_score', verbose_name='PGS Publication ID (PGP)')
     ## Contributing Samples
     samples_variants = models.ManyToManyField(Sample, verbose_name='Source of Variant Associations (GWAS)', related_name='score_variants')
     samples_training = models.ManyToManyField(Sample, verbose_name='Score Development/Training', related_name='score_training')
@@ -1070,14 +1070,14 @@ class TraitCategory(models.Model):
 class EmbargoedPublication(models.Model):
     """Class to store the list of embargoed Publications"""
     # Stable identifier
-    id = models.CharField('PGS Publication/Study (PGP) ID', max_length=30, primary_key=True)
+    id = models.CharField('PGS Publication/Study ID (PGP)', max_length=30, primary_key=True)
     firstauthor = models.CharField('First Author', max_length=50)
 
 
 class EmbargoedScore(models.Model):
     """Class to store the list of embargoed Scores"""
     # Stable identifier
-    id = models.CharField('Polygenic Score (PGS) ID', max_length=30, primary_key=True)
+    id = models.CharField('Polygenic Score ID', max_length=30, primary_key=True)
     firstauthor = models.CharField('First Author', max_length=50)
 
 

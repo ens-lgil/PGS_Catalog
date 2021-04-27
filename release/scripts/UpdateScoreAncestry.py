@@ -1,3 +1,4 @@
+import re
 from catalog.models import Score, Performance
 from pgs_web import constants
 
@@ -23,8 +24,7 @@ class UpdateScoreAncestry:
 
     def __init__(self):
         self.scores = Score.objects.all().order_by('num')
-        #self.scores = Score.objects.filter(num=739)
-        #self.scores = Score.objects.filter(num=11)
+        #self.scores = Score.objects.filter(num=13)
 
 
     def get_ancestry_code(self,anc,stage):
@@ -182,6 +182,13 @@ class UpdateScoreAncestry:
                         else:
                             percent = "{:.1f}".format(percent)
                             percent = percent.replace('.0','')
+
+                        # Convert percentage type to float or int
+                        if re.match(r'^\d+\.\d+$', percent):
+                            percent = float(percent)
+                        else:
+                            percent = int(percent)
+
                         print(f'\t>>>> PERCENT: {key} => {percent}%')
 
                         anc_data[stage]['dist'][key] = percent

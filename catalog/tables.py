@@ -238,7 +238,7 @@ class Browse_TraitTable(tables.Table):
 
 class Browse_ScoreTable(tables.Table):
     '''Table to browse Scores (PGS) in the PGS Catalog'''
-    id = tables.Column(accessor='id', verbose_name=format_html('Polygenic Score (PGS) ID & Name'), orderable=True)
+    id = tables.Column(accessor='id', verbose_name=format_html('Polygenic Score ID & Name'), orderable=True)
     trait_efo = tables.Column(accessor='trait_efo', verbose_name='Mapped Trait(s)\n(Ontology)', orderable=False)
     ftp_link = tables.Column(accessor='link_filename', verbose_name=format_html('PGS Scoring File (FTP Link)'), orderable=False)
     ancestries =  Column_format_html(accessor='ancestries', verbose_name='Ancestry distribution', orderable=False)
@@ -429,7 +429,7 @@ class Browse_SampleSetTable(tables.Table):
     '''Table to browse SampleSets (PSS; used in PGS evaluations) in the PGS Catalog'''
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
-    sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
+    sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS)'), orderable=False)
     phenotyping_free = Column_shorten_text_content(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
@@ -531,7 +531,7 @@ class SampleTable_performance(tables.Table):
     '''Table on PGS page - displays information about the samples used in for PGS evaluation (accessed by PSS)'''
     sample_merged = Column_sample_merged(accessor='display_samples_for_table', verbose_name='Sample Numbers', orderable=False)
     sample_ancestry = Column_ancestry(accessor='display_ancestry', verbose_name='Sample Ancestry', orderable=False)
-    sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'), orderable=False)
+    sampleset = tables.Column(accessor='display_sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS)'), orderable=False)
     phenotyping_free = tables.Column(accessor='phenotyping_free', verbose_name='Phenotype Definitions and Methods')
     cohorts = Column_cohorts(accessor='cohorts', verbose_name='Cohort(s)')
 
@@ -572,8 +572,8 @@ class SampleTable_performance(tables.Table):
 
 class PerformanceTable(tables.Table):
     '''Displays PGS Performance metrics'''
-    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance<br />Metric ID (PPM ID)'))
-    sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS ID)'))
+    id = tables.Column(accessor='id', verbose_name=format_html('PGS Performance<br />Metric ID (PPM)'))
+    sampleset = tables.Column(accessor='sampleset', verbose_name=format_html('PGS Sample Set ID<br />(PSS)'))
     trait_info = Column_trait(accessor='display_trait', verbose_name='Trait', orderable=False)
     effect_sizes = Column_metriclist(accessor='effect_sizes_list', verbose_name=format_html('PGS Effect Sizes<br />(per SD change)'), orderable=False)
     class_accuracy = Column_metriclist(accessor='class_acc_list', verbose_name='Classification Metrics', orderable=False)
