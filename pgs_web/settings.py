@@ -47,6 +47,7 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 INSTALLED_APPS = [
 	'catalog.apps.CatalogConfig',
     'rest_api.apps.RestApiConfig',
+    'curation.apps.CurationConfig',
     'search.apps.SearchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
