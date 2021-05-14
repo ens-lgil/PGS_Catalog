@@ -81,18 +81,17 @@ class CurationTemplate():
     def extract_publication(self):
         '''parse_pub takes a curation dictionary as input and extracts the relevant info from the sheet and EuropePMC'''
         pinfo = self.table_publication.iloc[0]
-        c_doi = pinfo['doi']
+        c_doi = pinfo['doi'].strip()
         c_PMID = pinfo[0]
         publication = None
-
         # Check if this is already in the DB
         try:
-            publication = Publication.objects.get(doi=c_doi)
+            publication = Publication.objects.get(doi__iexact=c_doi)
             c_doi = publication.doi
             c_PMID = publication.PMID
-            print("Publication found in the database")
+            print("Existing publication found in the database\n")
         except Publication.DoesNotExist:
-            print("New publication")
+            print("New publication\n")
 
         parsed_publication = PublicationData(self.table_publication,c_doi,c_PMID,publication)
         
@@ -134,7 +133,7 @@ class CurationTemplate():
 
         # Extract data for training (GWAS + Score Development) sample
         for sample_id, sample_info in self.table_samples_scores.iterrows():
-            sample_remapped = self.get_sample_data(sample_info,current_schema)
+            sample_remapped = self.get_sample_data(sample_info,current_schema,spreadsheet_name)
 
             # Parse from GWAS Catalog
             sample_keys = sample_remapped.data.keys()
@@ -161,7 +160,7 @@ class CurationTemplate():
         for testset_name, testsets in self.table_samples_testing.groupby(level=0):
             results = []
             for sample_id, sample_info in testsets.iterrows():
-                sample_remapped = self.get_sample_data(sample_info,current_schema)
+                sample_remapped = self.get_sample_data(sample_info,current_schema,spreadsheet_name)
                 results.append(sample_remapped)
             self.parsed_samples_testing.append((testset_name, results))
 
@@ -194,7 +193,7 @@ class CurationTemplate():
             self.parsed_performances.append((p_key,parsed_performance))
 
 
-    def get_sample_data(self, sample_info, current_schema):
+    def get_sample_data(self, sample_info, current_schema, spreadsheet_name):
         ''' 
         Extract the sample data (gwas and dev/training)
         '''
@@ -207,11 +206,12 @@ class CurationTemplate():
                         if f == 'cohorts':
                             cohorts_list = []
                             for cohort in val.split(','):
+                                cohort = cohort.strip()
                                 cohort_id = cohort.upper()
                                 if cohort_id in self.parsed_cohorts:
                                     cohorts_list.append(self.parsed_cohorts[cohort_id])
                                 else:
-                                    self.report_error(spreadsheet_name, f'Error: the sample cohort "{val}" cannot be found in the Cohort Refr. spreadsheet')
+                                    self.report_error(spreadsheet_name, f'Error: the sample cohort "{cohort}" cannot be found in the Cohort Refr. spreadsheet')
                             val = cohorts_list
                         elif f in ['sample_age', 'followup_time']:
                             val = sample_remapped.str2demographic(f, val)

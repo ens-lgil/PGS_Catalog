@@ -70,6 +70,17 @@ class SampleData(GenericData):
         return current_demographic
 
 
+    def sample_model_exist(self):
+        sample_data = {}
+        for field, val in self.data.items():
+            if field not in ['cohorts','sample_age', 'followup_time']:
+                sample_data[field] = val
+        samples = Sample.objects.filter(**sample_data)
+        if len(samples) != 0:
+            return True
+        else: 
+            return False
+
     def create_sample_model(self):
         self.model = Sample()
         cohorts = []

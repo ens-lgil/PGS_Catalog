@@ -50,7 +50,6 @@ class PerformanceData(GenericData):
                     current_metric.add_data('estimate', float(val.split(' [')[0]))
                     # Check extra character/data after the brackets
                     extra = val.strip().split(']')
-                    #print(f'{current_metric.data}')
                     if len(extra) > 1:
                         # Check if second part has content
                         if (extra[1] != ''):
@@ -88,7 +87,9 @@ class PerformanceData(GenericData):
             if field not in ['publication','score','sampleset','metrics']:
                 setattr(self.model, field, val)
         self.model.save()
-        
+
         # Create associated Metric objects
         for metric in self.data['metrics']:
             metric.create_metric_model(self.model)
+
+        return self.model

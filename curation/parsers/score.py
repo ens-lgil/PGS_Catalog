@@ -16,12 +16,13 @@ class ScoreData(GenericData):
         self.model.set_score_ids(self.next_id_number(Score))
         for field, val in self.data.items():
             if field == 'publication':
-                self.model.publication = Publication.objects.get(doi = val)
+                self.model.publication = Publication.objects.get(doi__iexact=val)
             elif field == 'trait_efo':
                 efo_traits = []
                 for trait_id in val:
+                    trait_id = trait_id.replace(':','_')
                     try:
-                        efo = EFOTrait.objects.get(id=trait_id)
+                        efo = EFOTrait.objects.get(id__iexact=trait_id)
                     except EFOTrait.DoesNotExist:
                         efo = EFOTrait(id=trait_id)
                         efo.parse_api()

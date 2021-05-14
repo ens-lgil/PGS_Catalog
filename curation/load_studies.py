@@ -8,6 +8,12 @@ from catalog.models import Score
 curation2schema = pd.read_excel(template_schema, index_col=0)
 curation2schema_scoring = pd.read_excel(scoring_schema, index_col=0)
 
+data_obj = [
+    ('metric', 'id', Metric),
+    ('performance', 'num', Performance),
+    ('sampleset', 'num', SampleSet),
+    ('sampleset', 'id', Sample)
+]
 
 #Loop through studies to be included/loaded
 for study_name in study_names_list:
@@ -29,30 +35,43 @@ for study_name in study_names_list:
     current_study.extract_samples()
     current_study.extract_performances()
 
+    
+    data_ids = {
+        'metric': [],
+        'performance': [],
+        'sampleset': [],
+        'sample': []
+    }
+    failed_data_import = []
+
     # List the reported warning(s)
     if current_study.report['warning']:
         print("\n/!\ Reported warning(s) /!\ \n")
         warning_report = current_study.report['warning']
         for spreadsheet in warning_report:
-            print("# Spreadsheet '"+spreadsheet+"'")
+            print("\t# Spreadsheet '"+spreadsheet+"'")
             for msg in warning_report[spreadsheet]:
-                print('- '+msg)
+                print('\t- '+msg)
+        print('\n')
 
     # List the reported error(s)
     if current_study.report['error']:
         print("\n### Reported error(s) ###\n")
         error_report = current_study.report['error']
         for spreadsheet in error_report:
-            print("# Spreadsheet '"+spreadsheet+"'")
+            print("\t# Spreadsheet '"+spreadsheet+"'")
             for msg in error_report[spreadsheet]:
-                print('- '+msg)
+                print('\t- '+msg)
         continue
+        print('\n')
     
     # Exit for debugging
     #continue
     #exit(0)
 
     saved_scores = {}
+    existing_scores = []
+    import_warnings = []
 
 
     ## Publication ##
@@ -64,74 +83,121 @@ for study_name in study_names_list:
         # Check if score already exist
         try:
             current_score = Score.objects.get(name=score_data.data['name'],publication__id=current_publication.id)
-            print(f'- Existing Score: {current_score.id} ({score_id})')
+            import_warnings.append(f'Existing Score: {current_score.id} ({score_id})')
+            existing_scores.append(current_score.id)
         except Score.DoesNotExist:
             current_score = score_data.create_score_model()
-            print(f'- New Score: {current_score.id} ({score_id})')
+            import_warnings.append(f'New Score: {current_score.id} ({score_id})')
         saved_scores[score_id] = current_score
         
-        
-
 
     ## Sample ##
     # GWAS and Dev/Training Sample and attach them to Scores
-    for x in current_study.parsed_samples_scores:
-        scores = []
-        for s in x[0][0].split(','):
-            if s.strip() in saved_scores:
-                scores.append(saved_scores[s.strip()])
-            else:
-                print('WARNING: {} is not found in the saved scores list!!!'.format(s.strip()), x)
-        samples = x[1]
-        for current_score in scores:
-            for sample in samples:
-                current_sample = sample.create_sample_model()
-                if x[0][1] == 'GWAS/Variant associations':
-                    current_score.samples_variants.add(current_sample)
-                elif x[0][1] == 'Score development':
-                    current_score.samples_training.add(current_sample)
+    try:
+        for x in current_study.parsed_samples_scores:
+            scores = []
+            for s in x[0][0].split(','):
+                if s.strip() in saved_scores:
+                    scores.append(saved_scores[s.strip()])
                 else:
-                    print('ERROR: Unclear how to add samples')
+                    import_warnings.append(f'{s.strip()} is not found in the saved scores list!!!')
+            samples = x[1]
+            for current_score in scores:
+                for sample in samples:
+                    sample_model_exist = False
+                    if current_score.id in existing_scores:
+                        sample_model_exist = sample.sample_model_exist()
+                    if not sample_model_exist:
+                        current_sample = sample.create_sample_model()
+                        data_ids['sample'].append(current_sample.id)
+                        if x[0][1] == 'GWAS/Variant associations':
+                            current_score.samples_variants.add(current_sample)
+                        elif x[0][1] == 'Score development':
+                            current_score.samples_training.add(current_sample)
+                        else:
+                            import_warnings.append('ERROR: Unclear how to add samples')
+                    else:
+                        import_warnings.append(f'Sample "{x[0][0]}" ({x[0][1]}) already exist in the Database')
+    except Exception as e:
+        failed_data_import.append(f'GWAS & Dev/Testing Sample: {e}')
 
 
     # Test (Evaluation) Samples and Sample Sets
     testset_to_sampleset = {}
-    for x in current_study.parsed_samples_testing:
-        test_name, sample_list = x
+    try:
+        for x in current_study.parsed_samples_testing:
+            test_name, sample_list = x
 
-        # Initialize the current SampleSet
-        current_sampleset = SampleSet()
-        current_sampleset.set_ids(next_PSS_num())
-        current_sampleset.save()
+            samples_for_sampleset = []
 
-        # Attach underlying sample(s) and their descriptions to the SampleSet
-        for sample_desc in sample_list:
-            current_sample = sample_desc.create_sample_model()
-            # Add sample to the SampleSet
-            current_sampleset.samples.add(current_sample)
-        current_sampleset.save()
+            # Create samples
+            for sample_desc in sample_list:
+                current_sample = sample_desc.create_sample_model()
+                data_ids['sample'].append(current_sample.id)
+                samples_for_sampleset.append(current_sample)
+                
+            # Initialize the current SampleSet
+            current_sampleset = SampleSet()
+            current_sampleset.set_ids(next_PSS_num())
+            current_sampleset.save()
+            data_ids['sampleset'].append(current_sampleset.num)
 
-        testset_to_sampleset[test_name] = current_sampleset
+            # Add sample(s) to the SampleSet
+            for sample in samples_for_sampleset:
+                current_sampleset.samples.add(current_sample)
+                current_sampleset.save()
+
+            testset_to_sampleset[test_name] = current_sampleset
+    except Exception as e:
+        failed_data_import.append(f'SampleSet & Evaluation Sample: {e}')
 
 
     ## Performance Metrics ##
-    for x in current_study.parsed_performances:
-        i, performance = x
-        print(f'- Performance Score: {i[0]}')
-        # Find Score from the Score spreadsheet
-        if i[0] in saved_scores:
-            current_score = saved_scores[i[0]]
-        # Find existing Score in the database (e.g. PGS000001)
-        else:
-            try:
-                current_score = Score.objects.get(id = i[0])
-            except Score.DoesNotExist:
-                print(f'Can\'t find the Score {i[0]} in the database')
-                exit(1)
+    try:
+        for x in current_study.parsed_performances:
+            i, performance = x
+            # Find Score from the Score spreadsheet
+            if i[0] in saved_scores:
+                current_score = saved_scores[i[0]]
+            # Find existing Score in the database (e.g. PGS000001)
+            else:
+                try:
+                    current_score = Score.objects.get(id__iexact=i[0])
+                except Score.DoesNotExist:
+                    failed_data_import.append(f'Performance Metric: can\'t find the Score {i[0]} in the database')
+                    continue
 
-        related_SampleSet = testset_to_sampleset[i[1]]
+            related_SampleSet = testset_to_sampleset[i[1]]
+            current_performance = performance.create_performance_model(publication=current_publication, score=current_score, sampleset=related_SampleSet)
+            for metric in Metric.objects.filter(performance__id=current_performance.id):
+                data_ids['metric'].append(metric.id)
+            data_ids['performance'].append(current_performance.num)
+    except Exception as e:
+        failed_data_import.append(f'Performance Metric: {e}')
 
-        current_performance = performance.create_performance_model(publication=current_publication, score=current_score, sampleset=related_SampleSet)
+
+    # Update publication curation status
+    current_publication.curation_status = 'C'
+    current_publication.save()
+
+    # Print import warnings 
+    if len(import_warnings):
+        print('>>>> Import warnings <<<<')
+        print('- '+'\n- '.join(import_warnings))
+        print('\n')
+
+    # Remove entries if the import failed
+    if len(failed_data_import):
+        print('*************************')
+        print('* ERROR: Import failed! *')
+        print('*************************')
+        print('- '+'\n- '.join(failed_data_import))
+        for obj in data_obj:
+            ids = data_ids[obj[0]]
+            col_condition = obj[1] + '__in'
+            print(f'DELETE {obj} : {ids}')
+            obj[2].objects.filter(**{ col_condition: ids}).delete()
+        print('\n')
 
 
     ## Scoring file ##
@@ -180,9 +246,6 @@ for study_name in study_names_list:
                     print('Error in {} ! bad columns: {}', loc_scorefile, badmaps)
             except:
                 print('ERROR reading scorefile: {}', loc_scorefile)
-
-    current_study.parsed_publication.curation_status = 'C'
-    current_study.parsed_publication.save()
 
 
 

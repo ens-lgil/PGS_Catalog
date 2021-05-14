@@ -39,13 +39,14 @@ class MetricData(GenericData):
             self.add_data('name', self.name)
             if self.name.lower().startswith('beta'):
                 self.add_data('name_short', 'β')
+            elif self.name.lower().startswith('odds ratio'):
+                self.add_data('name_short', 'OR')
 
-        if not 'name_short' in self.data:
+        if not 'name_short' in self.data and len(self.name) <= 10:
             self.add_data('name_short', self.name)
 
     
     def create_metric_model(self,performance):
-        print(self.data)
         self.model = Metric(**self.data)
         self.model.performance = performance
         self.model.save()
