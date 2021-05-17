@@ -12,17 +12,22 @@ data_obj = [
     ('metric', 'id', Metric),
     ('performance', 'num', Performance),
     ('sampleset', 'num', SampleSet),
-    ('sampleset', 'id', Sample)
+    ('sample', 'id', Sample)
 ]
 
 #Loop through studies to be included/loaded
-for study_name in study_names_list:
+for study_name,study_status in study_names_list:
     # Print current study name
     title = f'Study: {study_name}'
     border = '===='
     for i in range(len(title)):
        border += '=' 
     print(f'\n\n{border}\n# Study: {study_name} #\n{border}')
+    if study_status:
+        print(f'Curation status: {study_status}\n')
+
+    ## Parsing ##
+    print('==> Step 1/2: Parsing study data')
 
     current_study = CurationTemplate()
     current_study.file_loc  = f'{studies_dir}/{study_name}/{study_name}.xlsx'
@@ -30,7 +35,7 @@ for study_name in study_names_list:
     current_study.read_curation()
     # Extract data from the different spreadsheets
     current_study.extract_cohorts()
-    current_study.extract_publication()
+    current_study.extract_publication(study_status)
     current_study.extract_scores()
     current_study.extract_samples()
     current_study.extract_performances()
@@ -49,9 +54,9 @@ for study_name in study_names_list:
         print("\n/!\ Reported warning(s) /!\ \n")
         warning_report = current_study.report['warning']
         for spreadsheet in warning_report:
-            print("\t# Spreadsheet '"+spreadsheet+"'")
-            for msg in warning_report[spreadsheet]:
-                print('\t- '+msg)
+            print("  # Spreadsheet '"+spreadsheet+"'")
+            for msg in list(warning_report[spreadsheet]):
+                print('    - '+msg)
         print('\n')
 
     # List the reported error(s)
@@ -59,15 +64,18 @@ for study_name in study_names_list:
         print("\n### Reported error(s) ###\n")
         error_report = current_study.report['error']
         for spreadsheet in error_report:
-            print("\t# Spreadsheet '"+spreadsheet+"'")
-            for msg in error_report[spreadsheet]:
-                print('\t- '+msg)
+            print("  # Spreadsheet '"+spreadsheet+"'")
+            for msg in list(error_report[spreadsheet]):
+                print('    - '+msg)
         continue
-        print('\n')
     
     # Exit for debugging
     #continue
-    #exit(0)
+
+
+    ## Import ##
+    print('\n----------------------------------\n')
+    print('==> Step 2/2: Importing study data')
 
     saved_scores = {}
     existing_scores = []
@@ -75,7 +83,13 @@ for study_name in study_names_list:
 
 
     ## Publication ##
-    current_publication = current_study.parsed_publication.create_publication_model()
+    if current_study.parsed_publication.model:
+        current_publication = current_study.parsed_publication.model
+    else:
+        try:
+            current_publication = Publication.objects.get(**current_study.parsed_publication.data)
+        except Publication.DoesNotExist:
+            current_publication = current_study.parsed_publication.create_publication_model()
 
 
     ## Score ##
@@ -86,7 +100,7 @@ for study_name in study_names_list:
             import_warnings.append(f'Existing Score: {current_score.id} ({score_id})')
             existing_scores.append(current_score.id)
         except Score.DoesNotExist:
-            current_score = score_data.create_score_model()
+            current_score = score_data.create_score_model(current_publication)
             import_warnings.append(f'New Score: {current_score.id} ({score_id})')
         saved_scores[score_id] = current_score
         
@@ -168,7 +182,13 @@ for study_name in study_names_list:
                     continue
 
             related_SampleSet = testset_to_sampleset[i[1]]
-            current_performance = performance.create_performance_model(publication=current_publication, score=current_score, sampleset=related_SampleSet)
+
+            try:
+                current_performance = Performance.objects.get(**performance.data, publication=current_publication, score=current_score, sampleset=related_SampleSet)
+                import_warnings.append(f'Existing Performance metric: {current_performance.id}')
+            except Performance.DoesNotExist:
+                current_performance = performance.create_performance_model(publication=current_publication, score=current_score, sampleset=related_SampleSet)
+                import_warnings.append(f'New Performance metric: {current_performance.id}')
             for metric in Metric.objects.filter(performance__id=current_performance.id):
                 data_ids['metric'].append(metric.id)
             data_ids['performance'].append(current_performance.num)
@@ -176,31 +196,32 @@ for study_name in study_names_list:
         failed_data_import.append(f'Performance Metric: {e}')
 
 
-    # Update publication curation status
-    current_publication.curation_status = 'C'
-    current_publication.save()
+    # Set publication curation status
+    if not study_status:
+        current_publication.curation_status = default_curation_status
+        current_publication.save()
 
     # Print import warnings 
     if len(import_warnings):
-        print('>>>> Import warnings <<<<')
-        print('- '+'\n- '.join(import_warnings))
-        print('\n')
+        print('\n>>>> Import warnings <<<<')
+        print('  - '+'\n  - '.join(import_warnings))
 
     # Remove entries if the import failed
     if len(failed_data_import):
-        print('*************************')
-        print('* ERROR: Import failed! *')
-        print('*************************')
-        print('- '+'\n- '.join(failed_data_import))
+        print('\n**** ERROR: Import failed! ****')
+        print('  - '+'\n  - '.join(failed_data_import))
         for obj in data_obj:
             ids = data_ids[obj[0]]
-            col_condition = obj[1] + '__in'
-            print(f'DELETE {obj} : {ids}')
-            obj[2].objects.filter(**{ col_condition: ids}).delete()
-        print('\n')
+            if len(ids):
+                col_condition = obj[1] + '__in'
+                obj[2].objects.filter(**{ col_condition: ids}).delete()
+                print(f'  > DELETED {obj[0]} (column "{obj[1]}") : {ids}')
 
 
-    ## Scoring file ##
+
+    #==============#
+    # Scoring file #
+    #==============#
     # Read the PGS and re-format with header information
     if skip_scorefiles == False:
         for score_id, current_score in saved_scores.items():

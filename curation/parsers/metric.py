@@ -37,10 +37,10 @@ class MetricData(GenericData):
             self.name, self.value = self.value.split('=')
             self.name = self.name.strip()
             self.add_data('name', self.name)
-            if self.name.lower().startswith('beta'):
-                self.add_data('name_short', 'β')
-            elif self.name.lower().startswith('odds ratio'):
-                self.add_data('name_short', 'OR')
+            # if self.name.lower().startswith('beta'):
+            #     self.add_data('name_short', 'β')
+            # elif self.name.lower().startswith('odds ratio'):
+            #     self.add_data('name_short', 'OR')
 
         if not 'name_short' in self.data and len(self.name) <= 10:
             self.add_data('name_short', self.name)

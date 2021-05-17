@@ -1,7 +1,8 @@
 import pandas as pd
-import re
+import numpy as np
 import requests
-#from psycopg2.extras import NumericRange
+import re
+from datetime import date
 from catalog.models import *
 from curation.parsers.cohort import CohortData
 from curation.parsers.publication import PublicationData
@@ -78,25 +79,55 @@ class CurationTemplate():
             self.parsed_cohorts[cohort_id] = parsed_cohort
 
 
-    def extract_publication(self):
+    def extract_publication(self,curation_status=None):
         '''parse_pub takes a curation dictionary as input and extracts the relevant info from the sheet and EuropePMC'''
+        spreadsheet_name = self.spreadsheet_names['Publication']
         pinfo = self.table_publication.iloc[0]
-        c_doi = pinfo['doi'].strip()
+        c_doi = pinfo['doi']
+        if type(c_doi) == str:
+            c_doi = c_doi.strip()
         c_PMID = pinfo[0]
         publication = None
-        # Check if this is already in the DB
-        try:
-            publication = Publication.objects.get(doi__iexact=c_doi)
-            c_doi = publication.doi
-            c_PMID = publication.PMID
-            print("Existing publication found in the database\n")
-        except Publication.DoesNotExist:
-            print("New publication\n")
+        new_publication = True
+        # If there is a DOI
+        if type(c_doi) == str:
+            # Check if this is already in the DB
+            try:
+                publication = Publication.objects.get(doi__iexact=c_doi)
+                c_doi = publication.doi
+                c_PMID = publication.PMID
+                new_publication = False
+                print("  > Existing publication found in the database\n")
+            except Publication.DoesNotExist:
+                print(f'  > New publication ({c_doi}) for the Catalog\n')
 
-        parsed_publication = PublicationData(self.table_publication,c_doi,c_PMID,publication)
+            parsed_publication = PublicationData(self.table_publication,c_doi,c_PMID,publication)
+            
+            # Fetch the publication information from EuropePMC
+            if not publication:
+                parsed_publication.get_publication_information()
         
-        if not publication:
-            parsed_publication.get_publication_information()
+        # Create the object from the Spreadsheet only
+        else:
+            parsed_publication = PublicationData(self.table_publication)
+            current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
+            previous_field = None
+            for col, val in pinfo.iteritems():
+                if val and col in current_schema.index:
+                    field = current_schema.loc[col][1]
+                    if type(val) == str or type(val) == int:
+                        # Add first author initials
+                        if previous_field == 'firstauthor':
+                            parsed_publication.data['firstauthor'] = val+' '+parsed_publication.data['firstauthor']
+                        else:
+                            parsed_publication.add_data(field, val)
+                    previous_field = field    
+            if 'date_publication' not in parsed_publication.data:
+                parsed_publication.add_data('date_publication',date.today())
+
+        if new_publication == True:
+            parsed_publication.add_curation_notes()
+            parsed_publication.add_curation_status(curation_status)
 
         self.parsed_publication = parsed_publication
 
@@ -106,7 +137,7 @@ class CurationTemplate():
         spreadsheet_name = self.spreadsheet_names[model]
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
         for score_name, score_info in self.table_scores.iterrows():
-            parsed_score = ScoreData(score_name,self.parsed_publication.doi)
+            parsed_score = ScoreData(score_name)
             for col, val in score_info.iteritems():
                 if pd.isnull(val) is False:
                     # Map to schema
@@ -169,7 +200,7 @@ class CurationTemplate():
         spreadsheet_name = self.spreadsheet_names['Performance']
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
         for p_key, performance_info in self.table_performances.iterrows():
-            parsed_performance = PerformanceData(self.parsed_publication.doi)
+            parsed_performance = PerformanceData()
             for col, val in performance_info.iteritems():
                 if pd.isnull(val) == False:
                     m = None
@@ -181,15 +212,16 @@ class CurationTemplate():
                     if m is not None:
                         if f.startswith('metric'):
                             try:
-                                parsed_performance.add_metric(f, val)
+                                parsed_performance.add_metric(f, val, spreadsheet_name)
                             except:
                                 if ';' in str(val):
                                     for x in val.split(';'):
-                                        parsed_performance.add_metric(f, x)
+                                        parsed_performance.add_metric(f, x, spreadsheet_name)
                                 else:
                                     self.report_error(spreadsheet_name, f'Error parsing: {f} {val}')
                         else:
                             parsed_performance.add_data(f, val)
+            self.update_report(parsed_performance)
             self.parsed_performances.append((p_key,parsed_performance))
 
 
@@ -214,8 +246,8 @@ class CurationTemplate():
                                     self.report_error(spreadsheet_name, f'Error: the sample cohort "{cohort}" cannot be found in the Cohort Refr. spreadsheet')
                             val = cohorts_list
                         elif f in ['sample_age', 'followup_time']:
-                            val = sample_remapped.str2demographic(f, val)
-                            
+                            val = sample_remapped.str2demographic(f, val, spreadsheet_name)
+                            self.update_report(val)
                         sample_remapped.add_data(f,val)
         return sample_remapped
 
@@ -224,20 +256,27 @@ class CurationTemplate():
     #  Error/warning reports methods  #
     #=================================#
 
+    def add_report(self, type, spreadsheet_name, msg):
+        """
+        Store the reported error/warning.
+        - type: type of report (e.g. error, warning)
+        - spreadsheet_name: name of the spreadsheet (e.g. Publication Information)
+        - msg: error message
+        """
+        if type in ['error', 'warning']:
+            if not spreadsheet_name in self.report[type]:
+                self.report[type][spreadsheet_name] = set()
+            self.report[type][spreadsheet_name].add(msg)
+        else:
+            print('ERROR: Can\'t find the report category "{type}"!')
+
     def report_error(self, spreadsheet_name, msg):
         """
         Store the reported error.
         - spreadsheet_name: name of the spreadsheet (e.g. Publication Information)
         - msg: error message
         """
-        if not spreadsheet_name in self.report['error']:
-            self.report['error'][spreadsheet_name] = {}
-        # Avoid duplicated message
-        if not msg in self.report['error'][spreadsheet_name]:
-            self.report['error'][spreadsheet_name][msg] = []
-        # # Avoid duplicated line reports
-        # if not row_id in self.report['error'][spreadsheet_name][msg]:
-        #     self.report['error'][spreadsheet_name][msg].append(row_id)
+        self.add_report('error', spreadsheet_name, msg)
 
     def report_warning(self, spreadsheet_name, msg):
         """
@@ -245,11 +284,13 @@ class CurationTemplate():
         - spreadsheet_name: name of the spreadsheet (e.g. Publication Information)
         - msg: warning message
         """
-        if not spreadsheet_name in self.report['warning']:
-            self.report['warning'][spreadsheet_name] = {}
-        # Avoid duplicated message
-        if not msg in self.report['warning'][spreadsheet_name]:
-            self.report['warning'][spreadsheet_name][msg] = []
+        self.add_report('warning', spreadsheet_name, msg)
+    
+    def update_report(self, obj):
+        for type, reports in obj.report.items():
+            for sp_name, messages in obj.report[type].items():
+                for message in list(messages):
+                    self.add_report(type, sp_name, message)
 
 
 

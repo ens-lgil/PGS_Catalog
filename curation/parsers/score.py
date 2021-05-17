@@ -1,23 +1,20 @@
 from curation.parsers.generic import GenericData
-from catalog.models import Score, Publication, EFOTrait
+from catalog.models import Score, EFOTrait
 
 
 class ScoreData(GenericData):
 
-    def __init__(self,score_name,publication_doi):
+    def __init__(self,score_name):
         GenericData.__init__(self)
         self.name = score_name
-        self.data = {'name': score_name, 'publication': publication_doi}
+        self.data = {'name': score_name}
 
 
-    def create_score_model(self):
-
+    def create_score_model(self,publication):
         self.model = Score()
         self.model.set_score_ids(self.next_id_number(Score))
         for field, val in self.data.items():
-            if field == 'publication':
-                self.model.publication = Publication.objects.get(doi__iexact=val)
-            elif field == 'trait_efo':
+            if field == 'trait_efo':
                 efo_traits = []
                 for trait_id in val:
                     trait_id = trait_id.replace(':','_')
@@ -30,6 +27,8 @@ class ScoreData(GenericData):
                     efo_traits.append(efo)
             else:
                 setattr(self.model, field, val)
+        # Associate a Publication
+        self.model.publication = publication
         self.model.save()
 
         for efo in efo_traits:

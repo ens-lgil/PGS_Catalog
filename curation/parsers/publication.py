@@ -5,7 +5,7 @@ from catalog.models import Publication
 
 class PublicationData(GenericData):
 
-    def __init__(self,table_publication,doi,PMID=None,publication=None):
+    def __init__(self,table_publication,doi=None,PMID=None,publication=None):
         GenericData.__init__(self)
         self.table_publication = table_publication
         self.doi = doi
@@ -39,11 +39,22 @@ class PublicationData(GenericData):
                 if 'pmid' in result:
                     data_result['PMID'] = result['pmid']
 
-            if self.table_publication.shape[0] > 1:
-                data_result['curation_notes'] = self.table_publication.iloc[1,0]
+            self.add_curation_notes()
            
             for field, value in data_result.items():
                 self.add_data(field,value)
+        else:
+            print(f'Can\'t find a result on EuropePMC for the publication: {self.doi}')
+
+
+    def add_curation_notes(self):
+        if self.table_publication.shape[0] > 1:
+            self.add_data('curation_notes',self.table_publication.iloc[1,0])
+
+
+    def add_curation_status(self,curation_status):
+        if curation_status:
+            self.add_data('curation_status',curation_status)
 
 
     def rest_api_call_from_epmc(self,query):

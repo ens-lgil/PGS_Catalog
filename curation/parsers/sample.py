@@ -15,11 +15,11 @@ class SampleData(GenericData):
     #     self.add_data(field, demographic_val)
 
 
-    def str2demographic(self, field, val):
+    def str2demographic(self, field, val, spreadsheet_name):
         unit_regex = "([-+]?\d*\.\d+|\d+) ([a-zA-Z]+)"
         current_demographic = DemographicData(field,val)
         if type(val) == float:
-            current_demographic.add('estimate', val)
+            current_demographic.add_data('estimate', val)
         else:
             # Split by ; in case of multiple sub-fields
             l = val.split(';')
@@ -32,7 +32,7 @@ class SampleData(GenericData):
                     prefix_msg = f'Wrong format in the column \'{field}\''
                     if len(values) > 2:
                         prefix_msg = f'Too many values in the column \'{field}\''
-                    self.report_error(spread_sheet_name, f'{prefix_msg}. Format expected: \'name=value_or_interval unit\' (e.g. median=5.2 years).')
+                    self.report_error(spreadsheet_name, f'{prefix_msg}. Format expected: \'name=value_or_interval unit\' (e.g. median=5.2 years).')
                     continue
 
                 # Check if it contains a range item
@@ -42,7 +42,7 @@ class SampleData(GenericData):
                         range_match = tuple(map(float, matches[0].split(' - ')))
                         current_demographic.add_data('range', NumericRange(lower=range_match[0], upper=range_match[1], bounds='[]'))
                     else:
-                        self.report_error(spread_sheet_name, f'Data Range for the value "{value}" is not in the expected format (e.g. \'1.00 [0.80 - 1.20]\')')
+                        self.report_error(spreadsheet_name, f'Data Range for the value "{value}" is not in the expected format (e.g. \'1.00 [0.80 - 1.20]\')')
                     current_demographic.add_data('range_type', name)
                 else:
                     if name.lower().startswith('m'):
@@ -51,21 +51,21 @@ class SampleData(GenericData):
                         if with_units:
                             items = with_units.groups()
                             estimate = items[0]
-                            current_demographic['unit'] = items[1]
+                            current_demographic.add_data('unit', items[1])
                         else:
                             estimate = value
                         current_demographic.add_data('estimate', estimate)
 
                     elif name.lower().startswith('s'):
-                        current_demographic['variability_type'] = name
+                        current_demographic.add_data('variability_type', name)
                         with_units = re.match(unit_regex, value, re.I)
                         if with_units:
                             items = with_units.groups()
                             variability = items[0]
-                            current_demographic['unit'] = items[1]
+                            current_demographic.add_data('unit', items[1])
                         else:
                             variability = value
-                        current_demographic['variability'] = variability
+                        current_demographic.add_data('variability', variability)
         #print(val, current_demographic)
         return current_demographic
 
@@ -80,6 +80,7 @@ class SampleData(GenericData):
             return True
         else: 
             return False
+
 
     def create_sample_model(self):
         self.model = Sample()

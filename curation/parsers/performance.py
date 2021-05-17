@@ -6,17 +6,16 @@ from catalog.models import Performance
 
 class PerformanceData(GenericData):
 
-    def __init__(self,publication_doi):
+    def __init__(self,):
         GenericData.__init__(self)
-        self.data = {'publication': publication_doi, 'metrics': []}
+        self.metrics = []
+
+    def add_metric(self, field, val, spreadsheet_name):
+        metric = self.str2metric(field, val, spreadsheet_name)
+        self.metrics.append(metric)
 
 
-    def add_metric(self, field, val):
-        metric = self.str2metric(field, val)
-        self.data['metrics'].append(metric)
-
-
-    def str2metric(self, field, val):
+    def str2metric(self, field, val, spreadsheet_name):
         _, ftype, fname = field.split('_')
 
         #print(f'ftype: {ftype} | fname: {fname} | _: {_}')
@@ -36,7 +35,7 @@ class PerformanceData(GenericData):
                 # Check extra character/data after the parenthesis
                 extra = val.strip().split(')')
                 if len(extra) > 1:
-                    print(f'{spread_sheet_name}: Extra information detected after the parenthesis for: {val}')
+                    self.report_error(spreadsheet_name, f'Extra information detected after the parenthesis for: {val}')
                 try:
                     current_metric.add_data('estimate', float(val))
                 except:
@@ -53,10 +52,9 @@ class PerformanceData(GenericData):
                     if len(extra) > 1:
                         # Check if second part has content
                         if (extra[1] != ''):
-                            print(f'{spread_sheet_name}: Extra information detected after the interval for: "{val}"')
+                            self.report_error(spreadsheet_name, f'Extra information detected after the interval for: "{val}"')
                 except:
-                    #self.report_error(spread_sheet_name,row_id,f'Can\'t extract the estimate value from ({val})')
-                    print(f'{spread_sheet_name}: Can\'t extract the estimate value from ({val})')
+                    self.report_error(spreadsheet_name, f'Can\'t extract the estimate value from ({val})')
                     current_metric.add_data('estimate', val)
                 
                 matches_square = self.insquarebrackets.findall(val)
@@ -69,11 +67,9 @@ class PerformanceData(GenericData):
                         estimate = float(current_metric.data['estimate'])
                         # Check that the estimate is within the interval
                         if not min_ci <= estimate <= max_ci:
-                            #self.report_error(spread_sheet_name,f'The estimate value ({estimate}) is not within its the confidence interval [{min_ci} - {max_ci}]')
-                            print(f'{spread_sheet_name}: The estimate value ({estimate}) is not within its the confidence interval [{min_ci} - {max_ci}]')
+                            self.report_error(spreadsheet_name, f'The estimate value ({estimate}) is not within its the confidence interval [{min_ci} - {max_ci}]')
                     else:
-                        #self.report_error(spread_sheet_name,f'Confidence interval "{val}" is not in the expected format (e.g. "1.00 [0.80 - 1.20]")')
-                        print(f'{spread_sheet_name}: Confidence interval "{val}" is not in the expected format (e.g. "1.00 [0.80 - 1.20]")')
+                        self.report_error(spreadsheet_name, f'Confidence interval "{val}" is not in the expected format (e.g. "1.00 [0.80 - 1.20]")')
             # Update the value
             current_metric.value = val
 
@@ -84,12 +80,12 @@ class PerformanceData(GenericData):
         self.model = Performance(publication=publication, score=score, sampleset=sampleset)
         self.model.set_performance_id(self.next_id_number(Performance))
         for field, val in self.data.items():
-            if field not in ['publication','score','sampleset','metrics']:
+            if field not in ['publication','score','sampleset']:
                 setattr(self.model, field, val)
         self.model.save()
 
         # Create associated Metric objects
-        for metric in self.data['metrics']:
+        for metric in self.metrics:
             metric.create_metric_model(self.model)
 
         return self.model
