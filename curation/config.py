@@ -5,15 +5,18 @@ scoring_schema = './curation/templates/ScoringFileSchema.xlsx'
 
 studies_dir = '/Users/lg10/Workspace/datafiles/SourceFiles/test_DBSourceFiles_May142021/'
 
+scoring_dir = '/Users/lg10/Workspace/datafiles/SourceFiles/ScoringFiles/'
+
 study_names_list = [
-    #('Wang2020', None),
-    #('Johnson2015', None),
-    ('Darst2021', None),
-    ('Dron2021', None),
-    ('Fahed2020_Penetrance', None),
-    ('Tam2021_PreSub','E')
+    #{ 'name': 'Wang2020' },
+    #{ 'name': 'Johnson2015' },
+    { 'name': 'Darst2021' },
+    { 'name': 'Dron2021' , 'license': 'Not the default license'},
+    #('Fahed2020_Penetrance', None),
+    { 'name': 'Fahed2020_Test' },
+    { 'name': 'Tam2021_PreSub', 'status': 'E' }
 ]
 
 default_curation_status = 'IP'
 
-skip_scorefiles = True #False
+skip_scorefiles = False

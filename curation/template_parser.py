@@ -132,12 +132,14 @@ class CurationTemplate():
         self.parsed_publication = parsed_publication
 
 
-    def extract_scores(self):
+    def extract_scores(self, license=None):
         model = 'Score'
         spreadsheet_name = self.spreadsheet_names[model]
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
         for score_name, score_info in self.table_scores.iterrows():
             parsed_score = ScoreData(score_name)
+            if license:
+                parsed_score.add_data('license', license)
             for col, val in score_info.iteritems():
                 if pd.isnull(val) is False:
                     # Map to schema

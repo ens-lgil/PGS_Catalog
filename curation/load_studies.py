@@ -1,33 +1,94 @@
 import os, gzip
+import pandas as pd
 import numpy as np
 from curation.template_parser import *
 from curation.config import *
 from catalog.models import Score
 
 
+
+def global_report(study_names_list, failed_studies):
+    ''' Global reports of the studies import '''
+    studies_count = len(study_names_list)
+    import_success = studies_count - len(failed_studies.keys())
+    print('\n=======================================================\n')
+    print('#------------------------#')
+    print('# End of script - Report #')
+    print('#------------------------#')
+    print(f'Successful imports: {import_success}/{studies_count}')
+    if failed_studies:
+        print(f'Failed imports:')
+        for study,error_type in failed_studies.items():
+            print(f'- {study}: {error_type}')
+    print('\n')
+
+
+def create_scoringfileheader(cscore, score_model=Score):
+    '''Function to extract score & publication information for the PGS Catalog Scoring File commented header'''
+
+    pub = cscore.publication
+    lines = [
+        '### PGS CATALOG SCORING FILE - see www.pgscatalog.org/downloads/#dl_ftp for additional information',
+        '## POLYGENIC SCORE (PGS) INFORMATION',
+        f'# PGS ID = {cscore.id}',
+        f'# PGS Name = {cscore.name}',
+        f'# Reported Trait = {cscore.trait_reported}',
+        f'# Original Genome Build = {cscore.variants_genomebuild}',
+        f'# Number of Variants = {cscore.variants_number}',
+        '## SOURCE INFORMATION',
+        f'# PGP ID = {pub.id}',
+        f'# Citation = {pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}'
+    ]
+
+    try:
+        if cscore.license != score_model._meta.get_field('license')._get_default():
+            ltext = cscore.license.replace('\n', ' ')     # Make sure there are no new-lines that would screw up the commenting
+            lines.append('# LICENSE = {}'.format(ltext))  # Append to header
+    except Exception as e:
+        print(f'Exception: {e}')
+    return lines
+
+
 curation2schema = pd.read_excel(template_schema, index_col=0)
 curation2schema_scoring = pd.read_excel(scoring_schema, index_col=0)
 
 data_obj = [
-    ('metric', 'id', Metric),
     ('performance', 'num', Performance),
     ('sampleset', 'num', SampleSet),
     ('sample', 'id', Sample)
 ]
 
+if skip_scorefiles == False:
+    steps_count = 3 
+else:
+    steps_count = 2
+
+failed_studies = {}
+
 #Loop through studies to be included/loaded
-for study_name,study_status in study_names_list:
+for study_data in study_names_list:
+
+    study_name = study_data['name']
+
+    study_license = None
+    if 'license' in study_data:
+        study_license = study_data['license']
+
+    study_status = None
+    if 'status' in study_data:
+        study_status = study_data['status']
+
     # Print current study name
     title = f'Study: {study_name}'
     border = '===='
     for i in range(len(title)):
-       border += '=' 
+        border += '=' 
     print(f'\n\n{border}\n# Study: {study_name} #\n{border}')
     if study_status:
         print(f'Curation status: {study_status}\n')
 
     ## Parsing ##
-    print('==> Step 1/2: Parsing study data')
+    print(f'==> Step 1/{steps_count}: Parsing study data')
 
     current_study = CurationTemplate()
     current_study.file_loc  = f'{studies_dir}/{study_name}/{study_name}.xlsx'
@@ -36,7 +97,7 @@ for study_name,study_status in study_names_list:
     # Extract data from the different spreadsheets
     current_study.extract_cohorts()
     current_study.extract_publication(study_status)
-    current_study.extract_scores()
+    current_study.extract_scores(study_license)
     current_study.extract_samples()
     current_study.extract_performances()
 
@@ -67,6 +128,7 @@ for study_name,study_status in study_names_list:
             print("  # Spreadsheet '"+spreadsheet+"'")
             for msg in list(error_report[spreadsheet]):
                 print('    - '+msg)
+        failed_studies[study_name] = 'parsing error'
         continue
     
     # Exit for debugging
@@ -75,7 +137,7 @@ for study_name,study_status in study_names_list:
 
     ## Import ##
     print('\n----------------------------------\n')
-    print('==> Step 2/2: Importing study data')
+    print(f'==> Step 2/{steps_count}: Importing study data')
 
     saved_scores = {}
     existing_scores = []
@@ -103,7 +165,7 @@ for study_name,study_status in study_names_list:
             current_score = score_data.create_score_model(current_publication)
             import_warnings.append(f'New Score: {current_score.id} ({score_id})')
         saved_scores[score_id] = current_score
-        
+
 
     ## Sample ##
     # GWAS and Dev/Training Sample and attach them to Scores
@@ -136,6 +198,43 @@ for study_name,study_status in study_names_list:
         failed_data_import.append(f'GWAS & Dev/Testing Sample: {e}')
 
 
+    # Check if the Performance Metrics already exist in the DB
+    # If they exist, we delete them (including the associated SampleSet and Samples)
+    try:
+        data2delete = {'performance': set(), 'sampleset': set(), 'sample': set()}
+        for x in current_study.parsed_performances:
+            i, performance = x
+            # Find Score from the Score spreadsheet
+            if i[0] in saved_scores:
+                current_score = saved_scores[i[0]]
+            # Find existing Score in the database (e.g. PGS000001)
+            else:
+                try:
+                    current_score = Score.objects.get(id__iexact=i[0])
+                except Score.DoesNotExist:
+                    failed_data_import.append(f'Performance Metric: can\'t find the Score {i[0]} in the database')
+                    continue
+            performances = Performance.objects.filter(publication=current_publication, score=current_score)
+            
+            for performance in performances:
+                sampleset = performance.sampleset
+                samples = sampleset.samples.all()
+                # Store the objects to delete
+                data2delete['performance'].add(performance)
+                data2delete['sampleset'].add(sampleset)
+                for sample in samples:
+                    data2delete['sample'].add(sample)
+        # Delete stored objects
+        for data_type in ('performance','sampleset','sample'):
+            data_list = list(data2delete[data_type])
+            import_warnings.append(f'DELETE existing {data_type}(s) [ids]: {", ".join([str(x.id) for x in data_list])}')
+            for entry in data_list:
+                entry.delete()
+
+    except Exception as e:
+        failed_data_import.append(f'Check existing Performance Metric: {e}')
+
+
     # Test (Evaluation) Samples and Sample Sets
     testset_to_sampleset = {}
     try:
@@ -145,8 +244,8 @@ for study_name,study_status in study_names_list:
             samples_for_sampleset = []
 
             # Create samples
-            for sample_desc in sample_list:
-                current_sample = sample_desc.create_sample_model()
+            for sample_test in sample_list:
+                current_sample = sample_test.create_sample_model()
                 data_ids['sample'].append(current_sample.id)
                 samples_for_sampleset.append(current_sample)
                 
@@ -183,14 +282,9 @@ for study_name,study_status in study_names_list:
 
             related_SampleSet = testset_to_sampleset[i[1]]
 
-            try:
-                current_performance = Performance.objects.get(**performance.data, publication=current_publication, score=current_score, sampleset=related_SampleSet)
-                import_warnings.append(f'Existing Performance metric: {current_performance.id}')
-            except Performance.DoesNotExist:
-                current_performance = performance.create_performance_model(publication=current_publication, score=current_score, sampleset=related_SampleSet)
-                import_warnings.append(f'New Performance metric: {current_performance.id}')
-            for metric in Metric.objects.filter(performance__id=current_performance.id):
-                data_ids['metric'].append(metric.id)
+            current_performance = performance.create_performance_model(publication=current_publication, score=current_score, sampleset=related_SampleSet)
+            import_warnings.append(f'New Performance Metric: {current_performance.id} & new Sample Set: {current_performance.sampleset.id}')
+
             data_ids['performance'].append(current_performance.num)
     except Exception as e:
         failed_data_import.append(f'Performance Metric: {e}')
@@ -203,11 +297,12 @@ for study_name,study_status in study_names_list:
 
     # Print import warnings 
     if len(import_warnings):
-        print('\n>>>> Import warnings <<<<')
+        print('\n>>>> Import information <<<<')
         print('  - '+'\n  - '.join(import_warnings))
 
     # Remove entries if the import failed
     if len(failed_data_import):
+        failed_studies[study_name] = 'import error'
         print('\n**** ERROR: Import failed! ****')
         print('  - '+'\n  - '.join(failed_data_import))
         for obj in data_obj:
@@ -216,7 +311,7 @@ for study_name,study_status in study_names_list:
                 col_condition = obj[1] + '__in'
                 obj[2].objects.filter(**{ col_condition: ids}).delete()
                 print(f'  > DELETED {obj[0]} (column "{obj[1]}") : {ids}')
-
+        continue
 
 
     #==============#
@@ -224,16 +319,28 @@ for study_name,study_status in study_names_list:
     #==============#
     # Read the PGS and re-format with header information
     if skip_scorefiles == False:
+        print('\n----------------------------------\n')
+        print(f'==> Step 3/{steps_count}: Add header to the Scoring file(s)')
         for score_id, current_score in saved_scores.items():
             try:
+                print('Step 0')
                 loc_scorefile = f'{studies_dir}/{study_name}/raw_scores/{score_id}.txt'
-                #print('reading scorefile: {}', loc_scorefile)
                 df_scoring = pd.read_table(loc_scorefile, dtype='str', engine = 'python')
+                column_check = True
+                print('Step 0a')
+                for x in df_scoring.columns:
+                    if not x in curation2schema_scoring.index:
+                        column_check = False
+                        print(f'{x} not in index')
+                        break
                 # Check that columns are in the schema
-                column_check = [x in curation2schema_scoring.index for x in df_scoring.columns]
-                if all(column_check):
+                #column_check = [x in curation2schema_scoring.index for x in df_scoring.columns]
+                #if all(column_check):
+                print('Step 0b')
+                if column_check == True:
+                    print('Step 1a')
                     header = create_scoringfileheader(current_score)
-
+                    print('Step 1b')
                     #Check if weight_type in columns
                     if 'weight_type' in df_scoring.columns:
                         if all(df_scoring['weight_type']):
@@ -247,45 +354,30 @@ for study_name,study_status in study_names_list:
                         elif 'HR' in df_scoring.columns:
                             df_scoring['effect_weight'] = np.log(pd.to_numeric(df_scoring['HR']))
                             df_scoring['weight_type'] = 'log(HR)'
-
+                    print('Step 2')
                     # Reorganize columns according to schema
                     corder = []
                     for x in curation2schema_scoring.index:
                         if x in df_scoring.columns:
                             corder.append(x)
+                    print('Step 3')
                     df_scoring = df_scoring[corder]
-
-                    with gzip.open('ScoringFiles/{}.txt.gz'.format(current_score.id), 'w') as outf:
+                    with gzip.open(f'{scoring_dir}/{current_score.id}.txt.gz', 'w') as outf:
                         outf.write('\n'.join(header).encode('utf-8'))
                         outf.write('\n'.encode('utf-8'))
                         outf.write(df_scoring.to_csv(sep='\t', index=False).encode('utf-8'))
+                    print('Step 4')
                 else:
                     badmaps = []
                     for i, v in enumerate(column_check):
                         if v == False:
                             badmaps.append(df_scoring.columns[i])
-                    print('Error in {} ! bad columns: {}', loc_scorefile, badmaps)
+                    failed_studies[study_name] = 'scoring file error'
+                    print(f'ERROR in {loc_scorefile} ! bad columns: {badmaps}')
             except:
-                print('ERROR reading scorefile: {}', loc_scorefile)
+                failed_studies[study_name] = 'scoring file error'
+                print(f'ERROR reading scorefile: {loc_scorefile}')
 
+# Global reports
+global_report(study_names_list, failed_studies)
 
-
-def create_scoringfileheader(cscore):
-    """Function to extract score & publication information for the PGS Catalog Scoring File commented header"""
-    pub = cscore.publication
-    lines = [
-        '### PGS CATALOG SCORING FILE - see www.pgscatalog.org/downloads/#dl_ftp for additional information',
-        '## POLYGENIC SCORE (PGS) INFORMATION',
-        '# PGS ID = {}'.format(cscore.id),
-        '# PGS Name = {}'.format(cscore.name),
-        '# Reported Trait = {}'.format(cscore.trait_reported),
-        '# Original Genome Build = {}'.format(cscore.variants_genomebuild),
-        '# Number of Variants = {}'.format(cscore.variants_number),
-        '## SOURCE INFORMATION',
-        '# PGP ID = {}'.format(pub.id),
-        '# Citation = {} et al. {} ({}). doi:{}'.format(pub.firstauthor, pub.journal, pub.date_publication.strftime('%Y'), pub.doi)
-    ]
-    if cscore.license != Score._meta.get_field('license')._get_default():
-        ltext = cscore.license.replace('\n', ' ')     # Make sure there are no new-lines that would screw up the commenting
-        lines.append('# LICENSE = {}'.format(ltext))  # Append to header
-    return lines

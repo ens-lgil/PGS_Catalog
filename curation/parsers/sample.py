@@ -69,7 +69,6 @@ class SampleData(GenericData):
         #print(val, current_demographic)
         return current_demographic
 
-
     def sample_model_exist(self):
         sample_data = {}
         for field, val in self.data.items():
@@ -80,6 +79,63 @@ class SampleData(GenericData):
             return True
         else: 
             return False
+
+    # def sample_model_exist(self):
+    #     sample_data = {}
+    #     for field, val in self.data.items():
+    #         if field not in ['cohorts','sample_age', 'followup_time']:
+    #             sample_data[field] = val
+    #     samples = Sample.objects.filter(**sample_data)
+    #     matching_sample = None
+    #     print(f'# Check sample_model_exist')
+    #     if len(samples) != 0:
+    #         sample_count = 0
+    #         for sample in samples:
+    #             sample_count += 1
+    #             print(f'+ Sample {sample_count}')
+    #             # Check cohorts
+    #             if self.data['cohorts']:
+    #                 sample_cohorts = [x.name_short for x in sample.cohorts]
+    #                 print(f'  > Sample cohorts {sample_cohorts}')
+    #                 cohort_match = 0
+    #                 for cohort in self.data['cohorts']:
+    #                     print(f'  > SampleData: {cohort}')
+    #                     if cohort.name in sample_cohorts:
+    #                         cohort_match += 1
+    #                 if cohort_match != len(self.data['cohorts']):
+    #                     continue
+    #                 print("Cohorts match!")
+    #             # Check sample_age
+    #             if self.data['sample_age']:
+    #                 print(f'  > Check sample_age')
+    #                 if sample.sample_age:
+    #                     sample_data_age = self.data['sample_age']
+    #                     identical_sample_age = True
+    #                     for key, val in sample_data_age.items():
+    #                         if sample_data_age[key] != sample.sample_age[key]:
+    #                             identical_sample_age = False
+    #                             break
+    #                     if not identical_sample_age:
+    #                         continue
+    #                 else:
+    #                     continue
+    #             # Check followup_time
+    #             if self.data['followup_time']:
+    #                 print(f'  > Check followup_time')
+    #                 if sample.followup_time:
+    #                     sample_data_time = self.data['followup_time']
+    #                     identical_sample_time = True
+    #                     for key, val in sample_data_time.items():
+    #                         if sample_data_time[key] != sample.followup_time[key]:
+    #                             identical_sample_time = False
+    #                             break
+    #                     if not identical_sample_time:
+    #                         continue
+    #                 else:
+    #                     continue
+    #             print(f'Sample for evaluation already exist: {self.data}')
+    #             matching_sample = sample
+    #     return matching_sample
 
 
     def create_sample_model(self):
