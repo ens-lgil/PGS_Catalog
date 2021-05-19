@@ -1,5 +1,6 @@
 import re
 from psycopg2.extras import NumericRange
+from django.db import IntegrityError, transaction
 from curation.parsers.generic import GenericData
 from curation.parsers.metric import MetricData
 from catalog.models import Performance
@@ -76,16 +77,21 @@ class PerformanceData(GenericData):
         return current_metric
 
 
+    @transaction.atomic
     def create_performance_model(self, publication, score, sampleset):
-        self.model = Performance(publication=publication, score=score, sampleset=sampleset)
-        self.model.set_performance_id(self.next_id_number(Performance))
-        for field, val in self.data.items():
-            if field not in ['publication','score','sampleset']:
-                setattr(self.model, field, val)
-        self.model.save()
+        try:
+            with transaction.atomic():
+                self.model = Performance(publication=publication, score=score, sampleset=sampleset)
+                self.model.set_performance_id(self.next_id_number(Performance))
+                for field, val in self.data.items():
+                    if field not in ['publication','score','sampleset']:
+                        setattr(self.model, field, val)
+                self.model.save()
 
-        # Create associated Metric objects
-        for metric in self.metrics:
-            metric.create_metric_model(self.model)
+                # Create associated Metric objects
+                for metric in self.metrics:
+                    metric.create_metric_model(self.model)
+        except IntegrityError as e:
+            print('Error with the creation of the Performance(s) and/or the Metric(s)')
 
         return self.model

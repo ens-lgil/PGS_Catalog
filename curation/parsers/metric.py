@@ -1,3 +1,4 @@
+from django.db import IntegrityError, transaction
 from curation.parsers.generic import GenericData
 from catalog.models import Metric
 
@@ -45,9 +46,15 @@ class MetricData(GenericData):
         if not 'name_short' in self.data and len(self.name) <= 10:
             self.add_data('name_short', self.name)
 
-    
+
+    @transaction.atomic
     def create_metric_model(self,performance):
-        self.model = Metric(**self.data)
-        self.model.performance = performance
-        self.model.save()
+        try:
+            with transaction.atomic():
+                self.model = Metric(**self.data)
+                self.model.performance = performance
+                self.model.save()
+        except IntegrityError as e:
+            print('Error with the creation of the Metric(s)')
+
         return self.model
