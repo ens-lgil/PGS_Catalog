@@ -13,6 +13,12 @@ class ScoreData(GenericData):
 
     @transaction.atomic
     def create_score_model(self,publication):
+        '''
+        Create an instance of the Score model.
+        It also create instance(s) of the EFOTrait model if needed.
+        - publication: instance of the Publication model
+        Return type: Score model
+        '''
         try:
             with transaction.atomic():
                 self.model = Score()
@@ -39,5 +45,6 @@ class ScoreData(GenericData):
                     self.model.trait_efo.add(efo)
                 self.model.save()
         except IntegrityError as e:
+            self.model = None
             print('Error with the creation of the Score(s) and/or the Trait(s)')
         return self.model

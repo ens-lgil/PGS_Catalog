@@ -28,6 +28,7 @@ class MetricData(GenericData):
 
 
     def set_names(self):
+        ''' Set the metric names (short and long). '''
         if self.name in self.name_common:
             self.add_data('name', self.name_common[self.name][0])
             self.add_data('name_short', self.name_common[self.name][1])
@@ -38,10 +39,6 @@ class MetricData(GenericData):
             self.name, self.value = self.value.split('=')
             self.name = self.name.strip()
             self.add_data('name', self.name)
-            # if self.name.lower().startswith('beta'):
-            #     self.add_data('name_short', 'β')
-            # elif self.name.lower().startswith('odds ratio'):
-            #     self.add_data('name_short', 'OR')
 
         if not 'name_short' in self.data and len(self.name) <= 10:
             self.add_data('name_short', self.name)
@@ -49,12 +46,16 @@ class MetricData(GenericData):
 
     @transaction.atomic
     def create_metric_model(self,performance):
+        '''
+        Create an instance of the Metric model.
+        Return type: Metric model
+        '''
         try:
             with transaction.atomic():
                 self.model = Metric(**self.data)
                 self.model.performance = performance
                 self.model.save()
         except IntegrityError as e:
-            print('Error with the creation of the Metric(s)')
+            print('Error with the creation of the Metric')
 
         return self.model

@@ -12,11 +12,24 @@ class PerformanceData(GenericData):
         self.metrics = []
 
     def add_metric(self, field, val, spreadsheet_name):
+        '''
+        Method encapsulating the method str2metric and add the returned MetricData object to the metrics array.
+        - field: data field (from the template schema)
+        - val: data value
+        - spreadsheet_name: Name of the spreadsheet where the data information comes from.
+        '''
         metric = self.str2metric(field, val, spreadsheet_name)
         self.metrics.append(metric)
 
 
     def str2metric(self, field, val, spreadsheet_name):
+        '''
+        Parse the metric information to store it into the MetricData object
+        - field: data field (from the template schema)
+        - val: data value
+        - spreadsheet_name: Name of the spreadsheet where the data information comes from.
+        Return type: MetricData object
+        '''
         _, ftype, fname = field.split('_')
 
         #print(f'ftype: {ftype} | fname: {fname} | _: {_}')
@@ -79,6 +92,13 @@ class PerformanceData(GenericData):
 
     @transaction.atomic
     def create_performance_model(self, publication, score, sampleset):
+        '''
+        Create an instance of the Performance model.
+        - publication: instance of the Publication model
+        - score: instance of the Score model
+        - sampleset: instance of the SampleSet model
+        Return type: Performance model
+        '''
         try:
             with transaction.atomic():
                 self.model = Performance(publication=publication, score=score, sampleset=sampleset)
@@ -92,6 +112,8 @@ class PerformanceData(GenericData):
                 for metric in self.metrics:
                     metric.create_metric_model(self.model)
         except IntegrityError as e:
+            self.model = None
+            self.report_error_import(e)
             print('Error with the creation of the Performance(s) and/or the Metric(s)')
 
         return self.model

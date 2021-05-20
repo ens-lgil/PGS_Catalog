@@ -1,5 +1,7 @@
+from django.db import IntegrityError, transaction
 from curation.parsers.generic import GenericData
 from catalog.models import Cohort
+
 
 class CohortData(GenericData):
 
@@ -10,6 +12,10 @@ class CohortData(GenericData):
         self.cohort_tuple = (self.name,self.name_long)
 
     def check_cohort(self):
+        '''
+        Check if a Cohort model already exists.
+        Return type: Cohort model
+        '''
         try:
             cohort = Cohort.objects.get(name_short__iexact=self.name, name_full__iexact=self.name_long)
             self.model = cohort
@@ -22,9 +28,19 @@ class CohortData(GenericData):
             except Cohort.DoesNotExist:
                 self.model = None
 
+
+    @transaction.atomic
     def create_cohort_model(self):
-        self.model, created = Cohort.objects.get_or_create(
-                        name_short=self.name, name_full=self.name_long
-                    )
-        self.model.save()
+        '''
+        Retrieve/Create an instance of the Cohort model.
+        Return type: Cohort model
+        '''
+        try:
+            with transaction.atomic():
+                self.model, created = Cohort.objects.get_or_create(
+                                name_short=self.name, name_full=self.name_long
+                            )
+        except IntegrityError as e:
+            print('Error with the creation of the Cohort')
+        
         return self.model

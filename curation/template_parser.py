@@ -25,6 +25,7 @@ class CurationTemplate():
         self.report = { 'error': {}, 'warning': {} }
 
     def get_spreadsheet_names(self):
+        ''' Mapping between Django catalog models and speadsheet names '''
         for s_name, s_content in self.table_mapschema.iterrows():
             # Fetch model
             s_model = s_content[1]
@@ -33,7 +34,7 @@ class CurationTemplate():
 
 
     def read_curation(self):
-        '''ReadCuration takes as input the location of a study metadata file'''
+        ''' Read metadata file and store the spreadsheets into pandas DataFrames. '''
 
         self.get_spreadsheet_names()
 
@@ -58,13 +59,18 @@ class CurationTemplate():
             self.table_performances = pd.read_excel(loc_excel, sheet_name=self.spreadsheet_names['Performance'], header=[0,1], index_col=[0, 1])
             
             self.table_cohorts = pd.read_excel(loc_excel, sheet_name=self.spreadsheet_names['Cohort'], header=0, index_col=0)
+        else:
+            self.report_error('Global', "Missing spreadsheet file!")
 
 
     def extract_cohorts(self):
+        ''' Extract cohort information and store it into CohortData objects. '''
         spreadsheet_name = self.spreadsheet_names['Cohort']
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
+        # Loop throught the rows
         for cohort_name, cohort_info in self.table_cohorts.iterrows():
             cohort_long_name = cohort_name
+            # Loop throught the columns
             for col, val in cohort_info.iteritems():
                 if col in current_schema.index:
                     if pd.isnull(val) == False:
@@ -80,7 +86,7 @@ class CurationTemplate():
 
 
     def extract_publication(self,curation_status=None):
-        '''parse_pub takes a curation dictionary as input and extracts the relevant info from the sheet and EuropePMC'''
+        ''' Extract publication information, fetch extra information via EuropePMC REST API and store it into a PublicationData object. '''
         spreadsheet_name = self.spreadsheet_names['Publication']
         pinfo = self.table_publication.iloc[0]
         c_doi = pinfo['doi']
@@ -112,6 +118,7 @@ class CurationTemplate():
             parsed_publication = PublicationData(self.table_publication)
             current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
             previous_field = None
+            # Loop throught the columns
             for col, val in pinfo.iteritems():
                 if val and col in current_schema.index:
                     field = current_schema.loc[col][1]
@@ -133,24 +140,28 @@ class CurationTemplate():
 
 
     def extract_scores(self, license=None):
+        ''' Extract score information and store it into one or several ScoreData objects. '''
         model = 'Score'
         spreadsheet_name = self.spreadsheet_names[model]
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
+        # Loop throught the rows (i.e. score)
         for score_name, score_info in self.table_scores.iterrows():
             parsed_score = ScoreData(score_name)
             if license:
                 parsed_score.add_data('license', license)
+            # Loop throught the columns
             for col, val in score_info.iteritems():
                 if pd.isnull(val) is False:
                     # Map to schema
-                    if col[1] in current_schema.index:
-                        m, f = current_schema.loc[col[1]][:2]
-                    elif col[0] in current_schema.index:
-                        m, f = current_schema.loc[col[0]][:2]
-                    else:
-                        m = None
+                    m, f = self.get_model_field_from_schema(col,current_schema)
+                    # if col[1] in current_schema.index:
+                    #     m, f = current_schema.loc[col[1]][:2]
+                    # elif col[0] in current_schema.index:
+                    #     m, f = current_schema.loc[col[0]][:2]
+                    # else:
+                    #     m = None
 
-                    # Add to extract if it's the same model
+                    # Add to ScoreData if it's from the Score model
                     if m == model:
                         if f == 'trait_efo':
                             efo_list = val.split(',')
@@ -199,17 +210,19 @@ class CurationTemplate():
 
 
     def extract_performances(self):
+        ''' Extract the performance and metric data. '''
         spreadsheet_name = self.spreadsheet_names['Performance']
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
         for p_key, performance_info in self.table_performances.iterrows():
             parsed_performance = PerformanceData()
             for col, val in performance_info.iteritems():
                 if pd.isnull(val) == False:
-                    m = None
-                    if col[1] in current_schema.index:
-                        m, f = current_schema.loc[col[1]][:2]
-                    elif col[0] in current_schema.index:
-                        m, f = current_schema.loc[col[0]][:2]
+                    m, f = self.get_model_field_from_schema(col,current_schema)
+                    # m = None
+                    # if col[1] in current_schema.index:
+                    #     m, f = current_schema.loc[col[1]][:2]
+                    # elif col[0] in current_schema.index:
+                    #     m, f = current_schema.loc[col[0]][:2]
 
                     if m is not None:
                         if f.startswith('metric'):
@@ -228,9 +241,7 @@ class CurationTemplate():
 
 
     def get_sample_data(self, sample_info, current_schema, spreadsheet_name):
-        ''' 
-        Extract the sample data (gwas and dev/training)
-        '''
+        ''' Extract the sample data (gwas and dev/training). '''
         sample_remapped = SampleData()
         for c, val in sample_info.to_dict().items():
             if c in current_schema.index:
@@ -252,6 +263,23 @@ class CurationTemplate():
                             self.update_report(val)
                         sample_remapped.add_data(f,val)
         return sample_remapped
+
+
+    def get_model_field_from_schema(self, col, current_schema):
+        '''
+        Retrieve the model and field from the Template, that corresponds to the current spreadsheet column.
+        e.g. "Score Name/ID" -> model: Score |  field: name
+        - col: the current column selected
+        - current_schema: the template, indexed by the "Column"
+        Return types: Django model, string
+        '''
+        model = None
+        field = None
+        if col[1] in current_schema.index:
+            model, field = current_schema.loc[col[1]][:2]
+        elif col[0] in current_schema.index:
+             model, field  = current_schema.loc[col[0]][:2]
+        return model, field 
 
 
     #=================================#

@@ -14,12 +14,16 @@ class PublicationData(GenericData):
 
 
     def get_publication_information(self):
+        '''
+        Retrieve the main publication information from EuropePMC (via their REST API),
+        using the DOI or the PubMed ID.
+        '''
         payload = {'format' : 'json'}
         try:
-            result= self.rest_api_call_from_epmc(f'doi:{self.doi}')
+            result = self.rest_api_call_to_epmc(f'doi:{self.doi}')
         except:
             if self.PMID:
-                result = self.rest_api_call_from_epmc(f'ext_id:{self.PMID}')
+                result = self.rest_api_call_to_epmc(f'ext_id:{self.PMID}')
             else:
                 print(f'Can\'t find a match on EuropePMC for the publication: {self.doi}')
         
@@ -48,16 +52,28 @@ class PublicationData(GenericData):
 
 
     def add_curation_notes(self):
+        '''
+        Add the curation notes to the "data" dictionary if there is one in the Publication spreadsheet.
+        '''
         if self.table_publication.shape[0] > 1:
             self.add_data('curation_notes',self.table_publication.iloc[1,0])
 
 
     def add_curation_status(self,curation_status):
+        '''
+        Add the curation status to the "data" dictionary if there is one.
+        - curation_status: curation status from the configuration file
+        '''
         if curation_status:
             self.add_data('curation_status',curation_status)
 
 
-    def rest_api_call_from_epmc(self,query):
+    def rest_api_call_to_epmc(self,query):
+        '''
+        REST API call to EuropePMC
+        - query: the search query
+        Return type: JSON
+        '''
         payload = {'format': 'json'}
         payload['query'] = query
         result = requests.get('https://www.ebi.ac.uk/europepmc/webservices/rest/search', params=payload)
@@ -67,6 +83,10 @@ class PublicationData(GenericData):
 
 
     def create_publication_model(self):
+        '''
+        Create an instance of the Publication model.
+        Return type: Publication model
+        '''
         if not self.model:
             self.model = Publication(**self.data)
             self.model.set_publication_ids(self.next_id_number(Publication))

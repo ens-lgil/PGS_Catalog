@@ -6,6 +6,10 @@ from catalog.models import *
 
 
 class StudyImport():
+    ''' 
+    Class generating running the parsing of the input file (spreadsheet), storing the parsed data 
+    into temporary objects ans then importing the data into the database, via the Django models.
+    '''
 
     data_obj = [
         ('performance', 'num', Performance),
@@ -47,7 +51,7 @@ class StudyImport():
 
 
     def print_title(self):
-        # Print current study name
+        ''' Print the study name '''
         title = f'Study: {self.study_name}'
         border = '===='
         for i in range(len(title)):
@@ -58,7 +62,10 @@ class StudyImport():
 
 
     def parse_curation_data(self):
-
+        '''
+        Read the spreadsheet file and run the different parsers.
+        The parsed data is stored in into a CurationTemplate object
+        '''
         self.study = CurationTemplate()
         self.study.file_loc  = f'{self.study_path}/{self.study_name}.xlsx'
         self.study.table_mapschema = self.curation_schema
@@ -72,7 +79,10 @@ class StudyImport():
 
     
     def import_curation_data(self):
-        
+        '''
+        Run the data import from the data collected by the parsers.
+        It also print the import reports and errors
+        '''
         self.import_publication_model()
         self.import_score_models()
         self.import_gwas_dev_samples()
@@ -98,7 +108,8 @@ class StudyImport():
                     print(f'  > DELETED {obj[0]} (column "{obj[1]}") : {ids}')
 
 
-    def import_publication_model(self):#, publication_model=Publication):
+    def import_publication_model(self):
+        ''' Import the Publication data if the Publication is not yet in the database. '''
         if self.study.parsed_publication.model:
             self.study_publication = self.study.parsed_publication.model
         else:
@@ -113,12 +124,14 @@ class StudyImport():
 
 
     def import_score_models(self):
+        ''' Import the Scofe data if the Score is not yet in the database. '''
         for score_id, score_data in self.study.parsed_scores.items():
-            # Check if score already exist
+            # Check if Score model already exists
             try:
                 current_score = Score.objects.get(name=score_data.data['name'],publication__id=self.study_publication.id)
                 self.import_warnings.append(f'Existing Score: {current_score.id} ({score_id})')
                 self.existing_scores.append(current_score.id)
+            # Create Score model
             except Score.DoesNotExist:
                 current_score = score_data.create_score_model(self.study_publication)
                 self.import_warnings.append(f'New Score: {current_score.id} ({score_id})')
@@ -126,28 +139,29 @@ class StudyImport():
 
 
     def import_gwas_dev_samples(self):
-        ''' Sample - GWAS and Dev/Training Samples and attach them the associated Scores '''
+        ''' Import the GWAS and Dev/Training Samples and attach them the associated Score(s) '''
         try:
             for x in self.study.parsed_samples_scores:
                 scores = []
+                # Extract scores
                 for s in x[0][0].split(','):
                     if s.strip() in self.study_scores:
                         scores.append(self.study_scores[s.strip()])
                     else:
                         self.import_warnings.append(f'{s.strip()} is not found in the saved scores list!!!')
                 samples = x[1]
-                for current_score in scores:
+                for score in scores:
                     for sample in samples:
                         sample_model_exist = False
-                        if current_score.id in self.existing_scores:
+                        if score.id in self.existing_scores:
                             sample_model_exist = sample.sample_model_exist()
+                        # New sample
                         if not sample_model_exist:
-                            current_sample = sample.create_sample_model()
-                            #self.data_ids['sample'].append(current_sample.id)
+                            sample_model = sample.create_sample_model()
                             if x[0][1] == 'GWAS/Variant associations':
-                                current_score.samples_variants.add(current_sample)
+                                score.samples_variants.add(sample_model)
                             elif x[0][1] == 'Score development':
-                                current_score.samples_training.add(current_sample)
+                                score.samples_training.add(sample_model)
                             else:
                                 self.import_warnings.append('ERROR: Unclear how to add samples')
                         else:
@@ -157,23 +171,26 @@ class StudyImport():
 
 
     def remove_existing_performance_metrics(self):
-        # Check if the Performance Metrics already exist in the DB
-        # If they exist, we delete them (including the associated SampleSet and Samples)
+        '''
+        Check if the Performance Metrics already exist in the DB
+        If they exist, we delete them (including the associated SampleSet and Samples)
+        '''
         try:
             data2delete = {'performance': set(), 'sampleset': set(), 'sample': set()}
+            # Loop over the parsed performances
             for x in self.study.parsed_performances:
                 i, performance = x
                 # Find Score from the Score spreadsheet
                 if i[0] in self.study_scores:
-                    current_score = self.study_scores[i[0]]
+                    score = self.study_scores[i[0]]
                 # Find existing Score in the database (e.g. PGS000001)
                 else:
                     try:
-                        current_score = Score.objects.get(id__iexact=i[0])
+                        score = Score.objects.get(id__iexact=i[0])
                     except Score.DoesNotExist:
                         self.failed_data_import.append(f'Performance Metric: can\'t find the Score {i[0]} in the database')
                         continue
-                performances = Performance.objects.filter(publication=self.study_publication, score=current_score)
+                performances = Performance.objects.filter(publication=self.study_publication, score=score)
                 
                 for performance in performances:
                     sampleset = performance.sampleset
@@ -196,7 +213,7 @@ class StudyImport():
 
 
     def import_samplesets(self):
-         # Test (Evaluation) Samples and Sample Sets
+        ''' Import Test (Evaluation) Samples and Sample Sets '''
         self.study_samplesets = {}
         try:
             for x in self.study.parsed_samples_testing:
@@ -204,19 +221,19 @@ class StudyImport():
 
                 samples_for_sampleset = []
 
-                # Create samples
+                # Create Samples and store them in a list
                 for sample_test in sample_list:
                     sample_model = sample_test.create_sample_model()
                     self.data_ids['sample'].append(sample_model.id)
                     samples_for_sampleset.append(sample_model)
                     
-                # Initialize the current SampleSet
+                # Create the SampleSet objectå
                 sampleset_model = SampleSet()
                 sampleset_model.set_ids(next_PSS_num())
                 sampleset_model.save()
                 self.data_ids['sampleset'].append(sampleset_model.num)
 
-                # Add sample(s) to the SampleSet
+                # Add the Sample(s) to the SampleSet
                 for sample in samples_for_sampleset:
                     sampleset_model.samples.add(sample_model)
                     sampleset_model.save()
@@ -227,7 +244,7 @@ class StudyImport():
 
 
     def import_performance_metrics(self):
-        ## Performance Metrics ##
+        ''' Import the Performance and the associated Metric(s) '''
         try:
             for x in self.study.parsed_performances:
                 i, performance = x
@@ -244,9 +261,16 @@ class StudyImport():
 
                 related_SampleSet = self.study_samplesets[i[1]]
 
+                #  Create the Performance and the associated Metric(s)
                 study_performance = performance.create_performance_model(publication=self.study_publication, score=current_score, sampleset=related_SampleSet)
-                self.import_warnings.append(f'New Performance Metric: {study_performance.id} & new Sample Set: {study_performance.sampleset.id}')
-
-                self.data_ids['performance'].append(study_performance.num)
+                if study_performance:
+                    self.import_warnings.append(f'New Performance Metric: {study_performance.id} & new Sample Set: {study_performance.sampleset.id}')
+                    self.data_ids['performance'].append(study_performance.num)
+                else:
+                    self.import_warnings.append(f'Performance Metric not created because of an issue while creating it.') 
+                    if 'error' in performance.report['import']:
+                        msg = ', '.join(performance.report['import']['error'])
+                        self.failed_data_import.append(f'Performance Metric: {msg}')
+                    continue
         except Exception as e:
             self.failed_data_import.append(f'Performance Metric: {e}')

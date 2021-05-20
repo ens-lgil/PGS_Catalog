@@ -1,11 +1,11 @@
 import gzip
 import pandas as pd
 import numpy as np
-#from curation.template_parser import *
 from catalog.models import Score
 
 
 class ScoringFileUpdate():
+    ''' Updating the Scoring file by adding a header and gzip it. '''
 
     def __init__(self, score, study_path, new_scoring_dir, score_file_schema):
         self.score = score
@@ -18,29 +18,31 @@ class ScoringFileUpdate():
         '''Function to extract score & publication information for the PGS Catalog Scoring File commented header'''
         score = self.score
         pub = score.publication
-        lines = [
-            '### PGS CATALOG SCORING FILE - see www.pgscatalog.org/downloads/#dl_ftp for additional information',
-            '## POLYGENIC SCORE (PGS) INFORMATION',
-            f'# PGS ID = {score.id}',
-            f'# PGS Name = {score.name}',
-            f'# Reported Trait = {score.trait_reported}',
-            f'# Original Genome Build = {score.variants_genomebuild}',
-            f'# Number of Variants = {score.variants_number}',
-            '## SOURCE INFORMATION',
-            f'# PGP ID = {pub.id}',
-            f'# Citation = {pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}'
-        ]
-
+        lines = []
         try:
+            lines = [
+                '### PGS CATALOG SCORING FILE - see www.pgscatalog.org/downloads/#dl_ftp for additional information',
+                '## POLYGENIC SCORE (PGS) INFORMATION',
+                f'# PGS ID = {score.id}',
+                f'# PGS Name = {score.name}',
+                f'# Reported Trait = {score.trait_reported}',
+                f'# Original Genome Build = {score.variants_genomebuild}',
+                f'# Number of Variants = {score.variants_number}',
+                '## SOURCE INFORMATION',
+                f'# PGP ID = {pub.id}'#,
+                f'# Citation = {pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}'
+            ]
+
             if score.license != Score._meta.get_field('license')._get_default():
                 ltext = score.license.replace('\n', ' ')     # Make sure there are no new-lines that would screw up the commenting
-                lines.append('# LICENSE = {}'.format(ltext))  # Append to header
+                lines.append('# LICENSE = {}'.format(ltext)) # Append to header
         except Exception as e:
-            print(f'Exception: {e}')
+            print(f'Header creation issue: {e}')
         return lines
 
 
     def update_scoring_file(self):
+        ''' Method to fetch the file, read it, add the header and compress it. '''
         failed_update = False
         try:
             score_name = self.score.name
@@ -59,6 +61,9 @@ class ScoringFileUpdate():
             if column_check == True:
                 # Get new header
                 header = self.create_scoringfileheader()
+                if len(header) == 0:
+                    failed_update = True
+                    return failed_update
                 
                 # Check if weight_type in columns
                 if 'weight_type' in df_scoring.columns:
