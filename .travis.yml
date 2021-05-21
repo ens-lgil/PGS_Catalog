@@ -9,7 +9,7 @@ env:
 install:
   - pip install -r requirements.txt
   - pip install requests
-  - pip install pandas numpy
+  - pip install pandas xlrd numpy
 before_script:
   - curl -s -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.0-amd64.deb
   - sudo dpkg -i --force-confnew elasticsearch-7.8.0-amd64.deb
