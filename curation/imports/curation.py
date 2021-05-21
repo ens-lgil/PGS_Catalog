@@ -15,8 +15,8 @@ class CurationImport():
     failed_studies = {}
 
     def __init__(self, data_path, studies_list, curation_status_by_default, skip_scoringfiles):
-        self.curation2schema = pd.read_excel(data_path['template_schema'], index_col=0)
-        self.curation2schema_scoring = pd.read_excel(data_path['scoring_schema'], index_col=0)
+        self.curation2schema = pd.read_excel(data_path['template_schema'], sheet_name='Curation', index_col=0)
+        self.curation2schema_scoring = pd.read_excel(data_path['scoring_schema'], sheet_name='Columns', index_col=0)
 
         self.studies_list = studies_list
         self.studies_path = data_path['studies_dir']
