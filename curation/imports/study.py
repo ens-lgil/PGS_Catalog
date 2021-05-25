@@ -128,14 +128,14 @@ class StudyImport():
         for score_id, score_data in self.study.parsed_scores.items():
             # Check if Score model already exists
             try:
-                current_score = Score.objects.get(name=score_data.data['name'],publication__id=self.study_publication.id)
-                self.import_warnings.append(f'Existing Score: {current_score.id} ({score_id})')
-                self.existing_scores.append(current_score.id)
+                score = Score.objects.get(name=score_data.data['name'],publication__id=self.study_publication.id)
+                self.import_warnings.append(f'Existing Score: {score.id} ({score_id})')
+                self.existing_scores.append(score.id)
             # Create Score model
             except Score.DoesNotExist:
-                current_score = score_data.create_score_model(self.study_publication)
-                self.import_warnings.append(f'New Score: {current_score.id} ({score_id})')
-            self.study_scores[score_id] = current_score
+                score = score_data.create_score_model(self.study_publication)
+                self.import_warnings.append(f'New Score: {score.id} ({score_id})')
+            self.study_scores[score_id] = score
 
 
     def import_gwas_dev_samples(self):
@@ -227,7 +227,7 @@ class StudyImport():
                     self.data_ids['sample'].append(sample_model.id)
                     samples_for_sampleset.append(sample_model)
                     
-                # Create the SampleSet objectå
+                # Create the SampleSet object
                 sampleset_model = SampleSet()
                 sampleset_model.set_ids(next_PSS_num())
                 sampleset_model.save()
@@ -235,7 +235,7 @@ class StudyImport():
 
                 # Add the Sample(s) to the SampleSet
                 for sample in samples_for_sampleset:
-                    sampleset_model.samples.add(sample_model)
+                    sampleset_model.samples.add(sample)
                     sampleset_model.save()
 
                 self.study_samplesets[test_name] = sampleset_model

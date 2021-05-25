@@ -19,13 +19,18 @@ class CohortData(GenericData):
         try:
             cohort = Cohort.objects.get(name_short__iexact=self.name, name_full__iexact=self.name_long)
             self.model = cohort
-            print(f'Cohort {self.name} found in the DB')
+            #print(f'Cohort {self.name} found in the DB')
         except Cohort.DoesNotExist:
             self.model = None
             try:
                 cohort = Cohort.objects.get(name_short__iexact=self.name)
-                print(f'A existing cohort has been found in the DB with the ID {self.name}. However the long name differs.')
+                # Short name = long name
+                if self.name == self.name_long:
+                    self.model = cohort
+                else:
+                    print(f'A existing cohort has been found in the DB with the ID "{self.name}" ({self.name_long}). However the long name differs.')
             except Cohort.DoesNotExist:
+                print(f'New cohort "{self.name}".')
                 self.model = None
 
 
@@ -37,10 +42,14 @@ class CohortData(GenericData):
         '''
         try:
             with transaction.atomic():
-                self.model, created = Cohort.objects.get_or_create(
-                                name_short=self.name, name_full=self.name_long
-                            )
+                self.check_cohort()
+                if not self.model:
+                    self.model = Cohort()
+                    self.model.name_short=self.name
+                    self.model.name_full=self.name_long
+                    self.model.save()
         except IntegrityError as e:
+            self.model = None
             print('Error with the creation of the Cohort')
         
         return self.model

@@ -55,16 +55,16 @@ class ScoringFileUpdate():
             for x in df_scoring.columns:
                 if not x in self.score_file_schema.index:
                     column_check = False
-                    print(f'{x} not in index')
+                    print(f'The column "{x}" is not in the Schema index')
                     break
-            
+
             if column_check == True:
                 # Get new header
                 header = self.create_scoringfileheader()
                 if len(header) == 0:
                     failed_update = True
                     return failed_update
-                
+
                 # Check if weight_type in columns
                 if 'weight_type' in df_scoring.columns:
                     if all(df_scoring['weight_type']):
@@ -90,7 +90,6 @@ class ScoringFileUpdate():
                     outf.write('\n'.join(header).encode('utf-8'))
                     outf.write('\n'.encode('utf-8'))
                     outf.write(df_scoring.to_csv(sep='\t', index=False).encode('utf-8'))
-
             else:
                 badmaps = []
                 for i, v in enumerate(column_check):
@@ -98,7 +97,7 @@ class ScoringFileUpdate():
                         badmaps.append(df_scoring.columns[i])
                 failed_update = True
                 print(f'ERROR in {raw_scorefile} ! bad columns: {badmaps}')
-        except:
+        except Exception as e:
             failed_update = True
-            print(f'ERROR reading scorefile: {raw_scorefile}')
+            print(f'ERROR reading scorefile: {raw_scorefile}\n-> {e}')
         return failed_update

@@ -81,6 +81,6 @@ class CurationImport():
                         if is_failed == True:
                             self.failed_studies[study_import.study_name] = 'scoring file error'
                 else:
-                    print("  > No scores for this study")
+                    print("  > No scores for this study, therefore no scoring files")
 
         self.global_report()

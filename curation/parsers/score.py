@@ -27,7 +27,7 @@ class ScoreData(GenericData):
                     if field == 'trait_efo':
                         efo_traits = []
                         for trait_id in val:
-                            trait_id = trait_id.replace(':','_')
+                            trait_id = trait_id.replace(':','_').strip()
                             try:
                                 efo = EFOTrait.objects.get(id__iexact=trait_id)
                             except EFOTrait.DoesNotExist:

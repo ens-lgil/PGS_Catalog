@@ -1,3 +1,4 @@
+from cmath import nan
 import pandas as pd
 import numpy as np
 import requests
@@ -69,6 +70,8 @@ class CurationTemplate():
         current_schema = self.table_mapschema.loc[spreadsheet_name].set_index('Column')
         # Loop throught the rows
         for cohort_name, cohort_info in self.table_cohorts.iterrows():
+            if type(cohort_name) != str:
+                continue
             cohort_long_name = cohort_name
             # Loop throught the columns
             for col, val in cohort_info.iteritems():
@@ -154,12 +157,6 @@ class CurationTemplate():
                 if pd.isnull(val) is False:
                     # Map to schema
                     m, f = self.get_model_field_from_schema(col,current_schema)
-                    # if col[1] in current_schema.index:
-                    #     m, f = current_schema.loc[col[1]][:2]
-                    # elif col[0] in current_schema.index:
-                    #     m, f = current_schema.loc[col[0]][:2]
-                    # else:
-                    #     m = None
 
                     # Add to ScoreData if it's from the Score model
                     if m == model:
@@ -218,11 +215,6 @@ class CurationTemplate():
             for col, val in performance_info.iteritems():
                 if pd.isnull(val) == False:
                     m, f = self.get_model_field_from_schema(col,current_schema)
-                    # m = None
-                    # if col[1] in current_schema.index:
-                    #     m, f = current_schema.loc[col[1]][:2]
-                    # elif col[0] in current_schema.index:
-                    #     m, f = current_schema.loc[col[0]][:2]
 
                     if m is not None:
                         if f.startswith('metric'):
@@ -261,6 +253,8 @@ class CurationTemplate():
                         elif f in ['sample_age', 'followup_time']:
                             val = sample_remapped.str2demographic(f, val, spreadsheet_name)
                             self.update_report(val)
+                        elif f == 'source_PMID':
+                            val = int(val) # Convert from float to int
                         sample_remapped.add_data(f,val)
         return sample_remapped
 
