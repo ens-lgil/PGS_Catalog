@@ -499,7 +499,6 @@ class PublicationTest(TestCase):
 
     def create_publication_by_doi(self, num, date="2018-10-01", id="10.1016/j.jacc.2018.07.079",author=first_author,journal='bioRxiv'):
         date_list = date.split('-')
-        #date_formated = datetime.date(int(date_list[0]),int(date_list[1]),int(date_list[2]))
         date_formated = format_date(date_list)
         pub = Publication.objects.create(num=num, date_publication=date_formated, doi=id, firstauthor=author, journal=journal)
         pub.set_publication_ids(num)
@@ -507,7 +506,6 @@ class PublicationTest(TestCase):
 
     def create_publication_by_pmid(self, num, date="2015-04-08", id=25855707, journal="Lancet"):
         date_list = date.split('-')
-        #date_formated = datetime(int(date_list[0]),int(date_list[1]),int(date_list[2]))
         date_formated = format_date(date_list)
         pub = Publication.objects.create(num=num, date_publication=date_formated, PMID=id, journal=journal)
         pub.set_publication_ids(num)
@@ -554,7 +552,6 @@ class ReleaseTest(TestCase):
 
     date_list = ['2020','03','20']
     date_string = '-'.join(date_list)
-    #date_formated = datetime.date(int(date_list[0]),int(date_list[1]),int(date_list[2]))
     date_formated = format_date(date_list)
     notes = "Test release"
 
