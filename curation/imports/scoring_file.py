@@ -21,7 +21,7 @@ class ScoringFileUpdate():
         lines = []
         try:
             lines = [
-                '### PGS CATALOG SCORING FILE - see www.pgscatalog.org/downloads/#dl_ftp for additional information',
+                '### PGS CATALOG SCORING FILE - see https://www.pgscatalog.org/downloads/#dl_ftp for additional information',
                 '## POLYGENIC SCORE (PGS) INFORMATION',
                 f'# PGS ID = {score.id}',
                 f'# PGS Name = {score.name}',
@@ -29,9 +29,10 @@ class ScoringFileUpdate():
                 f'# Original Genome Build = {score.variants_genomebuild}',
                 f'# Number of Variants = {score.variants_number}',
                 '## SOURCE INFORMATION',
-                f'# PGP ID = {pub.id}'#,
-                f'# Citation = {pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}'
+                f'# PGP ID = {pub.id}'
             ]
+            if pub.firstauthor and pub.journal and pub.pub_year and pub.doi:
+                lines.append(f'# Citation = {pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}')
 
             if score.license != Score._meta.get_field('license')._get_default():
                 ltext = score.license.replace('\n', ' ')     # Make sure there are no new-lines that would screw up the commenting

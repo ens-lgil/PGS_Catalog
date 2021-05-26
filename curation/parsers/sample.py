@@ -107,14 +107,21 @@ class SampleData(GenericData):
                     elif field in ['sample_age', 'followup_time']:
                         current_demographic = val.create_demographic_model()
                         setattr(self.model, field, current_demographic)
+                    elif field == 'ancestry_broad' and (val == '' or val == 'NR'):
+                        setattr(self.model, field, 'Not reported')
                     else:
                         setattr(self.model, field, val)
-                #setattr(self.model, 'id', self.next_id_number(Sample))
                 self.model.save()
 
+                # Add ancestry broad data if none exists
+                if self.model.ancestry_broad == '' or not self.model.ancestry_broad:
+                    self.model.ancestry_broad = 'Not reported'
+                    
                 # Need to create the Sample object first (with an ID)
                 for cohort in cohorts:
                     self.model.cohorts.add(cohort)
+
+                # Save updates
                 self.model.save()
         except IntegrityError as e:
             self.model = None

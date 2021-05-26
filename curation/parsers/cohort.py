@@ -32,6 +32,10 @@ class CohortData(GenericData):
             except Cohort.DoesNotExist:
                 print(f'New cohort "{self.name}".')
                 self.model = None
+            except:
+                print(f'ERROR with cohort {self.name} duplicated!')    
+        except:
+            print(f'ERROR with cohort {self.name} ({self.name_long}) duplicated!')    
 
 
     @transaction.atomic

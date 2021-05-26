@@ -98,20 +98,31 @@ class CurationTemplate():
         c_PMID = pinfo[0]
         publication = None
         new_publication = True
-        # If there is a DOI
-        if type(c_doi) == str:
-            # Check if this is already in the DB
-            try:
-                publication = Publication.objects.get(doi__iexact=c_doi)
-                c_doi = publication.doi
-                c_PMID = publication.PMID
-                new_publication = False
-                print("  > Existing publication found in the database\n")
-            except Publication.DoesNotExist:
-                print(f'  > New publication ({c_doi}) for the Catalog\n')
+        # If there is a DOI or PMID
+        if type(c_doi) == str or c_PMID:
+            if type(c_doi) == str:
+                # Check if this is already in the DB
+                try:
+                    publication = Publication.objects.get(doi__iexact=c_doi)
+                    c_doi = publication.doi
+                    c_PMID = publication.PMID
+                    new_publication = False
+                    print("  > Existing publication found in the database\n")
+                except Publication.DoesNotExist:
+                    print(f'  > New publication ({c_doi}) for the Catalog\n')
+            elif c_PMID:
+                # Check if this is already in the DB
+                try:
+                    publication = Publication.objects.get(PMID=c_PMID)
+                    c_doi = publication.doi
+                    c_PMID = publication.PMID
+                    new_publication = False
+                    print("  > Existing publication found in the database\n")
+                except Publication.DoesNotExist:
+                    print(f'  > New publication (PMID:{c_PMID}) for the Catalog\n')
 
             parsed_publication = PublicationData(self.table_publication,c_doi,c_PMID,publication)
-            
+                
             # Fetch the publication information from EuropePMC
             if not publication:
                 parsed_publication.get_publication_information()
@@ -353,6 +364,7 @@ def get_gwas_study(gcst_id):
                     else:
                         ancestry_data['ancestry_broad'] += ','
                     ancestry_data['ancestry_broad'] += ancestralGroup['ancestralGroup']
+   
                 # ancestry_free
                 for countryOfOrigin in ancestry['countryOfOrigin']:
                     if countryOfOrigin['countryName'] != 'NR':
