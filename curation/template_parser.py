@@ -99,7 +99,7 @@ class CurationTemplate():
         publication = None
         new_publication = True
         # If there is a DOI or PMID
-        if type(c_doi) == str or c_PMID:
+        if type(c_doi) == str or type(c_PMID) == int:
             if type(c_doi) == str:
                 # Check if this is already in the DB
                 try:
@@ -110,7 +110,7 @@ class CurationTemplate():
                     print("  > Existing publication found in the database\n")
                 except Publication.DoesNotExist:
                     print(f'  > New publication ({c_doi}) for the Catalog\n')
-            elif re.match("^\d+$",c_PMID):
+            elif type(c_PMID) == int:
                 # Check if this is already in the DB
                 try:
                     publication = Publication.objects.get(PMID=c_PMID)
