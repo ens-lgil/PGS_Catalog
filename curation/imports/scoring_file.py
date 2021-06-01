@@ -1,6 +1,7 @@
 import gzip
 import pandas as pd
 import numpy as np
+import re
 from catalog.models import Score
 
 
@@ -87,10 +88,18 @@ class ScoringFileUpdate():
                         corder.append(x)
 
                 df_scoring = df_scoring[corder]
+                df_csv = df_scoring.to_csv(sep='\t', index=False)
+                # Cleanup the file by removing empty lines
+                new_df_csv = []
+                for row in df_csv.split('\n'):
+                    if not re.match('^\t*$', row):
+                        new_df_csv.append(row)
+                df_csv = '\n'.join(new_df_csv)
+
                 with gzip.open(f'{self.new_score_file_path}/{score_id}.txt.gz', 'w') as outf:
                     outf.write('\n'.join(header).encode('utf-8'))
                     outf.write('\n'.encode('utf-8'))
-                    outf.write(df_scoring.to_csv(sep='\t', index=False).encode('utf-8'))
+                    outf.write(df_csv.encode('utf-8'))
             else:
                 badmaps = []
                 for i, v in enumerate(column_check):

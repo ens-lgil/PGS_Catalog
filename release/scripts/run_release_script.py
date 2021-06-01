@@ -39,13 +39,13 @@ def run(*args):
     check_duplicated_cohorts()
 
     # Update ancestry distribution
-    update_ancestry_distribution()
+    #update_ancestry_distribution()
 
-    # Create release
-    call_create_release()
+    # # Create release
+    # call_create_release()
 
-    # Generate EuropePMC linkage XML file
-    generate_europePMC_linkage_xml_file()
+    # # Generate EuropePMC linkage XML file
+    # generate_europePMC_linkage_xml_file()
 
 
 #-----------#
@@ -121,7 +121,7 @@ def check_duplicated_cohorts():
     if len(cohorts_duplicated.keys()):
         error_msg = "The following cohorts seem duplicated in the database:"
         for key,val in cohorts_duplicated.items():
-            error_msg += "\t- Cohorts: "+', '.join(list(val))
+            error_msg += "\n\t- Cohorts: "+', '.join(list(val))
         error_report(error_msg)
     else:
         output_report("Cohort duplication - OK: No duplicated cohort found!")

@@ -693,9 +693,8 @@ class Score(models.Model):
                         multi_anc_html = ''
                         if key in multi_legend:
                             multi_anc_html += f' <a class="toggle_btn" data-toggle="tooltip" data-placement="right" data-delay="500" id="{key}_{stage}" title="" data-original-title="Click to show/hide the list of ancestries"><i class="fas fa-plus-circle"></i></a></div>'
-                            multi_anc_html += f'<div class="toggle_list" id="list_{key}_{stage}"><ul>{"".join(multi_legend[ma])}</ul>'
+                            multi_anc_html += f'<div class="toggle_list" id="list_{key}_{stage}"><ul>{"".join(multi_legend[key])}</ul>'
                         legend += f'<div><span class="fas fa-square ancestry_box_legend anc_colour_{key}" data-key="{key}"></span>{label}: {val}%{multi_anc_html}</div>'
-
                     count = ancestry_data['count']
                     if count == 0:
                         html_count = ''
