@@ -23,7 +23,7 @@ class CurationTemplate():
         self.parsed_performances = []
         self.table_mapschema = None
         self.spreadsheet_names = {}
-        self.report = { 'error': {}, 'warning': {} }
+        self.report = { 'error': {}, 'warning': {}, 'import': {} }
 
     def get_spreadsheet_names(self):
         ''' Mapping between Django catalog models and speadsheet names '''
@@ -46,19 +46,19 @@ class CurationTemplate():
             self.table_scores = pd.read_excel(loc_excel, sheet_name=self.spreadsheet_names['Score'], header=[0, 1], index_col=0)
 
             self.table_samples = pd.read_excel(loc_excel, sheet_name=self.spreadsheet_names['Sample'], header=0)
-            
-            # GWAS and Dev/Training Samples 
+
+            # GWAS and Dev/Training Samples
             self.table_samples_scores = self.table_samples[[x.startswith('Test') is False for x in self.table_samples.iloc[:, 1]]]
             # Index on columns "Score Name(s)" & "Study Stage"
             self.table_samples_scores.set_index(list(self.table_samples_scores.columns[[0, 1]]), inplace = True)
-            
-            # Testing (Evaluation) Samples 
+
+            # Testing (Evaluation) Samples
             self.table_samples_testing = self.table_samples[[x.startswith('Test') for x in self.table_samples.iloc[:, 1]]]
             # Index on column "Sample Set ID"
             self.table_samples_testing.set_index(list(self.table_samples_testing.columns[[2]]), inplace=True)
 
             self.table_performances = pd.read_excel(loc_excel, sheet_name=self.spreadsheet_names['Performance'], header=[0,1], index_col=[0, 1])
-            
+
             self.table_cohorts = pd.read_excel(loc_excel, sheet_name=self.spreadsheet_names['Cohort'], header=0, index_col=0)
         else:
             self.report_error('Global', "Missing spreadsheet file!")
@@ -122,11 +122,11 @@ class CurationTemplate():
                     print(f'  > New publication (PMID:{c_PMID}) for the Catalog\n')
 
             parsed_publication = PublicationData(self.table_publication,c_doi,c_PMID,publication)
-                
+
             # Fetch the publication information from EuropePMC
             if not publication:
                 parsed_publication.get_publication_information()
-        
+
         # Create the object from the Spreadsheet only
         else:
             parsed_publication = PublicationData(self.table_publication)
@@ -142,7 +142,7 @@ class CurationTemplate():
                             parsed_publication.data['firstauthor'] = val+' '+parsed_publication.data['firstauthor']
                         else:
                             parsed_publication.add_data(field, val)
-                    previous_field = field    
+                    previous_field = field
             if 'date_publication' not in parsed_publication.data:
                 parsed_publication.add_data('date_publication',date.today())
 
@@ -201,7 +201,7 @@ class CurationTemplate():
                             gwas_results.append(c_sample)
                         sample_remapped = gwas_results
                     else:
-                        self.report_error(spreadsheet_name, f'Can\'t fetch the GWAS information for the study {sample_remapped["source_GWAS_catalog"]}')
+                        self.report_error(spreadsheet_name, f'Can\'t fetch the GWAS information for the study {sample_remapped.data["source_GWAS_catalog"]}')
                 else:
                     self.report_error(spreadsheet_name, f'Missing GWAS Study ID (GCST ID) to fetch the sample information')
             if type(sample_remapped) != list:
@@ -284,7 +284,7 @@ class CurationTemplate():
             model, field = current_schema.loc[col[1]][:2]
         elif col[0] in current_schema.index:
              model, field  = current_schema.loc[col[0]][:2]
-        return model, field 
+        return model, field
 
 
     #=================================#
@@ -298,12 +298,12 @@ class CurationTemplate():
         - spreadsheet_name: name of the spreadsheet (e.g. Publication Information)
         - msg: error message
         """
-        if type in ['error', 'warning']:
+        if type in ['error', 'warning', 'import']:
             if not spreadsheet_name in self.report[type]:
                 self.report[type][spreadsheet_name] = set()
             self.report[type][spreadsheet_name].add(msg)
         else:
-            print('ERROR: Can\'t find the report category "{type}"!')
+            print(f'ERROR: Can\'t find the report category "{type}"!')
 
     def report_error(self, spreadsheet_name, msg):
         """
@@ -320,7 +320,7 @@ class CurationTemplate():
         - msg: warning message
         """
         self.add_report('warning', spreadsheet_name, msg)
-    
+
     def update_report(self, obj):
         for type, reports in obj.report.items():
             for sp_name, messages in obj.report[type].items():
@@ -342,10 +342,12 @@ def get_gwas_study(gcst_id):
         - gcst_id: GWAS Study ID (e.g. GCST010127)
     > Return: list of dictionnaries (1 per ancestry)
     """
+    study_data = []
     gwas_rest_url = 'https://www.ebi.ac.uk/gwas/rest/api/studies/'
     response = requests.get(f'{gwas_rest_url}{gcst_id}')
+    if not response:
+        return study_data
     response_data = response.json()
-    study_data = []
     if response_data:
         try:
             source_PMID = response_data['publicationInfo']['pubmedId']
@@ -364,7 +366,7 @@ def get_gwas_study(gcst_id):
                     else:
                         ancestry_data['ancestry_broad'] += ','
                     ancestry_data['ancestry_broad'] += ancestralGroup['ancestralGroup']
-   
+
                 # ancestry_free
                 for countryOfOrigin in ancestry['countryOfOrigin']:
                     if countryOfOrigin['countryName'] != 'NR':

@@ -42,7 +42,7 @@ class GenericData():
                 self.report[type][spreadsheet_name] = set()
             self.report[type][spreadsheet_name].add(msg)
         else:
-            print('ERROR: Can\'t find the report category "{type}"!')
+            print(f'ERROR: Can\'t find the report category "{type}"!')
 
 
     def report_error(self, spreadsheet_name, msg):
