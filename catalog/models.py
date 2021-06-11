@@ -612,7 +612,7 @@ class Score(models.Model):
 
     # PGS Development/method details
     method_name = models.TextField('PGS Development Method')
-    method_params = models.TextField('PGS Development Details/Relevant Parameters', default='NR')
+    method_params = models.TextField('PGS Development Details/Relevant Parameters', null=True)
 
     variants_number = models.IntegerField('Number of Variants', validators=[MinValueValidator(1)])
     variants_interactions = models.IntegerField('Number of Interaction Terms', default=0)
