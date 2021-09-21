@@ -200,6 +200,7 @@
         "variants_number": 10,
         "variants_interactions": 0,
         "variants_genomebuild": "GRCh38",
+        "weight_type": "beta",
         "license": "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details.",
         "ancestries": null,
         "samples_variants": [
@@ -228,6 +229,7 @@
         "variants_number": 10,
         "variants_interactions": 0,
         "variants_genomebuild": "GRCh38",
+        "weight_type": "log(OR)",
         "license": "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details.",
         "ancestries": null,
         "samples_variants": [

@@ -4,7 +4,7 @@ servers:
 info:
 
   title: PGS Catalog REST API
-  version: '1.8.1'
+  version: '1.8.2'
   description: |
     Programmatic access to the PGS Catalog metadata. More information about the metadata and its structure can be found [here](/docs/).
 
@@ -73,6 +73,9 @@ info:
 
     <a class="toggle_btn" id="changelog">REST API version changelog <i class="fas fa-plus-circle"></i></a>
     <div class="toggle_content" id="content_changelog" style="display:none">
+
+      * <span class="badge badge-pill badge-pgs">1.8.2</span> - September 2021:
+        * New field **weight_type** in the Score schemas.
 
       * <span class="badge badge-pill badge-pgs">1.8.1</span> - July 2021:
         * Change the data type of the field **source_PMID** to numeric in the Sample schemas
@@ -405,7 +408,6 @@ components:
                   associated_pgs_ids: ["PGS000215"]
                   child_associated_pgs_ids: []
 
-
     Metric:
       type: object
       description: "Metric data"
@@ -737,6 +739,10 @@ components:
           type: string
           description: "The version of the genome assembly that the variants present in the PGS are associated with. Listed as NR (Not Reported) if unknown."
           example: "GRCh38"
+        weight_type:
+          type: string
+          description: "Variant Weight supplied by the author: beta (effect size), or something like an OR/HR (odds/hazard ratio)."
+          example: "beta"
         ancestry_distribution:
           type: object
           description: "Ancestry distribution on each PGS stage. For more information about Ancestry, please go to [Ancestry documentation](/docs/ancestry). To get the full name of the Ancestry categories (e.g. 'European' for 'EUR'), please look at the endpoint **/rest/ancestry_categories**"

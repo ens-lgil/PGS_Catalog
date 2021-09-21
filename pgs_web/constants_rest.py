@@ -2,6 +2,13 @@
 
 PGS_REST_API = [
     {
+        'version': '1.8.2',
+        'date': '2021-09',
+        'changelog': [
+            "New field 'weight_type' in the Score schemas."
+        ]
+    },
+    {
         'version': '1.8.1',
         'date': '2021-07',
         'changelog': [

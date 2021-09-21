@@ -869,8 +869,9 @@ class ScoreTest(TestCase):
             "count": 365042
         }
     }
+    weight_type = 'beta'
 
-    def create_score(self, num, name=name, var_number=v_number, build=v_build, m_name=m_name, m_params=m_params):
+    def create_score(self, num, name=name, var_number=v_number, build=v_build, m_name=m_name, m_params=m_params, w_type=weight_type):
         pubtest = PublicationTest()
         pub = pubtest.get_publication_doi(num)
 
@@ -881,7 +882,8 @@ class ScoreTest(TestCase):
             variants_genomebuild=build,
             publication_id=pub.num,
             method_name=m_name,
-            method_params=m_params
+            method_params=m_params,
+            weight_type=w_type
         )
         score.set_score_ids(score.num)
         score.save()
@@ -927,6 +929,7 @@ class ScoreTest(TestCase):
         self.assertTrue(score.flag_asis)
         self.assertIsNotNone(score.license)
         self.assertTrue(score.has_default_license)
+        self.assertEqual(score.weight_type, self.weight_type)
 
         score.license = "Not the default one"
         self.assertFalse(score.has_default_license)

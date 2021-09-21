@@ -21,23 +21,28 @@ class ScoringFileUpdate():
         pub = score.publication
         lines = []
         try:
+            traits = score.trait_efo.all()
+            efo_ids = ','.join([x.id for x in traits])
+            mapped_traits = ','.join([x.label for x in traits])
             lines = [
-                '### PGS CATALOG SCORING FILE - see https://www.pgscatalog.org/downloads/#dl_ftp_scoring for additional information',
-                '## POLYGENIC SCORE (PGS) INFORMATION',
-                f'# PGS ID = {score.id}',
-                f'# PGS Name = {score.name}',
-                f'# Reported Trait = {score.trait_reported}',
-                f'# Original Genome Build = {score.variants_genomebuild}',
-                f'# Number of Variants = {score.variants_number}',
-                '## SOURCE INFORMATION',
-                f'# PGP ID = {pub.id}'
+                '###PGS CATALOG SCORING FILE - see https://www.pgscatalog.org/downloads/#dl_ftp_scoring for additional information',
+                '##POLYGENIC SCORE (PGS) INFORMATION',
+                f'#pgs_id={score.id}',
+                f'#pgs_name={score.name}',
+                f'#trait_reported={score.trait_reported}',
+                f'#trait_mapped={mapped_traits}',
+                f'#trait_efo={efo_ids}',
+                f'#genome_build={score.variants_genomebuild}',
+                f'#variants_number={score.variants_number}',
+                '##SOURCE INFORMATION',
+                f'#pgp_id={pub.id}'
             ]
             if pub.firstauthor and pub.journal and pub.pub_year and pub.doi:
-                lines.append(f'# Citation = {pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}')
+                lines.append(f'#citation={pub.firstauthor} et al. {pub.journal} ({pub.pub_year}). doi:{pub.doi}')
 
             if score.license != Score._meta.get_field('license')._get_default():
                 ltext = score.license.replace('\n', ' ')     # Make sure there are no new-lines that would screw up the commenting
-                lines.append('# LICENSE = {}'.format(ltext)) # Append to header
+                lines.append('#license={}'.format(ltext)) # Append to header
         except Exception as e:
             print(f'Header creation issue: {e}')
         return lines
@@ -80,6 +85,9 @@ class ScoringFileUpdate():
                     elif 'HR' in df_scoring.columns:
                         df_scoring['effect_weight'] = np.log(pd.to_numeric(df_scoring['HR']))
                         df_scoring['weight_type'] = 'log(HR)'
+                # Rename reference_allele column
+                if 'other_allele' not in df_scoring.columns and 'reference_allele' in df_scoring.columns:
+                    df_scoring.rename(columns={'reference_allele': 'other_allele'})
 
                 # Reorganize columns according to schema
                 corder = []

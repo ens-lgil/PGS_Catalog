@@ -129,18 +129,21 @@
 
         <div class="pgs_formatted_block">
           <pre>
-<span>### PGS CATALOG SCORING FILE - see https://www.pgscatalog.org/downloads/#dl_ftp_scoring for additional information</span>
-<span>## POLYGENIC SCORE (PGS) INFORMATION</span>
-<b># PGS ID</b> = <i>PGS identifier, e.g. 'PGS000001'</i>
-<b># PGS Name</b> = <i>PGS name, e.g. 'PRS77_BC' - optional</i>
-<b># Reported Trait</b> = <i>trait, e.g. 'Breast Cancer'</i>
-<b># Original Genome Build</b> = <i>Genome build/assembly, e.g. 'GRCh38'</i>
-<b># Number of Variants</b> = <i>Number of variants listed in the PGS</i>
-<span>## SOURCE INFORMATION</span>
-<b># PGP ID</b> = <i>PGS publication identifier, e.g. 'PGP000001'</i>
-<b># Citation</b> = <i>Information about the publication</i>
-<b># LICENSE</b> = <i>License and terms of PGS use/distribution - refers to the EMBL-EBI Terms of Use by default</i>
-<span class="scoring_col">rsID</span><span class="scoring_col">chr_name</span><span class="scoring_col">chr_position</span><span class="scoring_col">effect_allele</span><span class="scoring_col">reference_allele</span><span class="pgs_color_2">...</span></pre>
+<span>###PGS CATALOG SCORING FILE - see https://www.pgscatalog.org/downloads/#dl_ftp_scoring for additional information</span>
+<span>##POLYGENIC SCORE (PGS) INFORMATION</span>
+<b>#pgs_id</b>=<i>PGS identifier, e.g. 'PGS000001'</i>
+<b>#pgs_name</b>=<i>PGS name, e.g. 'PRS77_BC' - optional</i>
+<b>#trait_reported</b>=<i>trait, e.g. 'Breast Cancer'</i>
+<b>#trait_mapped</b>=<i>Ontology trait name, e.g. 'breast carcinoma'</i>
+<b>#trait_efo</b>=<i>Ontology trait ID (EFO), e.g. 'EFO_0000305'</i>
+<b>#genome_build</b>=<i>Genome build/assembly, e.g. 'GRCh38'</i>
+<b>#variants_number</b>=<i>Number of variants listed in the PGS</i>
+<b>#weight_type</b>=<i>Variant weight type, e.g. 'beta', 'OR/HR' (default 'NR')</i>
+<span>##SOURCE INFORMATION</span>
+<b>#pgp_id</b>=<i>PGS publication identifier, e.g. 'PGP000001'</i>
+<b>#citation</b>=<i>Information about the publication</i>
+<b>#license</b>=<i>License and terms of PGS use/distribution - refers to the EMBL-EBI Terms of Use by default</i>
+<span class="scoring_col">rsID</span><span class="scoring_col">chr_name</span><span class="scoring_col">chr_position</span><span class="scoring_col">effect_allele</span><span class="scoring_col">other_allele</span><span class="pgs_color_2">...</span></pre>
       </div>
 
       <p>It also has been edited to have consistent column headings based on the following schema:</p>
@@ -154,10 +157,9 @@
             <tr><td>chr_name</td><td>Location - Chromosome </td><td>Chromosome name/number associated with the variant</td><td><span class="pgs_color_red">Required</span> - may be optional if an <i>rsID</i> for the variant is provided</td></tr>
             <tr><td>chr_position</td><td>Location - Position within the Chromosome</td><td>Chromosomal position associated with the variant</td><td><span class="pgs_color_red">Required</span> - may be optional if an <i>rsID</i> for the variant is provided</td></tr>
             <tr><td>effect_allele</td><td>Effect Allele</td><td>The allele that's dosage is counted (e.g. {0, 1, 2}) and multiplied by the variant's weight ('effect_weight') when calculating score. The effect allele is also known as the 'risk allele'.</td><td><span class="pgs_color_red">Required</span></td></tr>
-            <tr><td>reference_allele</td><td>Reference Allele</td><td>The other allele(s) at the loci</td><td><span class="pgs_color_green">Optional</span> - but strongly recommended</td></tr>
+            <tr><td>other_allele</td><td>Other allele(s)</td><td>The other allele(s) at the loci</td><td><span class="pgs_color_green">Optional</span> - but strongly recommended</td></tr>
             <tr><td>effect_weight</td><td>Variant Weight</td><td>Value of the effect that is multiplied by the dosage of the effect allele ('effect_allele') when calculating the score.</td><td><span class="pgs_color_red">Required</span></td></tr>
             <tr><td>locus_name</td><td>Locus Name</td><td>This is kept in for loci where the variant may be referenced by the gene (APOE e4). It is also common (usually in smaller PGS) to see the variants named according to the genes they impact.</td><td><span class="pgs_color_green">Optional</span></td></tr>
-            <tr><td>weight_type</td><td>Type of Weight</td><td>Whether the author supplied Variant Weight is a: <b>beta</b> (effect size), or something like an <b>OR/HR</b> (odds/hazard ratio)</td><td><span class="pgs_color_green">Optional</span></td></tr>
             <tr><td>allelefrequency_effect</td><td>Effect Allele Frequency</td><td>Reported effect allele frequency, if the associated locus is a haplotype then haplotype frequency will be extracted.</td><td><span class="pgs_color_green">Optional</span></td></tr>
             <tr><td>is_interaction</td><td>FLAG: Interaction</td><td>This is a TRUE/FALSE variable that flags whether the weight should be multiplied with the dosage of more than one variant. Interactions are demarcated with a <i>_x_</i> between entries for each of the variants present in the interaction. </td><td><span class="pgs_color_green">Optional</span></td></tr>
             <tr><td>is_dominant</td><td>FLAG: Dominant Inheritance Model</td><td>This is a TRUE/FALSE variable that flags whether the weight should be added to the PGS sum if there is at least 1 copy of the effect allele (e.g. it is a dominant allele).</td><td><span class="pgs_color_green">Optional</span></td></tr>

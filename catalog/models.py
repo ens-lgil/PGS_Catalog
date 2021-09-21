@@ -626,6 +626,9 @@ class Score(models.Model):
     # Ancestry data
     ancestries = models.JSONField('Ancestry distributions', null=True)
 
+    # Weight type
+    weight_type = models.TextField('PGS Weight Type', default='NR')
+
     # Methods
     def __str__(self):
         return ' | '.join([self.id, self.name, '(%s)' % self.publication.__str__()])
