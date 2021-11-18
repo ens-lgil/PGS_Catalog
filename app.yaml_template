@@ -39,6 +39,7 @@ env_variables:
     DATABASE_USER: '<db_user>'
     DATABASE_PASSWORD: '<db_password>'
     DATABASE_PORT: '<db_port>'
+    DATABASE_PORT_LOCAL: '<db_port_local>'
     DATABASE_HOST: '<db_host>' # e.g.: localhost, IP address, /cloudsql/...
     ELASTICSEARCH_URL_ROOT: '<url_to_elasticsearch_service>'
 
