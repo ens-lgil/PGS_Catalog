@@ -25,6 +25,10 @@
 # Migrations
 **/migrations/
 
+# Templates
+app.yaml_template
+pgs-catalog-cred.json_template
+
 # Tests
 **/tests/
 
@@ -35,7 +39,6 @@
 
 # Other
 /rest_api/fixtures/
-app.yaml_template
 LICENSE.md
 README.md
 **/.DS_Store

@@ -6,6 +6,7 @@ Disallow: /rest/
 Disallow: /search/
 Disallow: /_ah/
 Disallow: /labs/
+Disallow: /upload/
 {% else %}
 Disallow: /
 {% endif %}

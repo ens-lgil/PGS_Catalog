@@ -60,6 +60,13 @@ urlpatterns = [
     # Setup URL used to warmup the Django app in the Google App Engine
     path('_ah/warmup', views.warmup, name="Warmup"),
 
+    # e.g. /upload/
+    path("upload/",  views.upload_metadata, name="Upload metadata"),
+
     # Setup robots.txt
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"))
 ]
+
+from django.conf import settings
+from django.conf.urls.static import static
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
