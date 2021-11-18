@@ -43,6 +43,8 @@ class SampleData(GenericData):
                         current_demographic.add_data('range', NumericRange(lower=range_match[0], upper=range_match[1], bounds='[]'))
                     else:
                         self.report_error(spreadsheet_name, f'Data Range for the value "{value}" is not in the expected format (e.g. \'1.00 [0.80 - 1.20]\')')
+                    if name.lower() == 'iqr':
+                        name = name.upper()
                     current_demographic.add_data('range_type', name)
                 else:
                     # Estimate
