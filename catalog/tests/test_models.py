@@ -250,7 +250,8 @@ class EFOTraitTest(TestCase):
         self.assertRegexpMatches(efo_trait_1.display_ext_url, id_url)
         efo_trait_1.parse_api()
         self.assertEqual(efo_trait_1.label, efo_name)
-        self.assertEqual(efo_trait_1.description, efo_desc)
+        #self.assertEqual(efo_trait_1.description, efo_desc)
+        self.assertTrue(fo_trait_1.description.startswith(efo_desc))
         self.assertIsNotNone(efo_trait_1.url)
         self.assertEqual(efo_trait_1.category_labels_list, [])
 
