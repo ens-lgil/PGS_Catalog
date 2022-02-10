@@ -251,7 +251,7 @@ class EFOTraitTest(TestCase):
         efo_trait_1.parse_api()
         self.assertEqual(efo_trait_1.label, efo_name)
         #self.assertEqual(efo_trait_1.description, efo_desc)
-        self.assertTrue(fo_trait_1.description.startswith(efo_desc))
+        self.assertTrue(efo_trait_1.description.startswith(efo_desc))
         self.assertIsNotNone(efo_trait_1.url)
         self.assertEqual(efo_trait_1.category_labels_list, [])
 
