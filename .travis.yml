@@ -19,6 +19,5 @@ before_install:
 before_script:
   - sleep 10
   - psql -c 'create database travis_ci_test;' -U postgres
-  - sleep 10
 script:
   - python manage.py test catalog/tests curation/tests rest_api/tests
