@@ -11,11 +11,11 @@ install:
   - pip install -r requirements.txt
   - pip install requests
   - pip install pandas xlrd openpyxl numpy
-# before_install:
-#   - curl https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.15.0-amd64.deb -o elasticsearch.deb
-#   - sudo dpkg -i --force-confnew elasticsearch.deb
-#   - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
-#   - sudo service elasticsearch restart
+before_install:
+  - curl https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.15.0-amd64.deb -o elasticsearch.deb
+  - sudo dpkg -i --force-confnew elasticsearch.deb
+  - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
+  - sudo service elasticsearch start
 before_script:
   - sleep 10
   - psql -c 'create database travis_ci_test;' -U postgres
