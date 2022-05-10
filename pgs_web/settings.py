@@ -153,6 +153,14 @@ if os.getenv('GAE_APPLICATION', None):
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': os.environ['DATABASE_HOST'],
             'PORT': os.environ['DATABASE_PORT']
+        },
+        'benchmark': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['DATABASE_NAME_2'],
+            'USER': os.environ['DATABASE_USER_2'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD_2'],
+            'HOST': os.environ['DATABASE_HOST_2'],
+            'PORT': os.environ['DATABASE_PORT_2']
         }
     }
 else:
@@ -168,6 +176,14 @@ else:
             'PASSWORD': os.environ['DATABASE_PASSWORD'],
             'HOST': 'localhost',
             'PORT': os.environ['DATABASE_PORT_LOCAL']
+        },
+        'benchmark': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['DATABASE_NAME_2'],
+            'USER': os.environ['DATABASE_USER_2'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD_2'],
+            'HOST': 'localhost',
+            'PORT': os.environ['DATABASE_PORT_LOCAL_2']
         }
     }
 # [END db_setup]
