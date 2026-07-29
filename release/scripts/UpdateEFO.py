@@ -132,9 +132,16 @@ class UpdateEFO:
         return data
 
 
+    def get_trait_id(self, trait:EFOTrait) -> str:
+        trait_id = trait.id
+        if trait_id in ['MONDO_0000001','MONDO:0000001']:
+            trait_id = 'AFO:O_0000001'
+        return trait_id
+
+
     def update_efo_info(self, trait):
         ''' Fetch EFO information from an EFO ID, using the OLS REST API '''
-        trait_id = trait.id
+        trait_id = self.get_trait_id(trait)
         try:
             response = self.ols_rest_client.get_term(trait_id)
         except Exception as e:
@@ -213,8 +220,9 @@ class UpdateEFO:
 
 
     def get_parents(self,trait):
+        trait_id = self.get_trait_id(trait)
         try:
-            response = self.ols_rest_client.get_ancestors(trait.id)
+            response = self.ols_rest_client.get_ancestors(trait_id)
         except Exception as e:
             print(f"ERROR: Can't retrieve parents for the trait '{trait.name}'! {e}")
             response = None
