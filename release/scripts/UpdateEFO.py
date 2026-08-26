@@ -133,10 +133,7 @@ class UpdateEFO:
 
 
     def get_trait_id(self, trait:EFOTrait) -> str:
-        trait_id = trait.id
-        if trait_id in ['MONDO_0000001','MONDO:0000001']:
-            trait_id = 'AFO:O_0000001'
-        return trait_id
+        return trait.id
 
 
     def update_efo_info(self, trait):
